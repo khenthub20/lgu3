@@ -1,0 +1,10 @@
+uploads/*
+!uploads/.gitkeep
+.DS_Store
+*.tmp
+*.log
+migrate_tags.php
+seed_calendar.php
+seed_programs.php
+fix_applications.php
+install_updates.php
