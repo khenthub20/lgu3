@@ -1059,5 +1059,47 @@ if ($action === 'get_calendar_stats') {
     exit;
 }
 
+// --- NOTIFICATION ENDPOINTS ---
+
+if ($action === 'get_notifications') {
+    $notifications = [];
+    $stmt = $conn->prepare("SELECT * FROM notifications WHERE user_id = ? ORDER BY created_at DESC LIMIT 20");
+    $stmt->bind_param("i", $uid);
+    $stmt->execute();
+    $res = $stmt->get_result();
+    while($row = $res->fetch_assoc()) {
+        $notifications[] = $row;
+    }
+    echo json_encode($notifications);
+    exit;
+}
+
+if ($action === 'mark_read') {
+    $input = json_decode(file_get_contents('php://input'), true);
+    $notifId = $input['id'];
+    
+    $stmt = $conn->prepare("UPDATE notifications SET is_read = 1 WHERE id = ? AND user_id = ?");
+    $stmt->bind_param("ii", $notifId, $uid);
+    
+    if($stmt->execute()) {
+        echo json_encode(['success' => true]);
+    } else {
+        echo json_encode(['error' => 'Failed to mark as read']);
+    }
+    exit;
+}
+
+if ($action === 'mark_all_read') {
+    $stmt = $conn->prepare("UPDATE notifications SET is_read = 1 WHERE user_id = ? AND is_read = 0");
+    $stmt->bind_param("i", $uid);
+    
+    if($stmt->execute()) {
+        echo json_encode(['success' => true, 'updated' => $stmt->affected_rows]);
+    } else {
+        echo json_encode(['error' => 'Failed to mark all as read']);
+    }
+    exit;
+}
+
 echo json_encode(['error' => 'Invalid action']);
 exit;

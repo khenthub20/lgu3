@@ -952,10 +952,17 @@ if (empty($skillRow['skills'])) {
         }
 
         async function markAllRead() {
-            // Simplify for demo: just call mark read for all unread or refresh
-            const unread = document.querySelectorAll('.notif-item.unread');
-            // Normally a single API call is better
-            fetchNotifs();
+            try {
+                const res = await fetch('api.php?action=mark_all_read', {
+                    method: 'POST'
+                });
+                const data = await res.json();
+                if(data.success) {
+                    fetchNotifs(); // Refresh to show updated state
+                }
+            } catch(e) {
+                console.error('Failed to mark all as read:', e);
+            }
         }
 
         async function fetchUserDocs() {
