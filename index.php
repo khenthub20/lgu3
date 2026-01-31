@@ -182,7 +182,7 @@ if ($stats['completions'] > 0) {
             <a href="#location">Location</a>
         </div>
         <div class="nav-btns">
-            <a href="index.php" class="btn-outline">Login</a>
+            <a href="index1.php" class="btn-outline">Login</a>
             <a href="signup.php" class="btn-filled">Get Started</a>
         </div>
     </nav>
