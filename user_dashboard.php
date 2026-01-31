@@ -111,6 +111,11 @@ if (empty($skillRow['skills'])) {
         label { display: block; margin-bottom: 0.5rem; color: var(--text-muted); font-size: 0.9rem; }
         textarea.form-control { resize: vertical; min-height: 120px; }
 
+        /* Modals and Animations */
+        @keyframes popupScale { 0% { transform:scale(0.8); opacity:0; } 100% { transform:scale(1); opacity:1; } }
+        #general-success-modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:10001; backdrop-filter:blur(8px); align-items:center; justify-content:center; }
+        .modal-content-premium { background:#0f172a; padding:2.5rem; border-radius:24px; border:1px solid rgba(16, 185, 129, 0.2); width:90%; max-width:400px; text-align:center; box-shadow:0 25px 60px -12px rgba(0,0,0,0.6); animation: popupScale 0.3s ease-out; }
+
         /* Mobile Nav Toggle */
         .mobile-toggle { display: none; }
         @media(max-width:768px){
@@ -632,11 +637,11 @@ if (empty($skillRow['skills'])) {
 
         <!-- Main Content -->
         <main class="main-content <?php echo ($is_active === 0) ? 'locked-view' : ''; ?>" id="main-content">
-            <header class="top-bar" style="background: var(--card-bg); backdrop-filter: blur(10px);">
-                <button class="mobile-toggle" onclick="document.getElementById('sidebar').classList.toggle('open')">☰</button>
-                <div class="welcome-text" style="display: flex; flex-direction: column;">
-                    <span style="font-weight: 600;">Good Morning, <span id="header-name"><?php echo htmlspecialchars($user_name); ?></span>!</span>
-                    <span style="font-size: 0.75rem; color: var(--text-muted); display: flex; align-items: center; gap: 5px;">
+            <header class="top-bar">
+                <button class="mobile-toggle" onclick="document.getElementById('sidebar').classList.toggle('open')"><i data-feather="menu"></i></button>
+                <div class="welcome-text">
+                    <span id="header-welcome-main" style="font-weight: 600;">Good Morning, <span id="header-name"><?php echo htmlspecialchars($user_name); ?></span>!</span>
+                    <span id="header-ref-id" style="font-size: 0.75rem; color: var(--text-muted); display: flex; align-items: center; gap: 5px;">
                         <i data-feather="hash" style="width: 12px; height: 12px;"></i>
                         Reference: <b style="color: var(--primary); font-family: monospace; letter-spacing: 1px;"><?php echo htmlspecialchars($userData['reference_id'] ?? 'REF-N/A'); ?></b>
                     </span>
@@ -657,11 +662,13 @@ if (empty($skillRow['skills'])) {
                         </div>
                     </div>
 
-                    <?php if($user_image): ?>
-                        <img src="<?php echo $user_image; ?>" class="avatar" style="object-fit:cover;">
-                    <?php else: ?>
-                        <div class="avatar"><?php echo $user_initials; ?></div>
-                    <?php endif; ?>
+                    <div id="header-avatar-container">
+                        <?php if($user_image): ?>
+                            <img src="<?php echo $user_image; ?>" class="avatar" id="header-avatar" style="object-fit:cover;">
+                        <?php else: ?>
+                            <div class="avatar" id="header-avatar"><?php echo $user_initials; ?></div>
+                        <?php endif; ?>
+                    </div>
                 </div>
             </header>
 
@@ -741,7 +748,10 @@ if (empty($skillRow['skills'])) {
                                     <?php endif; ?>
                                 </div>
                                 <input type="file" id="profile_image" name="profile_image" accept="image/*" style="display:none;" onchange="previewFile()">
-                                <button type="button" class="action-btn" onclick="document.getElementById('profile_image').click()">Change Picture</button>
+                                <div style="display:flex; gap:0.5rem; margin-top:1rem; justify-content:center; width:100%;">
+                                    <button type="button" class="action-btn" onclick="document.getElementById('profile_image').click()" style="padding:0.6rem 1rem; font-size:0.85rem; flex:1;">Change Picture</button>
+                                    <button type="button" id="save-photo-btn" class="primary-action-btn" style="display:none; padding:1.1rem 1.5rem; font-size:0.85rem; width:auto; flex:1; margin:0;" onclick="uploadProfilePicture()">Save New Photo</button>
+                                </div>
                             </div>
                             
                             <div id="edit-auth-notice" style="display:none; background:rgba(16, 185, 129, 0.1); border:1px solid #10b981; padding:0.75rem; border-radius:10px; margin-bottom:1.5rem; color:#10b981; font-size:0.85rem; text-align:center;">
@@ -856,7 +866,7 @@ if (empty($skillRow['skills'])) {
                         <p>View your training sessions and assigned tasks from the administration.</p>
                     </div>
 
-                    <div style="display:grid; grid-template-columns: 1fr 350px; gap:1.5rem;">
+                    <div class="schedule-grid">
                         <!-- Calendar Graphic -->
                         <div class="content-section" style="padding:1.5rem; background:var(--card-bg); border-radius:16px; border:1px solid var(--border-color);">
                             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
@@ -897,7 +907,7 @@ if (empty($skillRow['skills'])) {
                         <h2>Free Learning Resources</h2>
                         <p>Download modules and certificates for your professional growth.</p>
                     </div>
-                    <div id="user-docs-list" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap:1.5rem; margin-top:1.5rem;">
+                    <div id="user-docs-list" class="resources-grid">
                         <!-- Populated by JS -->
                         <p style="color:#aaa;">Loading resources...</p>
                     </div>
@@ -1412,11 +1422,13 @@ if (empty($skillRow['skills'])) {
              const file = document.querySelector('input[type=file]').files[0];
              const reader = new FileReader();
              const text = document.getElementById('preview-text');
+             const saveBtn = document.getElementById('save-photo-btn');
 
              reader.addEventListener("load", function () {
                 preview.src = reader.result;
                 preview.style.display = 'block';
                 if(text) text.style.display = 'none';
+                if(saveBtn) saveBtn.style.display = 'block';
              }, false);
 
              if (file) {
@@ -1424,38 +1436,51 @@ if (empty($skillRow['skills'])) {
              }
         }
 
-        document.getElementById('profileForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const formData = new FormData();
+        async function uploadProfilePicture() {
             const fileInput = document.getElementById('profile_image');
-            
-            if(fileInput.files.length > 0) {
-                formData.append('profile_image', fileInput.files[0]);
-                
-                // Since our API currently separates JSON and Files a bit awkwardly in strict REST,
-                // but PHP $_FILES works fine with FormData.
-                // We just need to make sure the endpoint is correct.
-                // Our api.php?action=update_profile handles $_FILES.
-                
-                try {
-                    const res = await fetch('api.php?action=update_profile', {
-                        method: 'POST',
-                        body: formData
-                    });
-                    const data = await res.json();
-                    if(data.success) {
-                        alert('Profile picture updated!');
-                        location.reload(); // To update header avatar
-                    } else {
-                        alert('Error: ' + data.error);
+            if(fileInput.files.length === 0) return;
+
+            const formData = new FormData();
+            formData.append('profile_image', fileInput.files[0]);
+
+            const saveBtn = document.getElementById('save-photo-btn');
+            const originalText = saveBtn.innerText;
+            saveBtn.innerText = 'Updating...';
+            saveBtn.disabled = true;
+
+            try {
+                const res = await fetch('api.php?action=update_profile', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await res.json();
+                if(data.success) {
+                    // Update Header Avatar Instantly
+                    const headerContainer = document.getElementById('header-avatar-container');
+                    if(headerContainer) {
+                        headerContainer.innerHTML = `<img src="${data.image_url}" class="avatar" id="header-avatar" style="object-fit:cover;">`;
                     }
-                } catch(err) {
-                    alert('Upload failed.');
+                    
+                    showSuccessModal("You are so pogi and maganda! Your profile picture is updated.");
+                    saveBtn.style.display = 'none';
+                } else {
+                    alert('Error: ' + data.error);
                 }
-            } else {
-                 alert('Please select an image first.');
+            } catch(err) {
+                alert('Upload failed.');
+            } finally {
+                saveBtn.innerText = originalText;
+                saveBtn.disabled = false;
             }
-        });
+        }
+
+        function showSuccessModal(message) {
+            const modal = document.getElementById('general-success-modal');
+            const msgEl = document.getElementById('success-modal-msg');
+            if(msgEl) msgEl.innerText = message;
+            if(modal) modal.style.display = 'flex';
+            feather.replace();
+        }
 
         // Create Report
         document.getElementById('reportForm').addEventListener('submit', async (e) => {
@@ -2225,6 +2250,18 @@ if (empty($skillRow['skills'])) {
                 <button onclick="document.getElementById('logout-modal').style.display='none'" style="padding:1rem; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); color:#fff; border-radius:14px; cursor:pointer; font-weight:600; font-size:1rem; transition:0.2s;">Cancel</button>
                 <button onclick="window.location.href='logout.php'" style="padding:1rem; background:#ef4444; border:none; color:#fff; border-radius:14px; cursor:pointer; font-weight:600; font-size:1rem; box-shadow:0 10px 20px -5px rgba(239, 68, 68, 0.4); transition:0.2s;">Yes, Logout</button>
             </div>
+        </div>
+    </div>
+
+    <!-- General Success Modal -->
+    <div id="general-success-modal">
+        <div class="modal-content-premium">
+            <div style="width:80px; height:80px; background:rgba(16, 185, 129, 0.1); border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 1.5rem;">
+                <i data-feather="check-circle" style="color:#10b981; width:36px; height:36px;"></i>
+            </div>
+            <h3 style="color:#fff; margin-bottom:0.75rem; font-size:1.5rem; font-weight:700;">Success!</h3>
+            <p id="success-modal-msg" style="color:#94a3b8; font-size:1.1rem; margin-bottom:2.5rem; line-height:1.5;"></p>
+            <button onclick="location.reload()" style="padding:1rem 2rem; background:#10b981; border:none; color:#fff; border-radius:14px; cursor:pointer; font-weight:600; font-size:1rem; box-shadow:0 10px 20px -5px rgba(16, 185, 129, 0.4); transition:0.2s; width:100%;">Awesome!</button>
         </div>
     </div>
 </body>

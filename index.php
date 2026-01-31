@@ -66,9 +66,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             font-family: 'Outfit', sans-serif;
             background: #020617;
             color: var(--text-main);
-            height: 100vh;
+            min-height: 100vh;
             display: flex;
-            overflow: hidden;
+            overflow-x: hidden;
         }
 
         /* --- LEFT SIDE: SLIDER --- */
@@ -165,7 +165,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             max-width: 420px;
             z-index: 10;
             animation: fadeIn 1s ease-out;
+            max-height: 90vh; /* Prevent vertical overflow */
+            overflow-y: auto;
+            padding: 10px;
         }
+        .login-card::-webkit-scrollbar { width: 4px; }
+        .login-card::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
 
         .brand-header {
             margin-bottom: 2.5rem;
@@ -266,8 +271,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         /* Responsive */
         @media (max-width: 900px) {
+            body { height: auto; }
             .slider-section { display: none; }
-            .login-section { flex: 1; border: none; }
+            .login-section { flex: 1; border: none; min-height: 100vh; padding: 2rem 1rem; }
+            .login-card { max-height: none; overflow: visible; }
+        }
+        @media (max-width: 400px) {
+            .brand-header h2 { font-size: 1.5rem; }
+            .brand-logo { width: 50px; height: 50px; margin-bottom: 1rem; }
+            .input-field { padding: 0.9rem 1rem 0.9rem 2.8rem; font-size: 0.9rem; }
         }
 
         @keyframes slideUp { from { opacity:0; transform:translateY(30px); } to { opacity:1; transform:translateY(0); } }

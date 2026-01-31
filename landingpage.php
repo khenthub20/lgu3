@@ -72,6 +72,19 @@ if ($stats['completions'] > 0) {
         .btn-filled { padding: 0.45rem 1.2rem; border-radius: 6px; background: var(--lp-primary); color: #fff; text-decoration: none; font-weight: 600; font-size: 0.8rem; transition: 0.3s; box-shadow: 0 4px 10px rgba(99, 102, 241, 0.2); }
         .btn-filled:hover { background: var(--lp-primary-dark); transform: translateY(-1px); }
 
+        /* Mobile Menu */
+        .mobile-menu-btn { display: none; background: transparent; border: none; color: #fff; cursor: pointer; padding: 5px; }
+        .mobile-nav-overlay {
+            position: fixed; top: 0; right: -100%; width: 100%; height: 100vh;
+            background: rgba(15, 17, 21, 0.98); backdrop-filter: blur(20px);
+            z-index: 2000; transition: 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+            display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2rem;
+            padding: 2rem;
+        }
+        .mobile-nav-overlay.open { right: 0; }
+        .mobile-nav-overlay a { color: #fff; text-decoration: none; font-size: 1.5rem; font-weight: 700; }
+        .mobile-close { position: absolute; top: 20px; right: 20px; color: #fff; cursor: pointer; }
+
         /* Hero Section */
         .hero {
             padding: 160px 10% 100px; display: grid; grid-template-columns: 1fr 1fr; align-items: center; gap: 4rem;
@@ -142,19 +155,32 @@ if ($stats['completions'] > 0) {
         .footer-bottom { border-top: 1px solid var(--lp-border); padding-top: 2rem; display: flex; justify-content: space-between; color: var(--lp-text-muted); font-size: 0.9rem; }
 
         @media (max-width: 968px) {
+            nav { padding: 0 5%; }
+            .logo span { font-size: 0.9rem; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
             .hero, .feature-grid, .story-flex, .test-grid { grid-template-columns: 1fr; display: block; }
-            .stats-bar { flex-wrap: wrap; gap: 2rem; }
-            .stat-item { flex: 1 1 150px; }
-            .hero { padding-top: 120px; text-align: center; }
-            .hero-content h1 { font-size: 3rem; }
-            .hero-content p { margin: 0 auto 2.5rem; }
+            .stats-bar { flex-wrap: wrap; gap: 2rem; padding: 3rem 5%; }
+            .stat-item { flex: 1 1 120px; }
+            .hero { padding: 120px 5% 60px; text-align: center; }
+            .hero-content h1 { font-size: 2.8rem; }
+            .hero-content p { margin: 0 auto 2rem; font-size: 1.1rem; }
+            .hero-image { display: none; } /* Hide complex hero images on small mobile to save space */
             .nav-links { display: none; }
-            .story-flex { margin-bottom: 4rem; }
-            .story-img { margin-bottom: 2rem; }
-            .test-card { margin-bottom: 1.5rem; }
-            .footer-grid { grid-template-columns: 1fr 1fr; }
-            .program-cat-grid { grid-template-columns: 1fr; gap: 1.5rem; }
+            .mobile-menu-btn { display: block; }
+            .nav-btns { display: none; } /* Hide login/signup in header, move to mobile menu */
+            .story-flex { margin-bottom: 3rem; }
+            .story-img { margin-bottom: 1.5rem; }
+            .test-card { margin-bottom: 1.2rem; }
+            .footer-grid { grid-template-columns: 1fr 1fr; gap: 2rem; }
+            .program-cat-grid { grid-template-columns: 1fr; gap: 1rem; }
             .program-list-items { grid-template-columns: 1fr; }
+            .location-section div { grid-template-columns: 1fr !important; display: flex !important; flex-direction: column !important; }
+            .map-container { order: -1; height: 300px; }
+        }
+        @media (max-width: 480px) {
+            .hero-content h1 { font-size: 2.2rem; }
+            .footer-grid { grid-template-columns: 1fr; }
+            .logo span { display: none; } /* Show only small logo or name */
+            .logo::after { content: 'LGU3'; font-size: 1.2rem; font-weight: 800; }
         }
 
         /* Programs Grid Specific */
@@ -165,12 +191,127 @@ if ($stats['completions'] > 0) {
         .program-list-items { list-style: none; display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
         .program-list-items li { color: var(--lp-text-muted); font-size: 0.9rem; display: flex; align-items: center; gap: 8px; }
         .program-list-items li::before { content: 'ΓåÆ'; color: var(--lp-primary); font-weight: bold; }
+
+        /* Team Section */
+        .team-section { padding: 100px 10%; background: #0b0d11; border-top: 1px solid var(--lp-border); }
+        .team-grid { 
+            display: grid; 
+            grid-template-columns: repeat(4, 1fr); 
+            gap: 2rem; 
+            margin-top: 4rem;
+            perspective: 1000px;
+        }
+        
+        .team-card-wrapper {
+            height: 480px;
+            cursor: pointer;
+            perspective: 1000px;
+        }
+
+        .team-card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            text-align: center;
+            transition: transform 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+            transform-style: preserve-3d;
+        }
+
+        .team-card-wrapper.flipped .team-card-inner,
+        .team-card-wrapper:hover .team-card-inner {
+            transform: rotateY(180deg);
+        }
+
+        .team-card-front, .team-card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+            border-radius: 24px;
+            border: 1px solid var(--lp-border);
+            padding: 2.5rem 1.5rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(10px);
+            background: rgba(30, 41, 59, 0.4);
+        }
+
+        .team-card-front {
+            z-index: 2;
+        }
+
+        .team-card-back {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(30, 41, 59, 0.9));
+            transform: rotateY(180deg);
+            border-color: var(--lp-primary);
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .team-card-wrapper:hover .team-card-front {
+            border-color: var(--lp-primary);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+        }
+
+        .team-img-wrapper {
+            width: 140px; height: 140px; margin: 0 auto 1.5rem;
+            border-radius: 50%; padding: 6px; background: linear-gradient(45deg, var(--lp-primary), #ec4899);
+            box-shadow: 0 10px 20px rgba(99, 102, 241, 0.3);
+            flex-shrink: 0;
+        }
+        .team-img-wrapper img { 
+            width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 4px solid #1e293b; 
+            filter: contrast(1.05) brightness(1.05) saturate(1.1);
+        }
+        
+        .team-card h3 { font-size: 1.1rem; margin-bottom: 0.5rem; color: #fff; font-weight: 700; }
+        .team-card-front p { color: var(--lp-primary); font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 1rem; }
+        .role-desc { color: var(--lp-text-muted); font-size: 0.85rem; line-height: 1.5; font-weight: 400; }
+        
+        .motivation-title {
+            color: var(--lp-primary);
+            font-weight: 800;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            margin-bottom: 1.2rem;
+        }
+        
+        .motivation-quote {
+            color: #fff;
+            font-size: 0.95rem;
+            font-style: italic;
+            line-height: 1.6;
+            opacity: 0.9;
+        }
+
+        .team-social { display: flex; justify-content: center; gap: 1rem; margin-top: 1.5rem; }
+        .team-social a { color: var(--lp-text-muted); transition: 0.3s; }
+        .team-social a:hover { color: #fff; transform: scale(1.2); }
+
+        .click-hint {
+            position: absolute;
+            bottom: 15px;
+            font-size: 0.65rem;
+            color: var(--lp-text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            opacity: 0.6;
+        }
+
+        @media (max-width: 1100px) { .team-grid { grid-template-columns: repeat(2, 1fr); } }
+        @media (max-width: 600px) { .team-grid { grid-template-columns: 1fr; } }
     </style>
 </head>
 <body>
 
     <nav>
-        <div class="logo" style="display: flex; align-items: center; gap: 12px;">
+        <div class="logo" style="display: flex; align-items: center; gap: 12px; cursor: pointer;" onclick="window.location.href='landingpage.php'">
             <img src="laforteza_logo.jpg" style="width: 35px; height: 35px; border-radius: 8px; object-fit: cover;">
             <span>LGU3 Livelihood Training Program</span>
         </div>
@@ -179,13 +320,30 @@ if ($stats['completions'] > 0) {
             <a href="#programs">Programs</a>
             <a href="#stories">Success Stories</a>
             <a href="#testimonials">Community</a>
+            <a href="#team">Meet the Team</a>
             <a href="#location">Location</a>
         </div>
         <div class="nav-btns">
             <a href="index.php" class="btn-outline">Login</a>
             <a href="signup.php" class="btn-filled">Get Started</a>
         </div>
+        <button class="mobile-menu-btn" onclick="toggleMobileNav()">
+            <i data-feather="menu"></i>
+        </button>
     </nav>
+
+    <!-- Mobile Navigation Overlay -->
+    <div class="mobile-nav-overlay" id="mobile-nav">
+        <div class="mobile-close" onclick="toggleMobileNav()"><i data-feather="x" style="width:32px; height:32px;"></i></div>
+        <a href="#features" onclick="toggleMobileNav()">Features</a>
+        <a href="#programs" onclick="toggleMobileNav()">Programs</a>
+        <a href="#stories" onclick="toggleMobileNav()">Stories</a>
+        <a href="#team" onclick="toggleMobileNav()">The Team</a>
+        <a href="#location" onclick="toggleMobileNav()">Location</a>
+        <hr style="width:50px; border:1px solid var(--lp-primary); opacity:0.3;">
+        <a href="index.php" style="color:var(--lp-primary);">Login</a>
+        <a href="signup.php" class="btn-filled" style="padding: 1rem 3rem; font-size: 1.2rem; border-radius: 14px;">Get Started</a>
+    </div>
 
     <header class="hero">
         <div class="hero-content">
@@ -484,6 +642,112 @@ if ($stats['completions'] > 0) {
             <!-- More placeholders if needed -->
         </div>
     </section>
+    
+    <section class="team-section" id="team">
+        <div class="section-header" style="text-align: center; margin: 0 auto 0;">
+            <span class="section-label">The Creators</span>
+            <h2>Meet the Elite Team</h2>
+            <p style="color: var(--lp-text-muted); margin-top: 1rem;">The passionate individuals behind the LGU3 Livelihood Training Program Portal.</p>
+        </div>
+
+        <div class="team-grid">
+            <!-- Wilfred -->
+            <div class="team-card-wrapper" onclick="this.classList.toggle('flipped')">
+                <div class="team-card-inner">
+                    <div class="team-card-front">
+                        <div class="team-img-wrapper">
+                            <img src="assets/team/wilfred.jpg" alt="Wilfred Aries Cajife Donarbe">
+                        </div>
+                        <h3>Wilfred Aries Cajife Donarbe</h3>
+                        <p>System Documentation</p>
+                        <div class="role-desc">Specializes in comprehensive system analysis and technical documentation.</div>
+                        <div class="team-social">
+                            <a href="#"><i data-feather="github" style="width:16px;"></i></a>
+                            <a href="#"><i data-feather="linkedin" style="width:16px;"></i></a>
+                        </div>
+                        <div class="click-hint">Hover to flip</div>
+                    </div>
+                    <div class="team-card-back">
+                        <div class="motivation-title">Purpose-Driven Innovation</div>
+                        <div class="motivation-quote">"We are united by a shared mission: to build a platform that empowers communities through accessible, reliable, and impactful livelihood training. Every line of code and every design choice serves a greater purpose—uplifting lives."</div>
+                        <div class="click-hint">Move mouse to return</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Ralph -->
+            <div class="team-card-wrapper" onclick="this.classList.toggle('flipped')">
+                <div class="team-card-inner">
+                    <div class="team-card-front">
+                        <div class="team-img-wrapper">
+                            <img src="assets/team/ralph.jpg" alt="Ralph Renz Cruzado">
+                        </div>
+                        <h3>Ralph Renz Cruzado</h3>
+                        <p>Scrum Master & Back-end</p>
+                        <div class="role-desc">Agile leadership and robust server-side architecture development.</div>
+                        <div class="team-social">
+                            <a href="#"><i data-feather="github" style="width:16px;"></i></a>
+                            <a href="#"><i data-feather="linkedin" style="width:16px;"></i></a>
+                        </div>
+                        <div class="click-hint">Hover to flip</div>
+                    </div>
+                    <div class="team-card-back">
+                        <div class="motivation-title">Strength in Collaboration</div>
+                        <div class="motivation-quote">"Each team member brings a unique expertise, and together we transform ideas into powerful solutions. Through collaboration, trust, and agile teamwork, we turn challenges into opportunities for growth."</div>
+                        <div class="click-hint">Move mouse to return</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dion -->
+            <div class="team-card-wrapper" onclick="this.classList.toggle('flipped')">
+                <div class="team-card-inner">
+                    <div class="team-card-front">
+                        <div class="team-img-wrapper">
+                            <img src="assets/team/dion.jpg" alt="Dion Sophia Celine">
+                        </div>
+                        <h3>Dion Sophia Celine</h3>
+                        <p>Front-end Developer</p>
+                        <div class="role-desc">Crafting beautiful, responsive and intuitive user interfaces.</div>
+                        <div class="team-social">
+                            <a href="#"><i data-feather="github" style="width:16px;"></i></a>
+                            <a href="#"><i data-feather="linkedin" style="width:16px;"></i></a>
+                        </div>
+                        <div class="click-hint">Hover to flip</div>
+                    </div>
+                    <div class="team-card-back">
+                        <div class="motivation-title">Excellence in Craftsmanship</div>
+                        <div class="motivation-quote">"From detailed system documentation to seamless user experiences, we are committed to quality and precision. We believe excellence is not optional—it’s our standard."</div>
+                        <div class="click-hint">Move mouse to return</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Khent -->
+            <div class="team-card-wrapper" onclick="this.classList.toggle('flipped')">
+                <div class="team-card-inner">
+                    <div class="team-card-front">
+                        <div class="team-img-wrapper">
+                            <img src="assets/team/khent.jpg" alt="Khent Agustin">
+                        </div>
+                        <h3>Khent Agustin</h3>
+                        <p>Full-Stack Developer</p>
+                        <div class="role-desc">Engineering end-to-end solutions from UI to database logic.</div>
+                        <div class="team-social">
+                            <a href="#"><i data-feather="github" style="width:16px;"></i></a>
+                            <a href="#"><i data-feather="linkedin" style="width:16px;"></i></a>
+                        </div>
+                        <div class="click-hint">Hover to flip</div>
+                    </div>
+                    <div class="team-card-back">
+                        <div class="motivation-title">Technology with Heart</div>
+                        <div class="motivation-quote">"Beyond systems and software, we build with empathy. Our motivation comes from knowing that this portal can open doors, create skills, and shape better futures for individuals and communities alike."</div>
+                        <div class="click-hint">Move mouse to return</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
 
     <section class="location-section" id="location" style="padding: 100px 10%; background: #0f1115;">
         <div class="section-header" style="text-align: center; margin: 0 auto 4rem;">
@@ -640,6 +904,10 @@ if ($stats['completions'] > 0) {
                 toast.style.transition = '0.3s';
                 setTimeout(() => toast.remove(), 300);
             }, 3000);
+        }
+
+        function toggleMobileNav() {
+            document.getElementById('mobile-nav').classList.toggle('open');
         }
     </script>
 </body>

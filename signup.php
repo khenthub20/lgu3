@@ -225,9 +225,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['verify_otp'])) {
             font-family: 'Outfit', sans-serif;
             background: #020617;
             color: var(--text-main);
-            height: 100vh;
+            min-height: 100vh;
             display: flex;
-            overflow: hidden;
+            overflow-x: hidden;
         }
 
         /* --- LEFT SIDE: SLIDER --- */
@@ -443,8 +443,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['verify_otp'])) {
         .signup-text a { color: var(--primary); text-decoration: none; font-weight: 600; }
 
         @media (max-width: 900px) {
+            body { height: auto; }
             .slider-section { display: none; }
-            .login-section { flex: 1; border: none; }
+            .login-section { flex: 1; border: none; min-height: 100vh; padding: 2rem 1rem; }
+            .login-card { max-height: none; overflow: visible; }
+        }
+        @media (max-width: 480px) {
+            .brand-header h2 { font-size: 1.5rem; }
+            .input-field { padding: 0.9rem 1rem 0.9rem 2.5rem; font-size: 0.9rem; }
+            .submit-btn { padding: 0.9rem; font-size: 0.9rem; }
         }
         
         @keyframes fadeIn { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }

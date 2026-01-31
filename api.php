@@ -43,6 +43,7 @@ if ($role === 'user') {
 // Ensure users table has bio column
 $conn->query("ALTER TABLE users ADD COLUMN IF NOT EXISTS bio TEXT AFTER interests");
 $conn->query("ALTER TABLE users ADD COLUMN IF NOT EXISTS ai_analysis_result TEXT AFTER bio");
+$conn->query("ALTER TABLE users ADD COLUMN IF NOT EXISTS profile_image VARCHAR(255) AFTER email");
 
 // Ensure notifications table exists
 $conn->query("CREATE TABLE IF NOT EXISTS notifications (
