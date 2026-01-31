@@ -243,6 +243,27 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             font-weight: 600;
         }
 
+        .explore-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 1.5rem;
+            padding: 0.6rem 1.2rem;
+            border-radius: 99px;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.85rem;
+            transition: all 0.3s ease;
+        }
+        .explore-btn:hover {
+            background: rgba(255,255,255,0.08);
+            border-color: rgba(255,255,255,0.2);
+            color: #fff;
+            transform: translateY(-2px);
+        }
+
         /* Responsive */
         @media (max-width: 900px) {
             .slider-section { display: none; }
@@ -324,6 +345,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
             <div class="signup-text">
                 Don't have an account? <a href="signup.php">Create Account</a>
+                
+                <div>
+                    <a href="landingpage.php" class="explore-btn">
+                        <i data-feather="globe" style="width: 14px; height: 14px;"></i>
+                        <span>Explore Landing Page</span>
+                    </a>
+                </div>
             </div>
         </div>
     </div>
