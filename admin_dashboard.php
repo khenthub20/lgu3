@@ -578,7 +578,10 @@ if ($checkCol && $checkCol->num_rows > 0) {
                                     <h3 style="margin-bottom:0.2rem;">Citizen Sentiment (NLP)</h3>
                                     <p style="font-size:0.8rem; color:#94a3b8;">Real-time analysis of citizen feedback.</p>
                                 </div>
-                                <div class="icon-box" style="background:rgba(139, 92, 246, 0.1); color:#8b5cf6; padding:0.5rem; border-radius:8px;"><i data-feather="message-circle"></i></div>
+                                <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 5px;">
+                                    <div class="icon-box" style="background:rgba(139, 92, 246, 0.1); color:#8b5cf6; padding:0.5rem; border-radius:8px;"><i data-feather="terminal"></i></div>
+                                    <span style="font-size: 0.6rem; color: var(--primary); font-weight: 700; text-transform: uppercase; letter-spacing: 1px; background: rgba(99, 102, 241, 0.1); padding: 2px 6px; border-radius: 4px; border: 1px solid rgba(99, 102, 241, 0.2);">Powered by Gemini 1.5 Flash</span>
+                                </div>
                             </div>
                             
                             <div style="display:flex; align-items:center; gap:2rem; margin-bottom:2rem;">

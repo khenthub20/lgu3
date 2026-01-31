@@ -5,6 +5,12 @@ header('Content-Type: application/json');
 if (session_status() === PHP_SESSION_NONE) session_start();
 include 'db_connect.php';
 
+if (file_exists('secrets.php')) {
+    include 'secrets.php';
+} else {
+    define('OPENAI_API_KEY', ''); // Fallback or env var
+}
+
 $action = $_GET['action'] ?? '';
 $role = $_SESSION['role'] ?? '';
 $uid = $_SESSION['user_id'] ?? 0;
@@ -33,6 +39,10 @@ if ($role === 'user') {
         }
     }
 }
+
+// Ensure users table has bio column
+$conn->query("ALTER TABLE users ADD COLUMN IF NOT EXISTS bio TEXT AFTER interests");
+$conn->query("ALTER TABLE users ADD COLUMN IF NOT EXISTS ai_analysis_result TEXT AFTER bio");
 
 // Ensure notifications table exists
 $conn->query("CREATE TABLE IF NOT EXISTS notifications (
@@ -216,48 +226,25 @@ if ($action === 'submit_assessment') {
     $skills = $input['skills'] ?? '';
     $interests = $input['interests'] ?? '';
     $status = $input['employment_status'] ?? '';
+    $bio = $input['bio'] ?? '';
     
     // 1. Save Profile
-    $stmt = $conn->prepare("UPDATE users SET skills = ?, interests = ?, employment_status = ? WHERE id = ?");
-    $stmt->bind_param("sssi", $skills, $interests, $status, $uid);
+    $stmt = $conn->prepare("UPDATE users SET skills = ?, interests = ?, employment_status = ?, bio = ? WHERE id = ?");
+    $stmt->bind_param("ssssi", $skills, $interests, $status, $bio, $uid);
     $stmt->execute();
     
-    // 2. AI Engine Simulation (Keyword Matching)
-    $recommendations = [];
-    $userText = strtolower($skills . ' ' . $interests);
+    // 2. Real-time AI Recommendation Engine (Gemini Powered)
+    $programs = [];
+    $resProgs = $conn->query("SELECT id, title, category, description FROM programs");
+    while($p = $resProgs->fetch_assoc()) $programs[] = $p;
     
-    $resProgs = $conn->query("SELECT * FROM programs");
-    while($prog = $resProgs->fetch_assoc()) {
-        $score = 0;
-        $progText = strtolower($prog['title'] . ' ' . $prog['category'] . ' ' . $prog['description']);
-        
-        // Split user input into words
-        $keywords = explode(' ', $userText);
-        foreach($keywords as $word) {
-            if(strlen($word) > 3 && strpos($progText, $word) !== false) {
-                $score++;
-            }
-        }
-        
-        // Base Match: Category checks
-        if(strpos($userText, strtolower($prog['category'])) !== false) $score += 2;
-        
-        // Threshold
-        if($score > 0) {
-            $recommendations[] = [
-                'id' => $prog['id'],
-                'title' => $prog['title'],
-                'category' => $prog['category'],
-                'score' => $score
-            ];
-        }
+    $recommendations = [];
+    if (!empty($programs)) {
+        $recommendations = analyzeRecommendationsAI($skills, $interests, $programs, $bio);
     }
     
-    // Sort by score
-    usort($recommendations, function($a, $b) { return $b['score'] - $a['score']; });
-    
     // Save Result
-    $jsonResult = json_encode(array_slice($recommendations, 0, 5)); // Top 5
+    $jsonResult = json_encode($recommendations);
     $stmt = $conn->prepare("UPDATE users SET ai_analysis_result = ? WHERE id = ?");
     $stmt->bind_param("si", $jsonResult, $uid);
     $stmt->execute();
@@ -630,14 +617,29 @@ if ($action === 'submitted_programs') { // Renaming reports to programs context 
 }
 
 if ($action === 'get_recommendations') {
-    $res = $conn->query("SELECT ai_analysis_result FROM users WHERE id = $uid");
+    $res = $conn->query("SELECT ai_analysis_result, skills, interests, bio FROM users WHERE id = $uid");
     $row = $res->fetch_assoc();
     $recs = $row['ai_analysis_result'] ? json_decode($row['ai_analysis_result'], true) : [];
     
-    // If empty (no matches), return random/all or specific message
+    // Logic: If empty or first load, and user has any profile data, force AI analysis
+    // Even if data is minimal, AI should suggest something.
     if(empty($recs)) {
-        // Fallback: Get recent programs
-         $resProgs = $conn->query("SELECT id, title, category, 1 as score FROM programs LIMIT 3");
+         $programs = [];
+         $resProgs = $conn->query("SELECT id, title, category, description FROM programs");
+         while($p = $resProgs->fetch_assoc()) $programs[] = $p;
+         
+         if (!empty($programs)) {
+             $recs = analyzeRecommendationsAI($row['skills'] ?? '', $row['interests'] ?? '', $programs, $row['bio'] ?? '');
+             if (!empty($recs)) {
+                $jsonResult = $conn->real_escape_string(json_encode($recs));
+                $conn->query("UPDATE users SET ai_analysis_result = '$jsonResult' WHERE id = $uid");
+             }
+         }
+    }
+    
+    // Final Professional Fallback (if AI service is down or no matches)
+    if(empty($recs)) {
+         $resProgs = $conn->query("SELECT id, title, category, description, NULL as score FROM programs LIMIT 3");
          while($p = $resProgs->fetch_assoc()) $recs[] = $p;
     }
     
@@ -1427,6 +1429,76 @@ if ($action === 'get_skill_progress') {
     exit;
 }
 
+function analyzeRecommendationsAI($skills, $interests, $programs, $bio = "") {
+    if (!defined('OPENAI_API_KEY') || empty(OPENAI_API_KEY)) return [];
+
+    $url = "https://api.openai.com/v1/chat/completions";
+    
+    $progFormatted = [];
+    foreach($programs as $p) {
+        $progFormatted[] = [
+            'id' => $p['id'],
+            'title' => $p['title'],
+            'category' => $p['category'],
+            'description' => $p['description']
+        ];
+    }
+    $progJson = json_encode($progFormatted);
+
+    $systemPrompt = "You are an expert Career Counselor for a local government livelihood program. Your task is to match a citizen to the TOP 3 most relevant programs based on their profile. You must respond with ONLY a valid JSON array of objects. Each object must have 'id' (integer) and 'score' (integer between 1-100). Do not include any explanations, markdown formatting, or code blocks.";
+    
+    $userPrompt = "Citizen Profile:\nBio: $bio\nSkills: $skills\nInterests: $interests\n\nAvailable Programs:\n$progJson\n\nTASK: Compare the profile (even if minimal) with the programs. If the user wants to LEARN something (e.g. 'I want to learn English'), prioritize programs that teach that skill. If profile is very empty, infer the best general starter programs. Return TOP 3 matches as JSON array.";
+
+    $data = [
+        "model" => "gpt-4o",
+        "messages" => [
+            ["role" => "system", "content" => $systemPrompt],
+            ["role" => "user", "content" => $userPrompt]
+        ],
+        "temperature" => 0.7
+    ];
+    
+    $ch = curl_init($url);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_POST, true);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
+    curl_setopt($ch, CURLOPT_HTTPHEADER, [
+        'Content-Type: application/json',
+        'Authorization: Bearer ' . OPENAI_API_KEY
+    ]);
+    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+    curl_setopt($ch, CURLOPT_TIMEOUT, 20);
+    
+    $response = curl_exec($ch);
+    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+    
+    $matchedRecs = [];
+    if ($httpCode === 200) {
+        $result = json_decode($response, true);
+        $content = $result['choices'][0]['message']['content'] ?? '[]';
+        
+        // Clean potential markdown
+        $jsonText = preg_replace('/```json|```/', '', $content);
+        $aiMatches = json_decode(trim($jsonText), true);
+        
+        if (is_array($aiMatches)) {
+            foreach($aiMatches as $match) {
+                foreach($programs as $p) {
+                    if ($p['id'] == $match['id']) {
+                        $rawScore = (int)($match['score'] ?? 0);
+                        $p['score'] = $rawScore > 0 ? $rawScore / 10 : 8.5; 
+                        $matchedRecs[] = $p;
+                        break;
+                    }
+                }
+            }
+        }
+    }
+    
+    return $matchedRecs;
+}
+
 if ($action === 'enroll_skill') {
     $input = json_decode(file_get_contents('php://input'), true);
     $tid = $input['test_id'];
@@ -1513,10 +1585,46 @@ if ($action === 'complete_stage') {
 }
 
 
+function analyzeSentimentAI($text) {
+    if (!defined('GEMINI_API_KEY') || empty(GEMINI_API_KEY)) return analyzeSentiment($text);
+
+    $url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=" . GEMINI_API_KEY;
+    
+    // Sanitize text for JSON
+    $cleanText = str_replace('"', '\"', $text);
+    $prompt = "Analyze the sentiment of this report from a citizen: \"$cleanText\". Respond with ONLY one word from these options: positive, neutral, negative.";
+               
+    $data = [
+        "contents" => [["parts" => [["text" => $prompt]]]]
+    ];
+    
+    $ch = curl_init($url);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_POST, true);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
+    curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
+    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+    curl_setopt($ch, CURLOPT_TIMEOUT, 5);
+    
+    $response = curl_exec($ch);
+    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+    
+    if ($httpCode === 200) {
+        $result = json_decode($response, true);
+        $sentiment = strtolower(trim($result['candidates'][0]['content']['parts'][0]['text'] ?? ''));
+        if (strpos($sentiment, 'positive') !== false) return 'positive';
+        if (strpos($sentiment, 'negative') !== false) return 'negative';
+        if (strpos($sentiment, 'neutral') !== false) return 'neutral';
+    }
+    
+    return analyzeSentiment($text); // Fallback to keyword analysis
+}
+
 function analyzeSentiment($text) {
     $text = strtolower($text);
-    $negative_words = ['broken', 'bad', 'fail', 'dirty', 'dangerous', 'delay', 'poor', 'crime', 'noise', 'garbage', 'flood', 'leak', 'slow', 'problem', 'complaint', 'worst', 'hate', 'trash', 'smell', 'dark'];
-    $positive_words = ['great', 'good', 'fast', 'helpful', 'clean', 'safe', 'thanks', 'excellent', 'effective', 'improve', 'benefit', 'love', 'best', 'satisfied', 'resolved'];
+    $negative_words = ['broken', 'bad', 'fail', 'dirty', 'dangerous', 'delay', 'poor', 'crime', 'noise', 'garbage', 'flood', 'leak', 'slow', 'problem', 'complaint', 'worst', 'hate', 'trash', 'smell', 'dark', 'error', 'broken'];
+    $positive_words = ['great', 'good', 'fast', 'helpful', 'clean', 'safe', 'thanks', 'excellent', 'effective', 'improve', 'benefit', 'love', 'best', 'satisfied', 'resolved', 'perfect'];
     
     $score = 0;
     foreach($positive_words as $w) {
@@ -1544,19 +1652,35 @@ if ($action === 'get_intelligence_data') {
         'prediction' => 0,
         'urgent_issues' => []
     ];
+
+    // Schema Patch: Add sentiment column if missing
+    $conn->query("ALTER TABLE reports ADD COLUMN IF NOT EXISTS sentiment VARCHAR(20) DEFAULT NULL");
     
     // 1. NLP: Analyze Citizen Reports (Most recent 100)
-    // Use SELECT * and ORDER BY id DESC (safer than created_at)
     $res = $conn->query("SELECT * FROM reports ORDER BY id DESC LIMIT 100");
     if($res) {
+        $ai_count = 0;
         while($row = $res->fetch_assoc()) {
-            // Handle missing columns gracefully
-            $desc = $row['description'] ?? $row['message'] ?? ''; // fallback
+            $desc = $row['description'] ?? $row['message'] ?? '';
             $title = $row['title'] ?? 'Report #' . $row['id'];
+            $rid = $row['id'];
             
             if(!$desc) continue;
             
-            $sentiment = analyzeSentiment($desc);
+            $sentiment = $row['sentiment'];
+            
+            // Real-time AI analysis for reports without sentiment (limit to 5 per request to keep it fast)
+            if (empty($sentiment) && $ai_count < 5) {
+                $sentiment = analyzeSentimentAI($desc);
+                if ($sentiment) {
+                    $conn->query("UPDATE reports SET sentiment = '$sentiment' WHERE id = $rid");
+                    $ai_count++;
+                }
+            }
+            
+            // Final fallback if AI failed or skipped
+            if (empty($sentiment)) $sentiment = 'neutral';
+            
             $insights['sentiment'][$sentiment]++;
             
             if(count($insights['urgent_issues']) < 5) {

@@ -1273,20 +1273,31 @@ if (empty($skillRow['skills'])) {
                      return;
                 }
                 
-                container.innerHTML = '';
+                container.innerHTML = ''; // Clear loading text
                 data.forEach(p => {
+                    // Score handling: if score is null/undefined it's a generic fallback
+                    // If score is 0 it was a 0% match (which we want to avoid)
+                    let scoreHtml = '';
+                    if (p.score !== null && p.score !== undefined) {
+                        const pct = Math.round(p.score * 10);
+                        scoreHtml = `<span class="rec-score">${pct}% Match</span>`;
+                    } else {
+                        scoreHtml = `<span class="rec-score" style="color:#6366f1;">AI Choice</span>`;
+                    }
+
                     container.innerHTML += `
                         <div class="rec-card">
                             <span class="rec-tag">${p.category}</span>
-                            <span class="rec-score">${p.score ? Math.round(p.score * 10) + '% Match' : 'Featured'}</span>
-                            <h3 style="color:#fff; margin-bottom:0.5rem;">${p.title}</h3>
-                            <p style="color:var(--text-muted); font-size:0.9rem;">${p.description || 'Program description unavailable.'}</p>
-                            <button class="action-btn" onclick="applyFor(${p.id})" style="margin-top:1rem; width:100%;">Free to Apply</button>
+                            ${scoreHtml}
+                            <h3 style="color:#fff; margin-bottom:0.5rem; font-size:1.1rem;">${p.title}</h3>
+                            <p style="color:var(--text-muted); font-size:0.85rem; line-height:1.4;">${p.description || 'Program description unavailable.'}</p>
+                            <button class="action-btn" onclick="applyFor(${p.id})" style="margin-top:1.25rem; width:100%; font-weight:600; background:rgba(99,102,241,0.1); border:1px solid rgba(99,102,241,0.2);">Enroll for Free</button>
                         </div>
                     `;
                 });
             } catch(e) {
                  console.error(e);
+                 document.getElementById('ai-recommendations').innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:2rem;color:#ef4444;">Unable to load recommendations. Please try refreshing.</div>';
             }
         }
         
@@ -2176,6 +2187,45 @@ if (empty($skillRow['skills'])) {
         function downloadID() {
             alert('Digital Copy Generated! In a real system, this would trigger a PDF/Image generation. You can now use the Print feature to save as PDF.');
         }
+
+        // --- INIT ---
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('Dashboard Init');
+            
+            // Logout Logic
+            const logoutBtn = document.querySelector('.logout-btn');
+            if(logoutBtn) {
+                logoutBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const modal = document.getElementById('logout-modal');
+                    modal.style.display = 'flex'; // Use flex to center
+                });
+            }
+
+            fetchRecommended();
+            // Other inits if needed:
+            if(typeof fetchMyApplications === 'function') fetchMyApplications();
+            
+            // Notification poller
+            setInterval(() => {
+                if(typeof fetchNotifications === 'function') fetchNotifications();
+            }, 60000); // Pulse every min
+            if(typeof fetchNotifications === 'function') fetchNotifications();
+        });
     </script>
+    <!-- Logout Modal -->
+    <div id="logout-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:10000; backdrop-filter:blur(8px); align-items:center; justify-content:center;">
+        <div style="background:#0f172a; padding:2.5rem; border-radius:24px; border:1px solid rgba(255,255,255,0.08); width:90%; max-width:400px; text-align:center; box-shadow:0 25px 60px -12px rgba(0,0,0,0.6); animation: popupScale 0.3s ease-out;">
+            <div style="width:80px; height:80px; background:rgba(239, 68, 68, 0.1); border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 1.5rem;">
+                <i data-feather="log-out" style="color:#ef4444; width:36px; height:36px;"></i>
+            </div>
+            <h3 style="color:#fff; margin-bottom:0.75rem; font-size:1.5rem; font-weight:700;">Signing Out?</h3>
+            <p style="color:#94a3b8; font-size:1rem; margin-bottom:2.5rem; line-height:1.5;">Are you sure you want to end your session?</p>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
+                <button onclick="document.getElementById('logout-modal').style.display='none'" style="padding:1rem; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); color:#fff; border-radius:14px; cursor:pointer; font-weight:600; font-size:1rem; transition:0.2s;">Cancel</button>
+                <button onclick="window.location.href='logout.php'" style="padding:1rem; background:#ef4444; border:none; color:#fff; border-radius:14px; cursor:pointer; font-weight:600; font-size:1rem; box-shadow:0 10px 20px -5px rgba(239, 68, 68, 0.4); transition:0.2s;">Yes, Logout</button>
+            </div>
+        </div>
+    </div>
 </body>
 </html>

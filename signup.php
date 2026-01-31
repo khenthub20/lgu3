@@ -98,47 +98,44 @@ function sendOTPEmail($to, $fullname, $otp) {
         </body>
         </html>
         ";
-
-        $mail->AltBody = "Hello $fullname,\n\nYour LGU3 verification code is: $otp\n\nThis code will expire in 10 minutes.\n\nIf you didn't request this code, please ignore this email.";
-
+        
         $mail->send();
         return true;
-        
     } catch (Exception $e) {
-        $_SESSION['email_debug'] = "Mailer Error: " . $mail->ErrorInfo . " | System Error: " . $e->getMessage();
-        error_log($_SESSION['email_debug']);
-        return false;
-    } catch (\Error $err) {
-        $_SESSION['email_debug'] = "PHP Error: " . $err->getMessage();
-        error_log($_SESSION['email_debug']);
+        error_log("Message could not be sent. Mailer Error: {$mail->ErrorInfo}");
         return false;
     }
 }
 
-// Step 1: Send OTP
+// STEP 1: Process Initial Registration
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['send_otp'])) {
-    $fullname = $_POST['fullname'];
-    $email = $_POST['email'];
+    $fullname = trim($_POST['fullname']);
+    $email = trim($_POST['email']);
     $password = $_POST['password'];
     $confirm_password = $_POST['confirm_password'];
 
-    if ($password !== $confirm_password) {
-        $error = "Passwords do not match!";
+    // Basic Validations
+    if (empty($fullname) || empty($email) || empty($password)) {
+        $error = "All fields are required.";
+    } elseif ($password !== $confirm_password) {
+        $error = "Passwords do not match.";
+    } elseif (strlen($password) < 6) {
+        $error = "Password must be at least 6 characters.";
     } else {
-        // Check if email already exists
-        $check = $conn->prepare("SELECT id FROM users WHERE email = ?");
-        $check->bind_param("s", $email);
-        $check->execute();
-        $check->store_result();
-
-        if ($check->num_rows > 0) {
-            $error = "Email is already registered.";
+        // Check if email exists
+        $stmt = $conn->prepare("SELECT id FROM users WHERE email = ?");
+        $stmt->bind_param("s", $email);
+        $stmt->execute();
+        $stmt->store_result();
+        
+        if ($stmt->num_rows > 0) {
+            $error = "Email is already registered. Please login.";
         } else {
-            // Generate 6-digit OTP
-            $otp = sprintf("%06d", mt_rand(1, 999999));
-            $otp_expiry = date('Y-m-d H:i:s', strtotime('+10 minutes'));
-
-            // Store in session
+            // Generate OTP
+            $otp = str_pad(mt_rand(0, 999999), 6, '0', STR_PAD_LEFT);
+            $otp_expiry = date("Y-m-d H:i:s", strtotime("+10 minutes"));
+            
+            // Store simple data in session (Removed Bio/AI Fields)
             $_SESSION['signup_data'] = [
                 'fullname' => $fullname,
                 'email' => $email,
@@ -146,152 +143,61 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['send_otp'])) {
                 'otp' => $otp,
                 'otp_expiry' => $otp_expiry
             ];
-            $_SESSION['signup_step'] = 2;
-
-            // Send OTP via email
-            $to = $email;
-            $subject = "LGU3 - Email Verification Code";
-            $message = "
-            <html>
-            <head>
-                <style>
-                    body { font-family: Arial, sans-serif; background: #f4f4f4; padding: 20px; }
-                    .container { background: white; padding: 30px; border-radius: 10px; max-width: 500px; margin: 0 auto; }
-                    .header { text-align: center; margin-bottom: 30px; }
-                    .otp-box { background: #6366f1; color: white; font-size: 32px; font-weight: bold; text-align: center; padding: 20px; border-radius: 8px; letter-spacing: 8px; }
-                    .footer { text-align: center; margin-top: 20px; color: #666; font-size: 12px; }
-                </style>
-            </head>
-            <body>
-                <div class='container'>
-                    <div class='header'>
-                        <h2 style='color: #6366f1;'>LGU3 Livelihood Portal</h2>
-                        <p>Email Verification</p>
-                    </div>
-                    <p>Hello <strong>$fullname</strong>,</p>
-                    <p>Thank you for registering! Please use the following verification code to complete your registration:</p>
-                    <div class='otp-box'>$otp</div>
-                    <p style='margin-top: 20px;'>This code will expire in <strong>10 minutes</strong>.</p>
-                    <p>If you didn't request this code, please ignore this email.</p>
-                    <div class='footer'>
-                        <p>© 2026 LGU3 Livelihood Portal. All rights reserved.</p>
-                    </div>
-                </div>
-            </body>
-            </html>
-            ";
-
-            $headers = "MIME-Version: 1.0" . "\r\n";
-            $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
-            $headers .= "From: LGU3 Portal <noreply@lgu3.local>" . "\r\n";
-
-            // Send OTP via Gmail SMTP
-            $emailSent = sendOTPEmail($email, $fullname, $otp);
-
-            if ($emailSent) {
-                $success = "Verification code sent to your email!";
-                $step = 2;
+            
+            // Send Email
+            if (sendOTPEmail($email, $fullname, $otp)) {
+                $_SESSION['signup_step'] = 2; // Move to Step 2
+                $success = "Verification code sent to your email.";
+                header("Location: signup.php");
+                exit();
             } else {
-                $error = "Failed to send verification email. ";
-                if(isset($_SESSION['email_debug'])) {
-                    $error .= "Error: " . $_SESSION['email_debug'];
-                    unset($_SESSION['email_debug']);
-                } else {
-                    $error .= "Please try again later.";
-                }
+                $error = "Failed to send verification email. Please check your internet connection or email address.";
             }
         }
-        $check->close();
+        $stmt->close();
     }
 }
 
-// Step 2: Verify OTP and Create Account
+// STEP 2: Process OTP Verification
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['verify_otp'])) {
-    $entered_otp = $_POST['otp'];
-
-    if (!isset($_SESSION['signup_data'])) {
-        $error = "Session expired. Please start again.";
-        $_SESSION['signup_step'] = 1;
-        $step = 1;
-    } else {
-        $stored_otp = $_SESSION['signup_data']['otp'];
-        $otp_expiry = $_SESSION['signup_data']['otp_expiry'];
-
-        if (strtotime($otp_expiry) < time()) {
+    $input_otp = $_POST['otp'];
+    $session_data = $_SESSION['signup_data'];
+    
+    if ($input_otp === $session_data['otp']) {
+        if (date("Y-m-d H:i:s") > $session_data['otp_expiry']) {
             $error = "OTP has expired. Please request a new one.";
-            unset($_SESSION['signup_data']);
-            $_SESSION['signup_step'] = 1;
-            $step = 1;
-        } elseif ($entered_otp != $stored_otp) {
-            $error = "Invalid OTP. Please try again.";
         } else {
-            // OTP is valid, hash password and create account
-            $fullname = $_SESSION['signup_data']['fullname'];
-            $email = $_SESSION['signup_data']['email'];
-            $password = $_SESSION['signup_data']['password'];
+            // Create Account (Reverted to basic fields)
+            $fullname = $session_data['fullname'];
+            $email = $session_data['email'];
+            $password = $session_data['password'];
+            
             $hashed_password = password_hash($password, PASSWORD_DEFAULT);
             $reference_id = 'REF-' . str_pad(mt_rand(0, 99999999), 8, '0', STR_PAD_LEFT);
 
+            // Insert into DB
             $stmt = $conn->prepare("INSERT INTO users (full_name, email, password, role, is_active, reference_id) VALUES (?, ?, ?, 'user', 1, ?)");
             $stmt->bind_param("ssss", $fullname, $email, $hashed_password, $reference_id);
-
+            
             if ($stmt->execute()) {
-                $success = "Account created successfully! <a href='index.php' style='color:#6366f1; font-weight:600;'>Login here</a>";
+                $user_id = $stmt->insert_id;
+                $_SESSION['user_id'] = $user_id;
+                $_SESSION['role'] = 'user';
+                $_SESSION['full_name'] = $fullname;
+                
+                // Clear signup session
                 unset($_SESSION['signup_data']);
                 unset($_SESSION['signup_step']);
-                $step = 3; // Success step
+                
+                // Redirect to Dashboard (Assessment will happen there)
+                header("Location: user_dashboard.php?new_user=1");
+                exit();
             } else {
-                $error = "Error: " . $stmt->error;
+                $error = "Database Error: " . $conn->error;
             }
-            $stmt->close();
         }
-    }
-}
-
-// Resend OTP
-if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['resend_otp'])) {
-    if (isset($_SESSION['signup_data'])) {
-        $otp = sprintf("%06d", mt_rand(1, 999999));
-        $otp_expiry = date('Y-m-d H:i:s', strtotime('+10 minutes'));
-        
-        $_SESSION['signup_data']['otp'] = $otp;
-        $_SESSION['signup_data']['otp_expiry'] = $otp_expiry;
-
-        $email = $_SESSION['signup_data']['email'];
-        $fullname = $_SESSION['signup_data']['fullname'];
-
-        $to = $email;
-        $subject = "LGU3 - New Verification Code";
-        $message = "
-        <html>
-        <head>
-            <style>
-                body { font-family: Arial, sans-serif; background: #f4f4f4; padding: 20px; }
-                .container { background: white; padding: 30px; border-radius: 10px; max-width: 500px; margin: 0 auto; }
-                .otp-box { background: #6366f1; color: white; font-size: 32px; font-weight: bold; text-align: center; padding: 20px; border-radius: 8px; letter-spacing: 8px; }
-            </style>
-        </head>
-        <body>
-            <div class='container'>
-                <h2 style='color: #6366f1;'>New Verification Code</h2>
-                <p>Hello <strong>$fullname</strong>,</p>
-                <p>Here's your new verification code:</p>
-                <div class='otp-box'>$otp</div>
-                <p style='margin-top: 20px;'>This code will expire in <strong>10 minutes</strong>.</p>
-            </div>
-        </body>
-        </html>
-        ";
-
-        $headers = "MIME-Version: 1.0" . "\r\n";
-        $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
-        $headers .= "From: LGU3 Portal <noreply@lgu3.local>" . "\r\n";
-
-        if (sendOTPEmail($email, $fullname, $otp)) {
-            $success = "New verification code sent!";
-        } else {
-            $error = "Failed to send email.";
-        }
+    } else {
+        $error = "Invalid verification code.";
     }
 }
 ?>
@@ -300,359 +206,387 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['resend_otp'])) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Join Us | LGU3 Livelihood</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <title>Join LGU3 | Create Account</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
     <script src="https://unpkg.com/feather-icons"></script>
     <style>
         :root {
-            --primary-gradient: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --glass-bg: rgba(15, 23, 42, 0.7);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+        }
+
+        * { box-sizing: border-box; margin:0; padding:0; }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: #020617;
+            color: var(--text-main);
+            height: 100vh;
+            display: flex;
+            overflow: hidden;
+        }
+
+        /* --- LEFT SIDE: SLIDER --- */
+        .slider-section {
+            flex: 1.2;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: flex-end;
+            padding: 4rem;
+        }
+
+        .slider-bg {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-size: cover;
+            background-position: center;
+            transition: opacity 1.5s ease-in-out, transform 10s ease;
+            opacity: 0;
+            transform: scale(1.05);
+            z-index: 0;
+        }
+
+        .slider-bg.active {
+            opacity: 1;
+            transform: scale(1);
         }
         
-        body { font-family: 'Outfit', sans-serif; background: #0a0c10; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
-        
-        .login-container {
-            max-width: 440px;
-            width: 100%;
-            padding: 3rem;
-            border-radius: 24px;
-            background: rgba(15, 17, 21, 0.4);
-            border: 1px solid rgba(255, 255, 255, 0.05);
+        .slider-overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(to top, #020617 10%, rgba(2,6,23,0.3) 100%);
+            z-index: 1;
+        }
+
+        .slider-content {
+            position: relative;
+            z-index: 2;
+            max-width: 600px;
+            animation: slideUp 1s ease-out;
+        }
+
+        .slider-title {
+            font-size: 3.5rem;
+            font-weight: 800;
+            line-height: 1.1;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, #fff 0%, #cbd5e1 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .slider-desc {
+            font-size: 1.2rem;
+            color: #cbd5e1;
+            line-height: 1.6;
+            margin-bottom: 2rem;
+        }
+
+        /* --- RIGHT SIDE: LOGIN/SIGNUP --- */
+        .login-section {
+            flex: 0.8;
+            background: rgba(2, 6, 23, 0.95);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+            border-left: 1px solid var(--glass-border);
             backdrop-filter: blur(20px);
-            box-shadow: 0 40px 100px -20px rgba(0, 0, 0, 0.5);
-            animation: entrance 1s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
-        @keyframes entrance {
-            from { opacity: 0; transform: scale(0.95) translateY(20px); }
-            to { opacity: 1; transform: scale(1) translateY(0); }
-        }
-
-        .login-header h1 {
-            font-size: 1.8rem;
-            font-weight: 600;
+        /* Flying Elements */
+        .flying-icon {
+            position: absolute;
+            opacity: 0.1;
             color: #fff;
-            letter-spacing: -0.5px;
-            margin-bottom: 0.5rem;
+            animation: floatAnim 10s infinite linear;
+            pointer-events: none;
+            z-index: 0;
         }
 
-        .welcome-msg {
-            font-size: 0.9rem;
-            color: #94a3b8;
-            margin-bottom: 2.5rem;
-            font-weight: 300;
+        @keyframes floatAnim {
+            0% { transform: translateY(110vh) rotate(0deg); opacity: 0; }
+            20% { opacity: 0.15; }
+            80% { opacity: 0.15; }
+            100% { transform: translateY(-10vh) rotate(360deg); opacity: 0; }
         }
 
-        .input-group { margin-bottom: 1.25rem; position: relative; }
-        
-        .input-group input {
+        .login-card {
             width: 100%;
-            background: rgba(255,255,255,0.03);
-            border: 1px solid rgba(255,255,255,0.08);
-            border-radius: 12px;
-            padding: 0.8rem 1rem;
-            font-size: 0.95rem;
-            color: #fff;
-            transition: all 0.3s;
+            max-width: 440px;
+            z-index: 10;
+            animation: fadeIn 1s ease-out;
+            max-height: 90vh; /* Prevent overflow on small screens */
+            overflow-y: auto;
+            padding-right: 5px; /* Scrollbar space */
+        }
+        
+        /* Custom Scrollbar */
+        .login-card::-webkit-scrollbar { width: 5px; }
+        .login-card::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+
+        .brand-header {
+            margin-bottom: 2rem;
+            text-align: center;
         }
 
-        .input-group input:focus {
-            border-color: #6366f1;
+        .brand-logo {
+            width: 50px; height: 50px;
+            background: linear-gradient(135deg, #6366f1, #a855f7);
+            border-radius: 14px;
+            display: flex; align-items: center; justify-content: center;
+            margin: 0 auto 1rem;
+            box-shadow: 0 10px 25px rgba(99, 102, 241, 0.3);
+        }
+
+        .input-group { position: relative; margin-bottom: 1.25rem; }
+        
+        .input-field {
+            width: 100%;
+            background: rgba(30, 41, 59, 0.5);
+            border: 1px solid var(--glass-border);
+            border-radius: 14px;
+            padding: 1rem 1rem 1rem 3rem;
+            color: #fff;
+            font-size: 0.95rem;
+            transition: 0.3s;
+        }
+
+        .input-field:focus {
+            border-color: var(--primary);
             background: rgba(99, 102, 241, 0.05);
             outline: none;
+            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
         }
 
-        .input-group label {
+        .input-icon {
             position: absolute;
-            left: 1rem;
-            top: 0.85rem;
-            font-size: 0.85rem;
+            left: 1rem; top: 50%;
+            transform: translateY(-50%);
             color: #64748b;
-            pointer-events: none;
-            transition: all 0.3s;
+            transition: 0.3s;
+            width: 18px;
+            height: 18px;
         }
 
-        .input-group input:focus ~ label,
-        .input-group input:not(:placeholder-shown) ~ label {
-            top: -8px;
-            left: 0.8rem;
-            font-size: 0.75rem;
-            color: #6366f1;
-            background: #0a0c10;
-            padding: 0 0.4rem;
-        }
+        .input-field:focus ~ .input-icon { color: var(--primary); }
 
-        .login-btn {
-            background: #fff;
-            color: #000;
-            border-radius: 12px;
-            padding: 1rem;
-            font-weight: 600;
-            font-size: 0.9rem;
-            border: none;
+        .submit-btn {
             width: 100%;
+            padding: 1rem;
+            background: linear-gradient(135deg, var(--primary), #4f46e5);
+            color: white;
+            border: none;
+            border-radius: 14px;
+            font-size: 1rem;
+            font-weight: 600;
             cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            transition: 0.3s;
+            box-shadow: 0 10px 20px -5px rgba(99, 102, 241, 0.4);
+            margin-top: 1rem;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
         }
 
-        .login-btn:hover {
+        .submit-btn:hover {
             transform: translateY(-2px);
-            background: #f8fafc;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
-        }
-
-        .error-msg {
-            background: rgba(239, 68, 68, 0.05);
-            color: #ef4444;
-            padding: 0.75rem;
-            border-radius: 12px;
-            font-size: 0.8rem;
-            border: 1px solid rgba(239, 68, 68, 0.1);
-            margin-bottom: 1.5rem;
-            text-align: center;
-        }
-
-        .success-msg {
-            background: rgba(16, 185, 129, 0.05);
-            color: #10b981;
-            padding: 0.75rem;
-            border-radius: 12px;
-            font-size: 0.8rem;
-            border: 1px solid rgba(16, 185, 129, 0.1);
-            margin-bottom: 1.5rem;
-            text-align: center;
+            box-shadow: 0 15px 30px -5px rgba(99, 102, 241, 0.5);
         }
 
         .otp-inputs {
             display: flex;
             gap: 0.5rem;
             justify-content: center;
-            margin: 2rem 0;
+            margin: 1.5rem 0;
         }
 
         .otp-inputs input {
-            width: 50px;
-            height: 60px;
+            width: 45px; height: 55px;
             text-align: center;
-            font-size: 1.5rem;
-            font-weight: 600;
+            font-size: 1.4rem;
+            font-weight: 700;
             border-radius: 12px;
-            background: rgba(255,255,255,0.03);
-            border: 1px solid rgba(255,255,255,0.08);
+            background: rgba(30, 41, 59, 0.5);
+            border: 1px solid var(--glass-border);
             color: #fff;
         }
-
+        
         .otp-inputs input:focus {
-            border-color: #6366f1;
-            background: rgba(99, 102, 241, 0.05);
-            outline: none;
-        }
-
-        .resend-link {
-            text-align: center;
-            margin-top: 1rem;
-            font-size: 0.85rem;
-            color: #64748b;
-        }
-
-        .resend-link button {
-            background: none;
-            border: none;
-            color: #6366f1;
-            font-weight: 600;
-            cursor: pointer;
-            text-decoration: underline;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.15);
         }
 
         .step-indicator {
-            display: flex;
-            justify-content: center;
-            gap: 0.5rem;
-            margin-bottom: 2rem;
+            display: flex; justify-content: center; gap: 0.5rem; margin-bottom: 2rem;
         }
-
         .step-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: rgba(255,255,255,0.1);
-            transition: all 0.3s;
+            width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,0.1); transition: 0.3s;
+        }
+        .step-dot.active {
+            background: var(--primary); width: 24px; border-radius: 10px;
         }
 
-        .step-dot.active {
-            background: #6366f1;
-            width: 24px;
-            border-radius: 4px;
+        .error-banner {
+            background: rgba(239, 68, 68, 0.1); color: #fca5a5; padding: 0.8rem; border-radius: 12px; margin-bottom: 1.5rem; text-align: center; border: 1px solid rgba(239, 68, 68, 0.2); font-size: 0.85rem;
         }
+        .success-banner {
+            background: rgba(16, 185, 129, 0.1); color: #86efac; padding: 0.8rem; border-radius: 12px; margin-bottom: 1.5rem; text-align: center; border: 1px solid rgba(16, 185, 129, 0.2); font-size: 0.85rem;
+        }
+
+        .signup-text { text-align: center; margin-top: 2rem; color: var(--text-muted); font-size: 0.9rem; }
+        .signup-text a { color: var(--primary); text-decoration: none; font-weight: 600; }
+
+        @media (max-width: 900px) {
+            .slider-section { display: none; }
+            .login-section { flex: 1; border: none; }
+        }
+        
+        @keyframes fadeIn { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+        @keyframes slideUp { from { opacity:0; transform:translateY(30px); } to { opacity:1; transform:translateY(0); } }
     </style>
 </head>
 <body>
-    <div class="login-container">
-        <div class="login-header">
-            <h1>Join Us</h1>
-            <p class="welcome-msg">
-                <?php if($step == 1): ?>
-                    Citizen Registration
-                <?php elseif($step == 2): ?>
-                    Email Verification
-                <?php else: ?>
-                    Registration Complete
-                <?php endif; ?>
 
-            </p>
+    <!-- LEFT SIDE: SLIDER -->
+    <div class="slider-section">
+        <div class="slider-overlay"></div>
+        <div class="slider-bg active" style="background-image: url('barangay_hq.png');"></div>
+        <div class="slider-bg" style="background-image: url('training_success.png');"></div>
+        <div class="slider-bg" style="background-image: url('livelihood_hero_premium.png');"></div>
+
+        <div class="slider-content">
+            <h1 class="slider-title" id="slider-title">Join the<br>Movement.</h1>
+            <p class="slider-desc" id="slider-desc">Start your journey today. Register to access exclusive livelihood programs and training.</p>
+            <div style="display:flex; gap:0.5rem; margin-top:1rem;">
+                <span style="width:12px; height:12px; background:#fff; border-radius:50%; opacity:1;"></span>
+                <span style="width:12px; height:12px; background:#fff; border-radius:50%; opacity:0.3;"></span>
+            </div>
         </div>
+    </div>
 
-        <div class="step-indicator">
-            <div class="step-dot <?php echo $step >= 1 ? 'active' : ''; ?>"></div>
-            <div class="step-dot <?php echo $step >= 2 ? 'active' : ''; ?>"></div>
-            <div class="step-dot <?php echo $step >= 3 ? 'active' : ''; ?>"></div>
+    <!-- RIGHT SIDE: FORM -->
+    <div class="login-section">
+        <!-- Flying Background Icons -->
+        <i data-feather="user-plus" class="flying-icon" style="left:15%; width:40px; height:40px; animation-duration:15s;"></i>
+        <i data-feather="star" class="flying-icon" style="left:85%; width:30px; height:30px; animation-duration:12s; animation-delay:2s;"></i>
+        <i data-feather="monitor" class="flying-icon" style="left:50%; width:45px; height:45px; animation-duration:18s; animation-delay:1s;"></i>
+
+        <div class="login-card">
+            <div class="brand-header">
+                <div class="brand-logo">
+                    <i data-feather="feather" style="color:#fff; width:28px; height:28px;"></i>
+                </div>
+                <h2 style="font-size:1.8rem; font-weight:700; margin-bottom:0.5rem; color:#fff;">
+                    <?php echo $step == 1 ? 'Create Account' : 'Verify Email'; ?>
+                </h2>
+                <p style="color:var(--text-muted); font-size:0.9rem;">
+                    <?php echo $step == 1 ? 'Enter your details below to get started' : 'We sent a code to your email'; ?>
+                </p>
+            </div>
+
+            <!-- Steps -->
+            <div class="step-indicator">
+                <div class="step-dot <?php echo $step >= 1 ? 'active' : ''; ?>"></div>
+                <div class="step-dot <?php echo $step >= 2 ? 'active' : ''; ?>"></div>
+            </div>
+
+            <?php if($error): ?>
+                <div class="error-banner">
+                    <i data-feather="alert-circle" style="width:16px; margin-right:5px; vertical-align:middle;"></i>
+                    <?php echo $error; ?>
+                </div>
+            <?php endif; ?>
+            <?php if($success): ?>
+                <div class="success-banner">
+                    <i data-feather="check-circle" style="width:16px; margin-right:5px; vertical-align:middle;"></i>
+                    <?php echo $success; ?>
+                </div>
+            <?php endif; ?>
+
+            <?php if($step == 1): ?>
+                <!-- STEP 1 FORM -->
+                <form method="POST" action="">
+                    <div class="input-group">
+                        <i data-feather="user" class="input-icon"></i>
+                        <input type="text" name="fullname" class="input-field" placeholder="Full Name" required autocomplete="name">
+                    </div>
+                    
+                    <div class="input-group">
+                        <i data-feather="mail" class="input-icon"></i>
+                        <input type="email" name="email" class="input-field" placeholder="Email Address" required autocomplete="email">
+                    </div>
+
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                        <div class="input-group">
+                            <i data-feather="lock" class="input-icon"></i>
+                            <input type="password" name="password" class="input-field" placeholder="Password" required autocomplete="new-password">
+                        </div>
+                        <div class="input-group">
+                            <i data-feather="check" class="input-icon"></i>
+                            <input type="password" name="confirm_password" class="input-field" placeholder="Confirm" required autocomplete="new-password">
+                        </div>
+                    </div>
+
+                    <button type="submit" name="send_otp" class="submit-btn" style="cursor:pointer;">
+                        Continue <i data-feather="arrow-right" style="width:16px;"></i>
+                    </button>
+                    
+                    <div class="signup-text">
+                        Already have an account? <a href="index.php">Sign In</a>
+                    </div>
+                </form>
+
+            <?php elseif($step == 2): ?>
+                <!-- STEP 2 FORM -->
+                <form method="POST" action="">
+                    <div style="text-align:center; margin-bottom:1.5rem; color:#fff;">
+                        Enter the 6-digit code sent to<br>
+                        <strong style="color:var(--primary);"><?php echo htmlspecialchars($_SESSION['signup_data']['email']); ?></strong>
+                    </div>
+
+                    <div class="otp-inputs">
+                        <input type="text" id="otp-input" maxlength="6" style="width:200px; letter-spacing:8px;" pattern="[0-9]*" required autocomplete="one-time-code">
+                    </div>
+                    <input type="hidden" name="otp" id="otp-hidden">
+
+                    <button type="submit" name="verify_otp" class="submit-btn">
+                        Verify & Join <i data-feather="check-circle" style="width:16px;"></i>
+                    </button>
+                    
+                    <div class="signup-text">
+                        <a href="?restart=1" style="color:#64748b; font-size:0.85rem;">Change Email / Restart</a>
+                    </div>
+                </form>
+            <?php endif; ?>
+
         </div>
-
-        <?php if($error): ?>
-            <div class="error-msg">
-                <?php echo $error; ?>
-            </div>
-        <?php endif; ?>
-
-        <?php if($success): ?>
-            <div class="success-msg">
-                <?php echo $success; ?>
-            </div>
-        <?php endif; ?>
-
-        <?php if($step == 1): ?>
-            <!-- Step 1: Registration Form -->
-            <form class="login-form" method="POST" action="">
-                <div class="input-group">
-                    <input type="text" id="fullname" name="fullname" required placeholder=" " autocomplete="name">
-                    <label for="fullname">Full Name</label>
-                </div>
-
-                <div class="input-group">
-                    <input type="email" id="email" name="email" required placeholder=" " autocomplete="email">
-                    <label for="email">Email Address</label>
-                </div>
-                
-                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1rem;">
-                    <div class="input-group">
-                        <input type="password" id="password" name="password" required placeholder=" " autocomplete="new-password">
-                        <label for="password">Password</label>
-                    </div>
-                    <div class="input-group">
-                        <input type="password" id="confirm_password" name="confirm_password" required placeholder=" " autocomplete="new-password">
-                        <label for="confirm_password">Confirm</label>
-                    </div>
-                </div>
-                
-                <div style="margin-bottom: 1.5rem;">
-                    <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.8rem; color:#64748b; cursor: pointer;">
-                        <input type="checkbox" id="terms" required style="width: auto;">
-                        I agree to the <a href="#" style="color:#6366f1;">Terms</a>
-                    </label>
-                </div>
-                
-                <button type="submit" name="send_otp" class="login-btn">
-                    <span>Send Verification Code</span>
-                    <i data-feather="mail" style="width:16px; margin-left:8px; vertical-align:middle;"></i>
-                </button>
-                
-                <p style="text-align: center; font-size: 0.85rem; margin-top: 2rem; color: #64748b;">
-                    Member? <a href="index.php" style="font-weight: 600; color: #6366f1; text-decoration: none;">Sign In</a>
-                    <span style="margin: 0 0.5rem; color: #334155;">|</span>
-                    <a href="landingpage.php" style="color: #94a3b8; text-decoration: none;">Back to Community</a>
-                </p>
-            </form>
-
-        <?php elseif($step == 2): ?>
-            <!-- Step 2: OTP Verification -->
-            <form method="POST" action="">
-                <p style="text-align: center; color: #94a3b8; margin-bottom: 1rem; font-size: 0.9rem;">
-                    We've sent a 6-digit code to<br>
-                    <strong style="color: #fff;"><?php echo isset($_SESSION['signup_data']) ? $_SESSION['signup_data']['email'] : ''; ?></strong>
-                </p>
-
-                <div class="otp-inputs">
-                    <input type="text" maxlength="1" class="otp-digit" pattern="[0-9]" required>
-                    <input type="text" maxlength="1" class="otp-digit" pattern="[0-9]" required>
-                    <input type="text" maxlength="1" class="otp-digit" pattern="[0-9]" required>
-                    <input type="text" maxlength="1" class="otp-digit" pattern="[0-9]" required>
-                    <input type="text" maxlength="1" class="otp-digit" pattern="[0-9]" required>
-                    <input type="text" maxlength="1" class="otp-digit" pattern="[0-9]" required>
-                </div>
-
-                <input type="hidden" name="otp" id="otp-hidden">
-
-                <button type="submit" name="verify_otp" class="login-btn">
-                    <span>Verify & Create Account</span>
-                    <i data-feather="check-circle" style="width:16px; margin-left:8px; vertical-align:middle;"></i>
-                </button>
-
-                <div class="resend-link">
-                    Didn't receive code? 
-                    <form method="POST" action="" style="display: inline;">
-                        <button type="submit" name="resend_otp">Resend</button>
-                    </form>
-                </div>
-
-                <div style="text-align: center; margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.05);">
-                    <a href="?restart=1" style="color: #64748b; font-size: 0.85rem; text-decoration: none; transition: color 0.3s;">
-                        <i data-feather="arrow-left" style="width: 14px; vertical-align: middle; margin-right: 4px;"></i>
-                        Change Email Address
-                    </a>
-                </div>
-            </form>
-
-            <script>
-                const otpInputs = document.querySelectorAll('.otp-digit');
-                const otpHidden = document.getElementById('otp-hidden');
-
-                otpInputs.forEach((input, index) => {
-                    input.addEventListener('input', (e) => {
-                        if (e.target.value.length === 1 && index < otpInputs.length - 1) {
-                            otpInputs[index + 1].focus();
-                        }
-                        updateOTP();
-                    });
-
-                    input.addEventListener('keydown', (e) => {
-                        if (e.key === 'Backspace' && e.target.value === '' && index > 0) {
-                            otpInputs[index - 1].focus();
-                        }
-                    });
-
-                    input.addEventListener('paste', (e) => {
-                        e.preventDefault();
-                        const pastedData = e.clipboardData.getData('text').slice(0, 6);
-                        pastedData.split('').forEach((char, i) => {
-                            if (otpInputs[i]) otpInputs[i].value = char;
-                        });
-                        updateOTP();
-                    });
-                });
-
-                function updateOTP() {
-                    const otp = Array.from(otpInputs).map(input => input.value).join('');
-                    otpHidden.value = otp;
-                }
-            </script>
-        <?php else: ?>
-            <!-- Step 3: Success -->
-            <div style="text-align: center; padding: 1rem 0;">
-                <div style="width: 64px; height: 64px; background: rgba(16, 185, 129, 0.1); color: #10b981; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem;">
-                    <i data-feather="user-check" style="width: 32px; height: 32px;"></i>
-                </div>
-                <p style="color: #94a3b8; margin-bottom: 2rem;">Your account is now active. You can now access the portal and explore upcoming programs.</p>
-                <a href="index.php" class="login-btn" style="text-decoration: none; display: block; text-align: center; padding: 1rem; border-radius: 12px; background: #6366f1; color: white; font-weight: 600; transition: all 0.3s; box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);">
-                    Go to Sign In
-                </a>
-            </div>
-        <?php endif; ?>
     </div>
 
     <script>
         feather.replace();
+
+        // Slider Logic
+        const slides = document.querySelectorAll('.slider-bg');
+        let current = 0;
+        setInterval(() => {
+            slides[current].classList.remove('active');
+            current = (current + 1) % slides.length;
+            slides[current].classList.add('active');
+        }, 5000);
+
+        // OTP Input handling
+        const otpInput = document.getElementById('otp-input');
+        if(otpInput) {
+            otpInput.addEventListener('input', (e) => {
+                document.getElementById('otp-hidden').value = e.target.value;
+            });
+        }
     </script>
 </body>
 </html>

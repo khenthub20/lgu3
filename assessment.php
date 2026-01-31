@@ -88,8 +88,18 @@ if ($userData && !empty($userData['skills'])) {
         </div>
 
         <form id="assessmentForm">
+            <div class="form-group" style="margin-bottom: 2rem; background: rgba(99, 102, 241, 0.05); padding: 1.5rem; border-radius: 16px; border: 1px solid rgba(99, 102, 241, 0.1);">
+                <label style="display:block; margin-bottom:0.5rem; color:#fff; font-weight:600;">✨ Tell us your Story/Goal</label>
+                <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:0.8rem;">Describe what you do now and what you want to achieve (e.g. "I am a vendor and I want to start a digital business"). Our AI will use this to find your best matches.</p>
+                <textarea name="bio" id="bio-field" class="form-control" style="width:100%; min-height:80px; padding: 1rem; background:var(--input-bg); border:1px solid var(--border-color); color:#fff; border-radius:12px;" required placeholder="My goal is to..."></textarea>
+                <div style="margin-top: 10px; display: flex; align-items: center; gap: 8px;">
+                    <div style="width: 8px; height: 8px; background: #10b981; border-radius: 50%; box-shadow: 0 0 10px #10b981;"></div>
+                    <span style="font-size: 0.75rem; color: #10b981; font-weight: 600;">Gemini AI is ready to analyze your story</span>
+                </div>
+            </div>
+
             <div class="form-group" style="margin-bottom: 1.5rem;">
-                <label style="display:block; margin-bottom:0.5rem; color:#fff;">Current Employment Status</label>
+                <label style="display:block; margin-bottom:0.5rem; color:#fff; font-weight:500;">Current Employment Status</label>
                 <select name="employment_status" class="form-control" style="width:100%; padding: 1rem; background:var(--input-bg); border:1px solid var(--border-color); color:#fff; border-radius:12px;" required>
                     <option value="" disabled selected>Select Status</option>
                     <option value="Unemployed">Unemployed</option>
@@ -100,20 +110,20 @@ if ($userData && !empty($userData['skills'])) {
                 </select>
             </div>
 
-            <div class="form-group" style="margin-bottom: 1.5rem;">
-                <label style="display:block; margin-bottom:0.5rem; color:#fff;">Skills & Expertise</label>
-                <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:0.5rem;">List your hard and soft skills (e.g., Cooking, Computer Repair, Communication...)</p>
-                <textarea name="skills" class="form-control" style="width:100%; min-height:100px; padding: 1rem; background:var(--input-bg); border:1px solid var(--border-color); color:#fff; border-radius:12px;" required placeholder="I am good at..."></textarea>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 2rem;">
+                <div class="form-group">
+                    <label style="display:block; margin-bottom:0.5rem; color:#fff; font-weight:500;">Skills & Expertise</label>
+                    <textarea name="skills" class="form-control" style="width:100%; min-height:100px; padding: 1rem; background:var(--input-bg); border:1px solid var(--border-color); color:#fff; border-radius:12px;" required placeholder="I am good at..."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label style="display:block; margin-bottom:0.5rem; color:#fff; font-weight:500;">Interests & Goals</label>
+                    <textarea name="interests" class="form-control" style="width:100%; min-height:100px; padding: 1rem; background:var(--input-bg); border:1px solid var(--border-color); color:#fff; border-radius:12px;" required placeholder="I want to learn about..."></textarea>
+                </div>
             </div>
 
-            <div class="form-group" style="margin-bottom: 2rem;">
-                <label style="display:block; margin-bottom:0.5rem; color:#fff;">Interests & Goals</label>
-                <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:0.5rem;">What kind of livelihood do you want to pursue?</p>
-                <textarea name="interests" class="form-control" style="width:100%; min-height:100px; padding: 1rem; background:var(--input-bg); border:1px solid var(--border-color); color:#fff; border-radius:12px;" required placeholder="I want to learn about..."></textarea>
-            </div>
-
-            <button type="submit" class="primary-action-btn" style="width:100%; padding: 1rem; font-size: 1.1rem;">
-                Analyze & Find Programs
+            <button type="submit" class="primary-action-btn" style="width:100%; padding: 1.25rem; font-size: 1.1rem; border-radius: 12px; font-weight: 600;">
+                Analyze & Find My Path
             </button>
         </form>
     </div>

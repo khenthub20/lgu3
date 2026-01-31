@@ -2,645 +2,369 @@
 session_start();
 include 'db_connect.php';
 
-// Fetch some real stats for the landing page
-$stats = [
-    'users' => 0,
-    'programs' => 0,
-    'completions' => 0,
-    'reports' => 0,
-    'employment_rate' => 89 // Default
-];
+$error = '';
 
-$uRes = $conn->query("SELECT COUNT(*) as count FROM users WHERE role = 'user'");
-if($uRes) $stats['users'] = $uRes->fetch_assoc()['count'];
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    $email = $_POST['email'];
+    $password = $_POST['password'];
 
-$pRes = $conn->query("SELECT COUNT(*) as count FROM programs");
-if($pRes) $stats['programs'] = $pRes->fetch_assoc()['count'];
+    // Secure query
+    $stmt = $conn->prepare("SELECT id, full_name, password, role, is_active FROM users WHERE email = ?");
+    $stmt->bind_param("s", $email);
+    $stmt->execute();
+    $result = $stmt->get_result();
 
-$cRes = $conn->query("SELECT COUNT(*) as count FROM user_skill_progress WHERE status = 'completed'");
-if(!$cRes) {
-    // Fallback for older schema if necessary
-    $cRes = $conn->query("SELECT COUNT(*) as count FROM skill_completions");
+    if ($result->num_rows > 0) {
+        $user = $result->fetch_assoc();
+        
+        // Check if account is deactivated
+        if ($user['is_active'] == 0) {
+            $error = "Your account has been deactivated. Please contact administration.";
+        } 
+        // In a real app, use password_verify($password, $user['password'])
+        else if (password_verify($password, $user['password'])) {
+            $_SESSION['user_id'] = $user['id'];
+            $_SESSION['role'] = $user['role'];
+            $_SESSION['full_name'] = $user['full_name'];
+
+            if ($user['role'] === 'admin') {
+                header("Location: admin_dashboard.php");
+            } else {
+                header("Location: user_dashboard.php");
+            }
+            exit();
+        } else {
+            $error = "Invalid password.";
+        }
+    } else {
+        $error = "User not found.";
+    }
+    $stmt->close();
 }
-if($cRes) $stats['completions'] = $cRes->fetch_assoc()['count'];
-
-$rRes = $conn->query("SELECT COUNT(*) as count FROM reports");
-if($rRes) $stats['reports'] = $rRes->fetch_assoc()['count'];
-
-// Logic for employment rate: Base 85% + small bonus for completions to keep it dynamic
-if ($stats['completions'] > 0) {
-    $stats['employment_rate'] = min(98, 85 + floor($stats['completions'] / 2));
-}
-
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LGU3 Livelihood Training Program | Skills & Empowerment</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <title>LGU3 Portal Access</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/feather-icons"></script>
     <style>
         :root {
-            --lp-primary: #6366f1;
-            --lp-primary-dark: #4f46e5;
-            --lp-bg: #0f1115;
-            --lp-card: #1e293b;
-            --lp-text: #f8fafc;
-            --lp-text-muted: #94a3b8;
-            --lp-border: rgba(255, 255, 255, 0.1);
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --glass-bg: rgba(15, 23, 42, 0.7);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
-        body { background: var(--lp-bg); color: var(--lp-text); line-height: 1.6; overflow-x: hidden; }
+        * { box-sizing: border-box; margin:0; padding:0; }
 
-        /* Navigation */
-        nav {
-            height: 65px; width: 100%; display: flex; align-items: center; justify-content: space-between;
-            padding: 0 8%; position: fixed; top: 0; z-index: 1000;
-            background: rgba(15, 17, 21, 0.8); backdrop-filter: blur(15px); border-bottom: 1px solid var(--lp-border);
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: #020617;
+            color: var(--text-main);
+            height: 100vh;
+            display: flex;
+            overflow: hidden;
         }
-        .logo { font-size: 1.1rem; font-weight: 800; color: #fff; letter-spacing: -0.5px; }
-        .logo span { color: var(--lp-primary); }
-        .nav-links { display: flex; gap: 1.8rem; }
-        .nav-links a { text-decoration: none; color: var(--lp-text-muted); font-size: 0.85rem; font-weight: 550; transition: 0.3s; }
-        .nav-links a:hover { color: #fff; }
-        .nav-btns { display: flex; gap: 0.75rem; }
-        .btn-outline { padding: 0.45rem 1.2rem; border-radius: 6px; border: 1px solid var(--lp-primary); color: var(--lp-primary); text-decoration: none; font-weight: 600; font-size: 0.8rem; transition: 0.3s; }
-        .btn-outline:hover { background: rgba(99, 102, 241, 0.1); }
-        .btn-filled { padding: 0.45rem 1.2rem; border-radius: 6px; background: var(--lp-primary); color: #fff; text-decoration: none; font-weight: 600; font-size: 0.8rem; transition: 0.3s; box-shadow: 0 4px 10px rgba(99, 102, 241, 0.2); }
-        .btn-filled:hover { background: var(--lp-primary-dark); transform: translateY(-1px); }
 
-        /* Hero Section */
-        .hero {
-            padding: 160px 10% 100px; display: grid; grid-template-columns: 1fr 1fr; align-items: center; gap: 4rem;
-            background: radial-gradient(circle at 80% 20%, rgba(99, 102, 241, 0.15), transparent 40%);
+        /* --- LEFT SIDE: SLIDER --- */
+        .slider-section {
+            flex: 1.2;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: flex-end;
+            padding: 4rem;
         }
-        .hero-content h1 { font-size: 4rem; font-weight: 800; line-height: 1.1; margin-bottom: 1.5rem; letter-spacing: -2px; }
-        .hero-content p { font-size: 1.25rem; color: var(--lp-text-muted); margin-bottom: 2.5rem; max-width: 500px; }
-        .hero-image { position: relative; }
-        .hero-image img { width: 100%; border-radius: 24px; box-shadow: 0 30px 60px rgba(0,0,0,0.5); }
-        .floating-card {
-            position: absolute; background: rgba(30, 41, 59, 0.8); backdrop-filter: blur(10px);
-            padding: 1rem; border-radius: 12px; border: 1px solid var(--lp-border);
-            display: flex; align-items: center; gap: 1rem;
-            animation: float 4s infinite ease-in-out;
+
+        .slider-bg {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-size: cover;
+            background-position: center;
+            transition: opacity 1.5s ease-in-out, transform 10s ease;
+            opacity: 0;
+            transform: scale(1.05);
+            z-index: 0;
         }
-        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-15px); } }
 
-        /* Stats */
-        .stats-bar { padding: 4rem 10%; display: flex; justify-content: space-around; background: rgba(255,255,255,0.02); }
-        .stat-item { text-align: center; }
-        .stat-item h2 { font-size: 2.5rem; color: #fff; margin-bottom: 0.5rem; }
-        .stat-item p { color: var(--lp-text-muted); text-transform: uppercase; font-size: 0.8rem; letter-spacing: 1px; }
+        .slider-bg.active {
+            opacity: 1;
+            transform: scale(1);
+        }
+        
+        /* Dark overlay for text readability */
+        .slider-overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(to top, #020617 10%, rgba(2,6,23,0.3) 100%);
+            z-index: 1;
+        }
 
-        /* Features */
-        .section-label { color: var(--lp-primary); font-weight: 700; text-transform: uppercase; letter-spacing: 2px; font-size: 0.8rem; margin-bottom: 1rem; display: block; }
-        .features { padding: 100px 10%; background: #0b0d11; }
-        .section-header { margin-bottom: 4rem; max-width: 700px; }
-        .section-header h2 { font-size: 2.5rem; margin-bottom: 1rem; }
-        .feature-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2rem; }
-        .feature-card {
-            padding: 2.5rem; background: var(--lp-card); border-radius: 20px; border: 1px solid var(--lp-border);
+        .slider-content {
+            position: relative;
+            z-index: 2;
+            max-width: 600px;
+            animation: slideUp 1s ease-out;
+        }
+
+        .slider-title {
+            font-size: 3.5rem;
+            font-weight: 800;
+            line-height: 1.1;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, #fff 0%, #cbd5e1 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .slider-desc {
+            font-size: 1.2rem;
+            color: #cbd5e1;
+            line-height: 1.6;
+            margin-bottom: 2rem;
+        }
+
+        /* --- RIGHT SIDE: LOGIN --- */
+        .login-section {
+            flex: 0.8;
+            background: rgba(2, 6, 23, 0.95);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+            border-left: 1px solid var(--glass-border);
+            backdrop-filter: blur(20px);
+        }
+
+        /* Flying Elements (Floating Icons) */
+        .flying-icon {
+            position: absolute;
+            opacity: 0.1;
+            color: #fff;
+            animation: floatAnim 10s infinite linear;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        @keyframes floatAnim {
+            0% { transform: translateY(110vh) rotate(0deg); opacity: 0; }
+            20% { opacity: 0.15; }
+            80% { opacity: 0.15; }
+            100% { transform: translateY(-10vh) rotate(360deg); opacity: 0; }
+        }
+
+        .login-card {
+            width: 100%;
+            max-width: 420px;
+            z-index: 10;
+            animation: fadeIn 1s ease-out;
+        }
+
+        .brand-header {
+            margin-bottom: 2.5rem;
+            text-align: center;
+        }
+
+        .brand-logo {
+            width: 60px; height: 60px;
+            background: linear-gradient(135deg, #6366f1, #a855f7);
+            border-radius: 16px;
+            display: flex; align-items: center; justify-content: center;
+            margin: 0 auto 1.5rem;
+            box-shadow: 0 10px 25px rgba(99, 102, 241, 0.3);
+        }
+
+        .input-group { position: relative; margin-bottom: 1.5rem; }
+        
+        .input-field {
+            width: 100%;
+            background: rgba(30, 41, 59, 0.5);
+            border: 1px solid var(--glass-border);
+            border-radius: 14px;
+            padding: 1.1rem 1rem 1.1rem 3rem;
+            color: #fff;
+            font-size: 1rem;
             transition: 0.3s;
         }
-        .feature-card:hover { border-color: var(--lp-primary); transform: translateY(-10px); }
-        .feature-icon { width: 50px; height: 50px; background: rgba(99, 102, 241, 0.1); color: var(--lp-primary); border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-bottom: 1.5rem; }
-        .feature-card h3 { font-size: 1.25rem; margin-bottom: 1rem; }
-        .feature-card p { color: var(--lp-text-muted); font-size: 0.95rem; }
 
-        /* Success Stories */
-        .success-stories { padding: 100px 10%; }
-        .story-flex { display: flex; gap: 4rem; align-items: center; margin-bottom: 6rem; }
-        .story-flex:nth-child(even) { flex-direction: row-reverse; }
-        .story-img { flex: 1; position: relative; }
-        .story-img img { width: 100%; border-radius: 24px; }
-        .story-content { flex: 1; }
-        .story-tag { background: var(--lp-primary); color: #fff; padding: 0.4rem 1rem; border-radius: 20px; font-size: 0.75rem; font-weight: 700; margin-bottom: 1rem; display: inline-block; }
-        .story-content h2 { font-size: 2.5rem; margin-bottom: 1.5rem; line-height: 1.2; }
-        .story-content p { color: var(--lp-text-muted); font-size: 1.1rem; margin-bottom: 2rem; }
-
-        /* Testimonials */
-        .testimonials { padding: 100px 10%; background: radial-gradient(circle at 10% 80%, rgba(236, 72, 153, 0.05), transparent 30%); }
-        .test-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2rem; }
-        .test-card { padding: 2rem; background: rgba(30, 41, 59, 0.5); border-radius: 20px; border: 1px solid var(--lp-border); position: relative; }
-        .test-card i { color: var(--lp-primary); opacity: 0.3; margin-bottom: 1rem; }
-        .test-user { display: flex; align-items: center; gap: 1rem; margin-top: 1.5rem; }
-        .test-user img { width: 45px; height: 45px; border-radius: 50%; background: #334155; }
-        .test-user-info h4 { font-size: 1rem; margin: 0; }
-        .test-user-info p { font-size: 0.8rem; color: var(--lp-text-muted); margin: 0; }
-
-        /* Footer */
-        footer { padding: 80px 10% 40px; background: #080a0d; border-top: 1px solid var(--lp-border); }
-        .footer-grid { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 4rem; margin-bottom: 4rem; }
-        .footer-col h4 { margin-bottom: 1.5rem; font-size: 1.1rem; }
-        .footer-col ul { list-style: none; }
-        .footer-col ul li { margin-bottom: 0.8rem; }
-        .footer-col ul li a { text-decoration: none; color: var(--lp-text-muted); transition: 0.3s; }
-        .footer-col ul li a:hover { color: #fff; }
-        .footer-bottom { border-top: 1px solid var(--lp-border); padding-top: 2rem; display: flex; justify-content: space-between; color: var(--lp-text-muted); font-size: 0.9rem; }
-
-        @media (max-width: 968px) {
-            .hero, .feature-grid, .story-flex, .test-grid { grid-template-columns: 1fr; display: block; }
-            .stats-bar { flex-wrap: wrap; gap: 2rem; }
-            .stat-item { flex: 1 1 150px; }
-            .hero { padding-top: 120px; text-align: center; }
-            .hero-content h1 { font-size: 3rem; }
-            .hero-content p { margin: 0 auto 2.5rem; }
-            .nav-links { display: none; }
-            .story-flex { margin-bottom: 4rem; }
-            .story-img { margin-bottom: 2rem; }
-            .test-card { margin-bottom: 1.5rem; }
-            .footer-grid { grid-template-columns: 1fr 1fr; }
-            .program-cat-grid { grid-template-columns: 1fr; gap: 1.5rem; }
-            .program-list-items { grid-template-columns: 1fr; }
+        .input-field:focus {
+            border-color: var(--primary);
+            background: rgba(99, 102, 241, 0.05);
+            outline: none;
+            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
         }
 
-        /* Programs Grid Specific */
-        .programs-section { padding: 100px 10%; background: #0f1115; }
-        .program-cat-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 2rem; margin-top: 3rem; }
-        .program-cat-card { background: rgba(255,255,255,0.02); border: 1px solid var(--lp-border); border-radius: 20px; padding: 2rem; }
-        .program-cat-card h3 { color: var(--lp-primary); margin-bottom: 1.5rem; display: flex; align-items: center; gap: 10px; }
-        .program-list-items { list-style: none; display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
-        .program-list-items li { color: var(--lp-text-muted); font-size: 0.9rem; display: flex; align-items: center; gap: 8px; }
-        .program-list-items li::before { content: '→'; color: var(--lp-primary); font-weight: bold; }
+        .input-icon {
+            position: absolute;
+            left: 1rem; top: 50%;
+            transform: translateY(-50%);
+            color: #64748b;
+            transition: 0.3s;
+        }
+
+        .input-field:focus ~ .input-icon { color: var(--primary); }
+
+        .submit-btn {
+            width: 100%;
+            padding: 1.1rem;
+            background: linear-gradient(135deg, var(--primary), #4f46e5);
+            color: white;
+            border: none;
+            border-radius: 14px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.3s;
+            box-shadow: 0 10px 20px -5px rgba(99, 102, 241, 0.4);
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 30px -5px rgba(99, 102, 241, 0.5);
+        }
+
+        .signup-text {
+            text-align: center;
+            margin-top: 2rem;
+            color: var(--text-muted);
+            font-size: 0.95rem;
+        }
+
+        .signup-text a {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        /* Responsive */
+        @media (max-width: 900px) {
+            .slider-section { display: none; }
+            .login-section { flex: 1; border: none; }
+        }
+
+        @keyframes slideUp { from { opacity:0; transform:translateY(30px); } to { opacity:1; transform:translateY(0); } }
+        @keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
+        
+        .error-banner {
+            background: rgba(239, 68, 68, 0.1);
+            color: #fca5a5;
+            padding: 1rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            text-align: center;
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            font-size: 0.9rem;
+        }
     </style>
 </head>
 <body>
 
-    <nav>
-        <div class="logo" style="display: flex; align-items: center; gap: 12px;">
-            <img src="laforteza_logo.jpg" style="width: 35px; height: 35px; border-radius: 8px; object-fit: cover;">
-            <span>LGU3 Livelihood Training Program</span>
-        </div>
-        <div class="nav-links">
-            <a href="#features">Features</a>
-            <a href="#programs">Programs</a>
-            <a href="#stories">Success Stories</a>
-            <a href="#testimonials">Community</a>
-            <a href="#location">Location</a>
-        </div>
-        <div class="nav-btns">
-            <a href="index1.php" class="btn-outline">Login</a>
-            <a href="signup.php" class="btn-filled">Get Started</a>
-        </div>
-    </nav>
+    <!-- LEFT SIDE: SLIDER -->
+    <div class="slider-section">
+        <div class="slider-overlay"></div>
+        <!-- Generated Images -->
+        <div class="slider-bg active" style="background-image: url('barangay_hq.png');"></div>
+        <div class="slider-bg" style="background-image: url('training_success.png');"></div>
+        <div class="slider-bg" style="background-image: url('livelihood_hero_premium.png');"></div>
 
-    <header class="hero">
-        <div class="hero-content">
-            <span class="section-label">Empowering Communities</span>
-            <h1 style="font-size: 3.5rem;">LGU3 Livelihood Training Program</h1>
-            <p>Access free world-class technical training, livelihood initiatives, and AI-powered career coaching integrated with your local government unit.</p>
-            <div style="display: flex; gap: 1rem; margin-bottom: 2rem;">
-                <a href="signup.php" class="btn-filled" style="padding: 1rem 2.5rem; font-size: 1.1rem;">Join for Free</a>
-                <a href="#programs" class="btn-outline" style="padding: 1rem 2.5rem; font-size: 1.1rem;">Explore Programs</a>
-            </div>
-            <div style="display: flex; align-items: center; gap: 10px; color: var(--lp-text-muted);">
-                <i data-feather="check-circle" style="width:16px; color:#10b981;"></i>
-                <span>No tuition fees, 100% community-driven.</span>
+        <div class="slider-content">
+            <h1 class="slider-title" id="slider-title">Barangay 175<br>Holdings Inc.</h1>
+            <p class="slider-desc" id="slider-desc">Empowering our community through sustainable livelihood programs and advanced digital training.</p>
+            <div style="display:flex; gap:0.5rem;">
+                <span style="width:12px; height:12px; background:#fff; border-radius:50%; opacity:1;"></span>
+                <span style="width:12px; height:12px; background:#fff; border-radius:50%; opacity:0.3;"></span>
+                <span style="width:12px; height:12px; background:#fff; border-radius:50%; opacity:0.3;"></span>
             </div>
         </div>
-        <div class="hero-image">
-            <img src="livelihood_hero_premium.png" alt="Empower Hub">
-            <div class="floating-card" style="top: 10%; right: -20px;">
-                <div style="background: var(--lp-primary); padding: 8px; border-radius: 8px;"><i data-feather="award" style="color:white; width:20px;"></i></div>
-                <div>
-                    <div style="font-weight: 700; font-size: 0.9rem;">Skills Verified</div>
-                    <div style="font-size: 0.7rem; color: var(--lp-text-muted);">Completing 85% today</div>
+    </div>
+
+    <!-- RIGHT SIDE: LOGIN -->
+    <div class="login-section">
+        <!-- Floating Elements -->
+        <i data-feather="briefcase" class="flying-icon" style="left:10%; width:40px; height:40px; animation-duration:15s;"></i>
+        <i data-feather="trending-up" class="flying-icon" style="left:80%; width:30px; height:30px; animation-duration:12s; animation-delay:2s;"></i>
+        <i data-feather="award" class="flying-icon" style="left:40%; width:50px; height:50px; animation-duration:18s; animation-delay:5s;"></i>
+        <i data-feather="code" class="flying-icon" style="left:70%; width:35px; height:35px; animation-duration:14s; animation-delay:1s;"></i>
+
+        <div class="login-card">
+            <div class="brand-header">
+                <div class="brand-logo">
+                    <i data-feather="shield" style="color:#fff; width:32px; height:32px;"></i>
                 </div>
+                <h2 style="font-size:2rem; font-weight:700; margin-bottom:0.5rem; color:#fff;">Welcome Back</h2>
+                <p style="color:var(--text-muted);">Access your professional livelihood portal</p>
             </div>
-            <div class="floating-card" style="bottom: 15%; left: -30px;">
-                <div style="background: #10b981; padding: 8px; border-radius: 8px;"><i data-feather="users" style="color:white; width:20px;"></i></div>
-                <div>
-                    <div style="font-weight: 700; font-size: 0.9rem;">Community Growth</div>
-                    <div style="font-size: 0.7rem; color: var(--lp-text-muted);">+<?php echo $stats['users']; ?> Active Members</div>
+
+            <?php if($error): ?>
+                <div class="error-banner">
+                    <i data-feather="alert-circle" style="width:16px; vertical-align:middle; margin-right:5px;"></i>
+                    <?php echo $error; ?>
                 </div>
-            </div>
-        </div>
-    </header>
+            <?php endif; ?>
 
-    <section class="stats-bar">
-        <div class="stat-item">
-            <h2><?php echo number_format($stats['users']); ?>+</h2>
-            <p>Active Citizens</p>
-        </div>
-        <div class="stat-item">
-            <h2><?php echo number_format($stats['programs']); ?>+</h2>
-            <p>Programs Offered</p>
-        </div>
-        <div class="stat-item">
-            <h2><?php echo number_format($stats['completions']); ?>+</h2>
-            <p>Skill Certificates</p>
-        </div>
-        <div class="stat-item">
-            <h2><?php echo $stats['employment_rate']; ?>%</h2>
-            <p>Employment Rate</p>
-        </div>
-        <div class="stat-item">
-            <h2><?php echo number_format($stats['reports']); ?>+</h2>
-            <p>User Reports</p>
-        </div>
-    </section>
-
-    <section class="features" id="features">
-        <div class="section-header">
-            <span class="section-label">Innovative Learning</span>
-            <h2>Tools designed for your success.</h2>
-            <p>We’ve integrated advanced technology with traditional community support to provide a seamless empowerment experience.</p>
-        </div>
-        <div class="feature-grid">
-            <div class="feature-card">
-                <div class="feature-icon"><i data-feather="target"></i></div>
-                <h3>Personalized Pathways</h3>
-                <p>Our Skill Assessment tool analyzes your strengths and recommends programs that fit your profile perfectly.</p>
-            </div>
-            <div class="feature-card">
-                <div class="feature-icon"><i data-feather="cpu"></i></div>
-                <h3>AI Career Assistant</h3>
-                <p>Chat with our NLP-powered bot to get career advice, help with applications, or clarify training modules.</p>
-            </div>
-            <div class="feature-card">
-                <div class="feature-icon"><i data-feather="book-open"></i></div>
-                <h3>Rich Resource Library</h3>
-                <p>Download free modules, PDF guides, and video tutorials across Agriculture, IT, and Technical skills.</p>
-            </div>
-            <div class="feature-card">
-                <div class="feature-icon"><i data-feather="activity"></i></div>
-                <h3>Smart Insights</h3>
-                <p>Real-time neighborhood sentiment analysis and ML-driven trend tracking help administrators improve your community.</p>
-            </div>
-            <div class="feature-card">
-                <div class="feature-icon"><i data-feather="calendar"></i></div>
-                <h3>Task Management</h3>
-                <p>A built-in personal work calendar helps you stay organized and never miss a training session or community event.</p>
-            </div>
-            <div class="feature-card">
-                <div class="feature-icon"><i data-feather="shield"></i></div>
-                <h3>Secure Authorization</h3>
-                <p>Maintain your data integrity with timed-access security for profile updates and name changes.</p>
-            </div>
-        </div>
-    </section>
-
-    <section class="programs-section" id="programs">
-        <div class="section-header">
-            <span class="section-label">Available Tracks</span>
-            <h2>Diverse Training Programs</h2>
-            <p>We offer a wide range of specialized courses designed to meet the demands of today's local and global markets.</p>
-        </div>
-
-        <div class="program-cat-grid">
-            <div class="program-cat-card" id="cat-tech">
-                <h3><i data-feather="tool"></i> Technical & Vocational</h3>
-                <ul class="program-list-items">
-                    <li>Basic Shielded Metal Arc Welding</li>
-                    <li>Residential Electrical Wiring</li>
-                    <li>Plumbing & Pipefitting</li>
-                    <li>Automotive Servicing</li>
-                    <li>Carpentry & Masonry</li>
-                    <li>Aircon Tech & Repair</li>
-                </ul>
-            </div>
-            <div class="program-cat-card" id="cat-digital">
-                <h3><i data-feather="monitor"></i> Digital & IT Literacy</h3>
-                <ul class="program-list-items">
-                    <li>Virtual Assistant Essentials</li>
-                    <li>Web Design & Management</li>
-                    <li>Digital Marketing 101</li>
-                    <li>Data Entry & Transcription</li>
-                    <li>Cybersecurity Awareness</li>
-                    <li>Graphic Design Basics</li>
-                </ul>
-            </div>
-            <div class="program-cat-card" id="cat-agriculture">
-                <h3><i data-feather="sun"></i> Agriculture & Livelihood</h3>
-                <ul class="program-list-items">
-                    <li>Organic Vegetable Farming</li>
-                    <li>Urban Hydroponics setup</li>
-                    <li>Mushroom Culture & Prod.</li>
-                    <li>Tilapia & Fishery Mgmt</li>
-                    <li>Free-range Poultry raises</li>
-                    <li>Food Processing tech</li>
-                </ul>
-            </div>
-            <div class="program-cat-card" id="cat-business">
-                <h3><i data-feather="shopping-bag"></i> Business & Entrepreneurship</h3>
-                <ul class="program-list-items">
-                    <li>Soap & Detergent Making</li>
-                    <li>Tailoring & Dressmaking</li>
-                    <li>Baking & Pastry Arts</li>
-                    <li>Financial Literacy basics</li>
-                    <li>Micro-business Mgmt</li>
-                    <li>Local Craftsmanship</li>
-                </ul>
-            </div>
-        </div>
-
-        <div style="margin-top: 4rem; text-align: center; background: rgba(99, 102, 241, 0.05); padding: 3rem; border-radius: 24px; border: 1px dashed var(--lp-primary);">
-            <h3 style="margin-bottom:1rem;">Can't find what you're looking for?</h3>
-            <p style="color: var(--lp-text-muted); margin-bottom: 2rem;">New programs are added every quarter based on community requests and industry trends.</p>
-            <a href="signup.php" class="btn-filled">Request a Program</a>
-        </div>
-    </section>
-
-    <section class="success-stories" id="stories">
-        <div class="section-header" style="text-align: center; margin: 0 auto 5rem;">
-            <span class="section-label">Impact Gallery</span>
-            <h2>Livelihood Program Success</h2>
-        </div>
-
-        <div class="story-flex">
-            <div class="story-img">
-                <img src="barangay_agriculture_success.png" alt="Agriculture">
-            </div>
-            <div class="story-content">
-                <span class="story-tag">Sustainable Development</span>
-                <h2>Barangay 175 Laforteza Oldings: The Green Revolution</h2>
-                <p>Through our Livelihood Program, residents of Barangay 175 Laforteza Oldings transformed vacant lots into thriving urban hydroponic gardens, now supplying fresh organic produce to local markets.</p>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-top: 2rem;">
-                    <div>
-                        <h4 style="color: #fff; font-size: 1.5rem;">24</h4>
-                        <p style="font-size: 0.8rem;">Families Empowered</p>
-                    </div>
-                    <div>
-                        <h4 style="color: #fff; font-size: 1.5rem;">$1.2k</h4>
-                        <p style="font-size: 0.8rem;">Monthly Rev Generated</p>
-                    </div>
+            <form method="POST" action="">
+                <div class="input-group">
+                    <i data-feather="mail" class="input-icon"></i>
+                    <input type="email" name="email" class="input-field" placeholder="Email Address" required>
                 </div>
-            </div>
-        </div>
-
-        <div class="story-flex">
-            <div class="story-img">
-                <img src="barangay_tech_training.png" alt="Tech Training">
-            </div>
-            <div class="story-content">
-                <span class="story-tag">Digital Inclusion</span>
-                <h2>Barangay Central: Bridging the Digital Divide</h2>
-                <p>By leveraging our specialized IT and Digital Marketing modules, over 50 youth in Barangay Central are now working as remote freelancers for international clients.</p>
-                <a href="signup.php" class="btn-outline" style="display:inline-block; margin-top:1.5rem;">Learn Digital Skills</a>
-            </div>
-        </div>
-
-        <div class="story-flex">
-            <div class="story-img">
-                <img src="lgu_citizen_success_business.png" alt="Small Business">
-            </div>
-            <div class="story-content">
-                <span class="story-tag">Entrepreneurship</span>
-                <h2>Angel's Journey: From Training to Business</h2>
-                <p>"Angel's Corner" started as a dream during a livelihood workshop. Today, Angel runs a successful local cafe and employs three other graduates from the same program.</p>
-                <blockquote style="border-left: 4px solid var(--lp-primary); padding-left: 1.5rem; color: var(--lp-text-muted); font-style: italic;">
-                    "LGU3 gave me more than just a certificate; it gave me the confidence and the resource network to start my own legacy."
-                </blockquote>
-            </div>
-        </div>
-    </section>
-
-    <section class="testimonials" id="testimonials">
-        <div class="section-header" style="text-align: center; margin: 0 auto 4rem;">
-            <span class="section-label">Community Feedback</span>
-            <h2>What your neighbors are saying.</h2>
-        </div>
-        <div class="test-grid">
-            <div class="test-card">
-                <i data-feather="quote" style="width: 40px; height: 40px;"></i>
-                <p>"The Skill Assessment was a game-changer for me. It pointed me towards Agriculture training, and now I'm managing our community urban farm."</p>
-                <div class="test-user">
-                    <div class="test-user-info">
-                        <h4>Maria Santos</h4>
-                        <p>Barangay 175 Laforteza Oldings</p>
-                    </div>
-                </div>
-            </div>
-            <div class="test-card">
-                <i data-feather="quote" style="width: 40px; height: 40px;"></i>
-                <p>"I love how I can easily download learning materials on my phone. The PDF guides are so detailed and easy to follow even without internet."</p>
-                <div class="test-user">
-                    <div class="test-user-info">
-                        <h4>Juan Dela Cruz</h4>
-                        <p>Barangay Central</p>
-                    </div>
-                </div>
-            </div>
-            <div class="test-card">
-                <i data-feather="quote" style="width: 40px; height: 40px;"></i>
-                <p>"The AI assistant helped me draft my application for the livelihood grant. It's like having a personal mentor available 24/7."</p>
-                <div class="test-user">
-                    <div class="test-user-info">
-                        <h4>Elena Rivera</h4>
-                        <p>Barangay Poblacion</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <section class="partner-barangays" id="barangays" style="padding: 80px 10%; background: rgba(30, 41, 59, 0.2);">
-        <div class="section-header" style="text-align: center; margin: 0 auto 4rem;">
-            <span class="section-label">Our Coverage</span>
-            <h2>Active Partner Barangays</h2>
-            <p style="color: var(--lp-text-muted); margin-top: 1rem;">Join the growing list of communities benefiting from our localized training programs.</p>
-        </div>
-        
-        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.5rem;">
-            <!-- BRGY 175 - Primary -->
-            <div style="background: rgba(99, 102, 241, 0.05); border: 1px solid var(--lp-primary); padding: 1.5rem; border-radius: 16px; display: flex; align-items: center; gap: 15px;">
-                <div style="width: 40px; height: 40px; background: white; border-radius: 8px; display: flex; align-items: center; justify-content: center; padding: 4px;">
-                    <img src="laforteza_logo.jpg" style="width: 100%; height: 100%; object-fit: cover; border-radius: 4px;">
-                </div>
-                <div>
-                    <h4 style="color: #fff; margin: 0;">Barangay 175</h4>
-                    <p style="color: var(--lp-text-muted); font-size: 0.8rem; margin: 0;">Laforteza Oldings (HQ)</p>
-                </div>
-                <span style="margin-left: auto; color: #10b981; font-size: 0.7rem; font-weight: 700; background: rgba(16, 185, 129, 0.1); padding: 4px 8px; border-radius: 12px;">ACTIVE</span>
-            </div>
-
-            <!-- BRGY Central -->
-            <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--lp-border); padding: 1.5rem; border-radius: 16px; display: flex; align-items: center; gap: 15px;">
-                <div style="width: 40px; height: 40px; background: rgba(255,255,255,0.05); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: var(--lp-text-muted);">
-                    <i data-feather="map-pin"></i>
-                </div>
-                <div>
-                    <h4 style="color: #fff; margin: 0;">Barangay Central</h4>
-                    <p style="color: var(--lp-text-muted); font-size: 0.8rem; margin: 0;">District 1 Portal</p>
-                </div>
-                <span style="margin-left: auto; color: #10b981; font-size: 0.7rem; font-weight: 700; background: rgba(16, 185, 129, 0.1); padding: 4px 8px; border-radius: 12px;">ACTIVE</span>
-            </div>
-
-            <!-- BRGY Poblacion -->
-            <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--lp-border); padding: 1.5rem; border-radius: 16px; display: flex; align-items: center; gap: 15px;">
-                <div style="width: 40px; height: 40px; background: rgba(255,255,255,0.05); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: var(--lp-text-muted);">
-                    <i data-feather="map-pin"></i>
-                </div>
-                <div>
-                    <h4 style="color: #fff; margin: 0;">Barangay Poblacion</h4>
-                    <p style="color: var(--lp-text-muted); font-size: 0.8rem; margin: 0;">Community Learning Center</p>
-                </div>
-                <span style="margin-left: auto; color: #10b981; font-size: 0.7rem; font-weight: 700; background: rgba(16, 185, 129, 0.1); padding: 4px 8px; border-radius: 12px;">ACTIVE</span>
-            </div>
-
-            <!-- More placeholders if needed -->
-        </div>
-    </section>
-
-    <section class="location-section" id="location" style="padding: 100px 10%; background: #0f1115;">
-        <div class="section-header" style="text-align: center; margin: 0 auto 4rem;">
-            <span class="section-label">Visit Us</span>
-            <h2>Training Center Location</h2>
-            <p style="color: var(--lp-text-muted); margin-top: 1rem;">Our central hub is easily accessible for all residents. Drop by to learn more about our programs.</p>
-        </div>
-
-        <div style="display: grid; grid-template-columns: 1fr 1.5fr; gap: 4rem; align-items: start;">
-            <div class="location-info">
-                <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--lp-border); padding: 2.5rem; border-radius: 24px;">
-                    <div style="margin-bottom: 2rem;">
-                        <h4 style="color: var(--lp-primary); margin-bottom: 0.5rem; display: flex; align-items: center; gap: 10px;">
-                            <i data-feather="map-pin"></i> Primary Address
-                        </h4>
-                        <p style="color: #fff; font-size: 1.1rem; line-height: 1.6; font-weight: 500;">
-                            Barangay 174, <br>
-                            Caloocan City, <br>
-                            Metro Manila, Philippines
-                        </p>
-                    </div>
-
-                    <div style="margin-bottom: 2rem;">
-                        <h4 style="color: var(--lp-primary); margin-bottom: 0.5rem; display: flex; align-items: center; gap: 10px;">
-                            <i data-feather="clock"></i> Operating Hours
-                        </h4>
-                        <p style="color: var(--lp-text-muted); font-size: 0.9rem;">
-                            Monday - Friday: 8:00 AM - 5:00 PM <br>
-                            Saturday: 9:00 AM - 12:00 PM <br>
-                            Sunday: Closed
-                        </p>
-                    </div>
-
-                    <div style="margin-bottom: 0;">
-                        <h4 style="color: var(--lp-primary); margin-bottom: 0.5rem; display: flex; align-items: center; gap: 10px;">
-                            <i data-feather="phone"></i> Contact Details
-                        </h4>
-                        <p style="color: var(--lp-text-muted); font-size: 0.9rem;">
-                            Email: support@lgu3livelihood.gov.ph <br>
-                            Phone: +63 912 345 6789
-                        </p>
-                    </div>
+                <div class="input-group">
+                    <i data-feather="lock" class="input-icon"></i>
+                    <input type="password" name="password" class="input-field" placeholder="Password" required>
                 </div>
 
-                <div style="margin-top: 2rem;">
-                    <a href="https://www.google.com/maps/dir/?api=1&destination=14.758252,121.044014" target="_blank" class="btn-outline" style="display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%;">
-                        <i data-feather="navigation" style="width: 18px;"></i> Get Directions
-                    </a>
-                </div>
-            </div>
+                <button type="submit" class="submit-btn" id="loginBtn">Sign In</button>
+            </form>
 
-            <div class="map-container" style="border-radius: 24px; overflow: hidden; height: 450px; border: 1px solid var(--lp-border); box-shadow: 0 20px 40px rgba(0,0,0,0.4);">
-                <iframe 
-                    src="https://maps.google.com/maps?q=14.758252,121.044014&z=15&output=embed" 
-                    width="100%" 
-                    height="100%" 
-                    style="border:0; filter: grayscale(1) invert(0.9) contrast(1.2) opacity(0.8);" 
-                    allowfullscreen="" 
-                    loading="lazy">
-                </iframe>
+            <div class="signup-text">
+                Don't have an account? <a href="signup.php">Create Account</a>
             </div>
         </div>
-    </section>
-
-    <footer>
-        <div class="footer-grid">
-            <div class="footer-col" style="padding-right: 2rem;">
-                <div class="logo" style="margin-bottom: 1.5rem;">LGU3<span>Livelihood Training Program</span></div>
-                <p style="color: var(--lp-text-muted); font-size: 0.9rem;">Empowering every citizen through localized digital learning, career coaching, and technical training. Join our community and build your future today.</p>
-            </div>
-            <div class="footer-col">
-                <h4>Programs</h4>
-                <ul>
-                    <li><a href="#cat-tech">Technical Skills</a></li>
-                    <li><a href="#cat-business">Livelihood Training</a></li>
-                    <li><a href="#cat-digital">Digital Marketing</a></li>
-                    <li><a href="#cat-agriculture">Agriculture</a></li>
-                </ul>
-            </div>
-            <div class="footer-col">
-                <h4>Quick Links</h4>
-                <ul>
-                    <li><a href="signup.php">Register</a></li>
-                    <li><a href="index.php">Citizen Login</a></li>
-                    <li><a href="javascript:void(0)" onclick="comingSoon()">Barangay Portal</a></li>
-                    <li><a href="javascript:void(0)" onclick="comingSoon()">Resource Hub</a></li>
-                </ul>
-            </div>
-            <div class="footer-col">
-                <h4>Support</h4>
-                <ul>
-                    <li><a href="#location">Location</a></li>
-                    <li><a href="javascript:void(0)" onclick="comingSoon()">Help Center</a></li>
-                    <li><a href="javascript:void(0)" onclick="comingSoon()">Privacy Policy</a></li>
-                    <li><a href="javascript:void(0)" onclick="comingSoon()">Terms of Service</a></li>
-                    <li><a href="javascript:void(0)" onclick="comingSoon()">Contact Us</a></li>
-                </ul>
-            </div>
-        </div>
-        <div class="footer-bottom">
-            <p>&copy; 2026 LGU3 Management System. All rights reserved.</p>
-            <div style="display: flex; gap: 1.5rem;">
-                <a href="#"><i data-feather="facebook" style="width: 18px;"></i></a>
-                <a href="#"><i data-feather="twitter" style="width: 18px;"></i></a>
-                <a href="#"><i data-feather="instagram" style="width: 18px;"></i></a>
-            </div>
-        </div>
-    </footer>
+    </div>
 
     <script>
         feather.replace();
 
-        // Smooth scroll for nav links
-        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-            anchor.addEventListener('click', function (e) {
-                e.preventDefault();
-                document.querySelector(this.getAttribute('href')).scrollIntoView({
-                    behavior: 'smooth'
-                });
-            });
-        });
+        // Slider Logic
+        const slides = document.querySelectorAll('.slider-bg');
+        const titles = [
+            'Barangay 175<br>Holdings Inc.',
+            'Skills for<br>Success',
+            'Community<br>Growth'
+        ];
+        const descs = [
+            'Empowering our community through sustainable livelihood programs and advanced digital training.',
+            'Join thousands of citizens learning new skills in tailoring, tech, and agriculture.',
+            'Building a stronger future together through innovation and shared opportunity.'
+        ];
+        
+        const titleEl = document.getElementById('slider-title');
+        const descEl = document.getElementById('slider-desc');
+        let current = 0;
 
-        // Simple scroll effect for nav
-        window.addEventListener('scroll', () => {
-            const nav = document.querySelector('nav');
-            if (window.scrollY > 50) {
-                nav.style.height = '70px';
-                nav.style.background = 'rgba(15, 17, 21, 0.95)';
-            } else {
-                nav.style.height = '80px';
-                nav.style.background = 'rgba(15, 17, 21, 0.8)';
-            }
-        });
-
-        function comingSoon() {
-            const toast = document.createElement('div');
-            toast.style.position = 'fixed';
-            toast.style.bottom = '20px';
-            toast.style.right = '20px';
-            toast.style.background = '#6366f1';
-            toast.style.color = 'white';
-            toast.style.padding = '1rem 2rem';
-            toast.style.borderRadius = '12px';
-            toast.style.boxShadow = '0 10px 25px rgba(0,0,0,0.3)';
-            toast.style.zIndex = '10000';
-            toast.style.animation = 'fadeIn 0.3s ease';
-            toast.innerText = 'Feature coming soon! We are currently working on this module.';
+        function nextSlide() {
+            slides[current].classList.remove('active');
+            current = (current + 1) % slides.length;
+            slides[current].classList.add('active');
             
-            document.body.appendChild(toast);
-            
+            // Text Animation
+            titleEl.style.opacity = 0;
+            descEl.style.opacity = 0;
             setTimeout(() => {
-                toast.style.opacity = '0';
-                toast.style.transform = 'translateY(10px)';
-                toast.style.transition = '0.3s';
-                setTimeout(() => toast.remove(), 300);
-            }, 3000);
+                titleEl.innerHTML = titles[current];
+                descEl.innerHTML = descs[current];
+                titleEl.style.opacity = 1;
+                descEl.style.opacity = 1;
+            }, 300);
         }
+
+        setInterval(nextSlide, 5000);
     </script>
 </body>
 </html>
