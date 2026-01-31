@@ -13,6 +13,16 @@
     --danger: #ef4444;
 }
 
+body.light-theme {
+    --bg-color: #f8fafc;
+    --card-bg: #ffffff;
+    --sidebar-bg: #ffffff;
+    --text-main: #1e293b;
+    --text-muted: #64748b;
+    --border-color: #e2e8f0;
+    --input-bg: #f1f5f9;
+}
+
 * {
     margin: 0;
     padding: 0;
@@ -428,7 +438,7 @@ body:not(.dashboard-body) {
     justify-content: space-between;
     align-items: center;
     padding: 0 2rem;
-    background: rgba(15, 17, 21, 0.8);
+    background: var(--card-bg);
     backdrop-filter: blur(10px);
     position: sticky;
     top: 0;

@@ -146,19 +146,19 @@ if ($action === 'create_report') {
     $stmtU->bind_param("is", $uid, $uMsg);
     $stmtU->execute();
 
-    // 2. Notify Admin
+    // 2. Notify All Admins
     $uname = 'A citizen';
     $uRes = $conn->query("SELECT full_name FROM users WHERE id = $uid");
     if($uRes && $uRes->num_rows > 0) $uname = $uRes->fetch_assoc()['full_name'];
 
-    $adminId = 1;
-    $adminRes = $conn->query("SELECT id FROM users WHERE role = 'admin' LIMIT 1");
-    if($adminRes && $adminRes->num_rows > 0) $adminId = $adminRes->fetch_assoc()['id'];
-
     $aMsg = "$uname has submitted a new report: '$title'.";
-    $stmtA = $conn->prepare("INSERT INTO notifications (user_id, title, message, type) VALUES (?, 'New Report Submitted', ?, 'warning')");
-    $stmtA->bind_param("is", $adminId, $aMsg);
-    $stmtA->execute();
+    $admins = $conn->query("SELECT id FROM users WHERE role = 'admin'");
+    while($adm = $admins->fetch_assoc()) {
+        $adminId = $adm['id'];
+        $stmtA = $conn->prepare("INSERT INTO notifications (user_id, title, message, type) VALUES (?, 'New Report Submitted', ?, 'warning')");
+        $stmtA->bind_param("is", $adminId, $aMsg);
+        $stmtA->execute();
+    }
 
     echo json_encode(['success' => true]);
     exit;
@@ -366,19 +366,19 @@ if ($action === 'apply_program') {
         $stmtU->bind_param("is", $uid, $uMsg);
         $stmtU->execute();
 
-        // 2. Notify Admin
+        // 2. Notify All Admins
         $uName = 'A user';
         $uRes = $conn->query("SELECT full_name FROM users WHERE id = $uid");
         if($uRes && $uRes->num_rows > 0) $uName = $uRes->fetch_assoc()['full_name'];
 
-        $adminId = 1;
-        $adminRes = $conn->query("SELECT id FROM users WHERE role = 'admin' LIMIT 1");
-        if($adminRes && $adminRes->num_rows > 0) $adminId = $adminRes->fetch_assoc()['id'];
-
         $aMsg = "$uName has applied for '$pTitle'. Review available in Applications panel.";
-        $stmtA = $conn->prepare("INSERT INTO notifications (user_id, title, message, type) VALUES (?, 'New Program Application', ?, 'info')");
-        $stmtA->bind_param("is", $adminId, $aMsg);
-        $stmtA->execute();
+        $admins = $conn->query("SELECT id FROM users WHERE role = 'admin'");
+        while($adm = $admins->fetch_assoc()) {
+            $adminId = $adm['id'];
+            $stmtA = $conn->prepare("INSERT INTO notifications (user_id, title, message, type) VALUES (?, 'New Program Application', ?, 'info')");
+            $stmtA->bind_param("is", $adminId, $aMsg);
+            $stmtA->execute();
+        }
 
         echo json_encode(['success' => true]);
     } else {
@@ -387,23 +387,7 @@ if ($action === 'apply_program') {
     exit;
 }
 
-if ($action === 'get_notifications') {
-    $notifs = [];
-    $conn->query("CREATE TABLE IF NOT EXISTS notifications (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        user_id INT,
-        title VARCHAR(200),
-        message TEXT,
-        is_read TINYINT(1) DEFAULT 0,
-        type VARCHAR(50) DEFAULT 'info',
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    )");
-    
-    $res = $conn->query("SELECT * FROM notifications WHERE user_id = $uid ORDER BY created_at DESC LIMIT 10");
-    while($row = $res->fetch_assoc()) $notifs[] = $row;
-    echo json_encode($notifs);
-    exit;
-}
+// Consolidated get_notifications handled below in line 1064
 
 if ($action === 'mark_read') {
     $input = json_decode(file_get_contents('php://input'), true);
@@ -1101,5 +1085,482 @@ if ($action === 'mark_all_read') {
     exit;
 }
 
+// --- SKILL TEST ACTIONS ---
+
+if ($action === 'get_skill_tests') {
+    $tests = [];
+    $res = $conn->query("SELECT * FROM skill_tests ORDER BY created_at DESC");
+    while($row = $res->fetch_assoc()) $tests[] = $row;
+    echo json_encode($tests);
+    exit;
+}
+
+if ($action === 'get_skill_progress') {
+    // Get progress for ALL tests or specific?
+    // User wants "link stage 1-5" context.
+    // Let's return joined data: test info + current progress
+    $data = [];
+    $sql = "SELECT st.*, 
+            usp.current_stage, usp.status as user_status, usp.score, usp.completed_at
+            FROM skill_tests st
+            LEFT JOIN user_skill_progress usp ON st.id = usp.test_id AND usp.user_id = $uid";
+    $res = $conn->query($sql);
+    while($row = $res->fetch_assoc()) {
+        // Get total stages count
+        $tid = $row['id'];
+        $cRes = $conn->query("SELECT COUNT(*) as c FROM skill_test_stages WHERE test_id = $tid");
+        $row['total_stages'] = $cRes->fetch_assoc()['c'];
+        $data[] = $row;
+    }
+    echo json_encode($data);
+    exit;
+}
+
+if ($action === 'enroll_skill') {
+    $input = json_decode(file_get_contents('php://input'), true);
+    $tid = $input['test_id'];
+    
+    // Check if enrolled
+    $check = $conn->query("SELECT id FROM user_skill_progress WHERE user_id = $uid AND test_id = $tid");
+    if($check->num_rows == 0) {
+        $stmt = $conn->prepare("INSERT INTO user_skill_progress (user_id, test_id, current_stage, status, started_at) VALUES (?, ?, 1, 'in_progress', NOW())");
+        $stmt->bind_param("ii", $uid, $tid);
+        $stmt->execute();
+    }
+    echo json_encode(['success' => true]);
+    exit;
+}
+
+if ($action === 'get_test_stages') {
+    $tid = $_GET['test_id'];
+    $stages = [];
+    $stmt = $conn->prepare("SELECT * FROM skill_test_stages WHERE test_id = ? ORDER BY stage_number ASC");
+    $stmt->bind_param("i", $tid);
+    $stmt->execute();
+    $res = $stmt->get_result();
+    while($row = $res->fetch_assoc()) $stages[] = $row;
+    echo json_encode($stages);
+    exit;
+}
+
+if ($action === 'complete_stage') {
+    $input = json_decode(file_get_contents('php://input'), true);
+    $tid = $input['test_id'];
+    $stageNum = $input['stage_number'];
+    
+    // Verify progress
+    $stmt = $conn->prepare("SELECT current_stage, status FROM user_skill_progress WHERE user_id = ? AND test_id = ?");
+    $stmt->bind_param("ii", $uid, $tid);
+    $stmt->execute();
+    $res = $stmt->get_result();
+    if($data = $res->fetch_assoc()) {
+        // Only update if we are completing the current stage
+        if($data['current_stage'] == $stageNum && $data['status'] !== 'completed') {
+            $nextStage = $stageNum + 1;
+            
+            // Count total stages
+            $countRes = $conn->query("SELECT COUNT(*) as c FROM skill_test_stages WHERE test_id = $tid");
+            $totalStages = $countRes->fetch_assoc()['c'];
+            
+            if($stageNum >= $totalStages) {
+                // Completed
+                $conn->query("UPDATE user_skill_progress SET status = 'completed', completed_at = NOW(), score = 100 WHERE user_id = $uid AND test_id = $tid");
+            } else {
+                $conn->query("UPDATE user_skill_progress SET current_stage = $nextStage WHERE user_id = $uid AND test_id = $tid");
+            }
+        }
+    }
+    echo json_encode(['success' => true]);
+    exit;
+}
+
+if ($action === 'get_skill_analytics') {
+    if($role !== 'admin') {
+         echo json_encode(['error' => 'Unauthorized']); exit;
+    }
+    
+    $analytics = [
+        'total_enrollments' => 0,
+        'completed_count' => 0,
+        'tests' => []
+    ];
+    
+    // Total Enrollments
+    $res = $conn->query("SELECT COUNT(*) as c FROM user_skill_progress");
+    $analytics['total_enrollments'] = $res->fetch_assoc()['c'];
+    
+    // Total Completions
+    $res = $conn->query("SELECT COUNT(*) as c FROM user_skill_progress WHERE status = 'completed'");
+    $analytics['completed_count'] = $res->fetch_assoc()['c'];
+    
+    // Data per Test
+    // Get all tests
+    $resTests = $conn->query("SELECT id, title FROM skill_tests");
+    while($test = $resTests->fetch_assoc()) {
+        $tid = $test['id'];
+        
+        // Count enrolled in this test
+        $resEnrolled = $conn->query("SELECT COUNT(*) as c FROM user_skill_progress WHERE test_id = $tid");
+        $enrolled = $resEnrolled->fetch_assoc()['c'];
+        
+        // Count completed in this test
+        $resCompleted = $conn->query("SELECT COUNT(*) as c FROM user_skill_progress WHERE test_id = $tid AND status = 'completed'");
+        $completed = $resCompleted->fetch_assoc()['c'];
+        
+        // Get recent enrollees
+        $users = [];
+        $sqlUsers = "SELECT u.full_name, u.email, usp.current_stage, usp.status, usp.started_at 
+                     FROM user_skill_progress usp
+                     JOIN users u ON usp.user_id = u.id
+                     WHERE usp.test_id = $tid
+                     ORDER BY usp.started_at DESC LIMIT 5";
+        $resUsers = $conn->query($sqlUsers);
+        while($u = $resUsers->fetch_assoc()) {
+            $users[] = $u;
+        }
+
+        $analytics['tests'][] = [
+            'title' => $test['title'],
+            'enrolled' => $enrolled,
+            'completed' => $completed,
+            'recent_users' => $users
+        ];
+    }
+    
+    echo json_encode($analytics);
+    exit;
+}
+
+// --- SKILL TEST MANAGEMENT (CRUD) ---
+
+if ($action === 'create_skill_test') {
+    if($role !== 'admin') exit;
+    $input = json_decode(file_get_contents('php://input'), true);
+    $title = $input['title'];
+    $desc = $input['description'];
+    $thumb = $input['thumbnail'] ?? 'https://via.placeholder.com/600x400';
+    
+    $stmt = $conn->prepare("INSERT INTO skill_tests (title, description, thumbnail) VALUES (?, ?, ?)");
+    $stmt->bind_param("sss", $title, $desc, $thumb);
+    if($stmt->execute()) echo json_encode(['success' => true]);
+    else echo json_encode(['error' => $conn->error]);
+    exit;
+}
+
+if ($action === 'update_skill_test') {
+    if($role !== 'admin') exit;
+    $input = json_decode(file_get_contents('php://input'), true);
+    $id = $input['id'];
+    $title = $input['title'];
+    $desc = $input['description'];
+    $thumb = $input['thumbnail'];
+    
+    $stmt = $conn->prepare("UPDATE skill_tests SET title = ?, description = ?, thumbnail = ? WHERE id = ?");
+    $stmt->bind_param("sssi", $title, $desc, $thumb, $id);
+    if($stmt->execute()) echo json_encode(['success' => true]);
+    else echo json_encode(['error' => $conn->error]);
+    exit;
+}
+
+if ($action === 'delete_skill_test') {
+    if($role !== 'admin') exit;
+    $input = json_decode(file_get_contents('php://input'), true);
+    $id = $input['id'];
+    
+    $conn->query("DELETE FROM skill_tests WHERE id = $id");
+    echo json_encode(['success' => true]);
+    exit;
+}
+
+if ($action === 'add_test_stage') {
+    if($role !== 'admin') exit;
+    $input = json_decode(file_get_contents('php://input'), true);
+    $tid = $input['test_id'];
+    $title = $input['title'];
+    $content = $input['content'];
+    $video = $input['video_url'];
+    
+    // Auto-calculate stage number
+    $res = $conn->query("SELECT MAX(stage_number) as m FROM skill_test_stages WHERE test_id = $tid");
+    $nextNum = ($res->fetch_assoc()['m'] ?? 0) + 1;
+    
+    $stmt = $conn->prepare("INSERT INTO skill_test_stages (test_id, stage_number, title, content, video_url) VALUES (?, ?, ?, ?, ?)");
+    $stmt->bind_param("iisss", $tid, $nextNum, $title, $content, $video);
+    if($stmt->execute()) echo json_encode(['success' => true]);
+    else echo json_encode(['error' => $conn->error]);
+    exit;
+}
+
+if ($action === 'update_test_stage') {
+    if($role !== 'admin') exit;
+    $input = json_decode(file_get_contents('php://input'), true);
+    $id = $input['id'];
+    $title = $input['title'];
+    $content = $input['content'];
+    $video = $input['video_url'];
+    
+    $stmt = $conn->prepare("UPDATE skill_test_stages SET title = ?, content = ?, video_url = ? WHERE id = ?");
+    $stmt->bind_param("sssi", $title, $content, $video, $id);
+    if($stmt->execute()) echo json_encode(['success' => true]);
+    else echo json_encode(['error' => $conn->error]);
+    exit;
+}
+
+if ($action === 'delete_test_stage') {
+    if($role !== 'admin') exit;
+    $input = json_decode(file_get_contents('php://input'), true);
+    $id = $input['id'];
+    
+    $conn->query("DELETE FROM skill_test_stages WHERE id = $id");
+    
+    // Potentially reorder stages? Keeping it simple for now. 
+    echo json_encode(['success' => true]);
+    exit;
+}
+
+
+// --- USER SKILL ACTIONS ---
+
+if ($action === 'get_skill_progress') {
+    // Auto-heal table
+    $conn->query("CREATE TABLE IF NOT EXISTS user_skill_progress (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        user_id INT,
+        test_id INT,
+        current_stage INT DEFAULT 1,
+        status ENUM('in_progress', 'completed') DEFAULT 'in_progress',
+        started_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        completed_at TIMESTAMP NULL
+    )");
+
+    $tests = [];
+    $res = $conn->query("SELECT * FROM skill_tests");
+    while($t = $res->fetch_assoc()) {
+        $tid = $t['id'];
+        
+        // Get Total Stages
+        $resStages = $conn->query("SELECT COUNT(*) as c FROM skill_test_stages WHERE test_id = $tid");
+        $t['total_stages'] = $resStages->fetch_assoc()['c'];
+        
+        // Get User Progress
+        $resProg = $conn->query("SELECT current_stage, status FROM user_skill_progress WHERE user_id = $uid AND test_id = $tid");
+        if($resProg && $resProg->num_rows > 0) {
+            $prog = $resProg->fetch_assoc();
+            $t['current_stage'] = (int)$prog['current_stage'];
+            $t['user_status'] = $prog['status']; // 'in_progress' or 'completed'
+            $t['status'] = $prog['status']; // Alias for frontend list view
+        } else {
+            $t['current_stage'] = 0; // Not enrolled
+            $t['user_status'] = null;
+            $t['status'] = null;
+        }
+        
+        $tests[] = $t;
+    }
+    echo json_encode($tests);
+    exit;
+}
+
+if ($action === 'enroll_skill') {
+    $input = json_decode(file_get_contents('php://input'), true);
+    $tid = $input['test_id'];
+    
+    // Check if already enrolled
+    $check = $conn->query("SELECT id FROM user_skill_progress WHERE user_id = $uid AND test_id = $tid");
+    if($check->num_rows == 0) {
+        $stmt = $conn->prepare("INSERT INTO user_skill_progress (user_id, test_id, current_stage, status) VALUES (?, ?, 1, 'in_progress')");
+        $stmt->bind_param("ii", $uid, $tid);
+        $stmt->execute();
+    }
+    echo json_encode(['success' => true]);
+    exit;
+}
+
+if ($action === 'get_test_stages') {
+    $tid = $_GET['test_id'];
+    $stages = [];
+    $res = $conn->query("SELECT * FROM skill_test_stages WHERE test_id = $tid ORDER BY stage_number ASC");
+    while($row = $res->fetch_assoc()) $stages[] = $row;
+    echo json_encode($stages);
+    exit;
+}
+
+if ($action === 'complete_stage') {
+    $input = json_decode(file_get_contents('php://input'), true);
+    $tid = $input['test_id'];
+    $stageNum = $input['stage_number'];
+    
+    // Verify current stage matches (prevent skipping)
+    $resP = $conn->query("SELECT current_stage, status FROM user_skill_progress WHERE user_id = $uid AND test_id = $tid");
+    $prog = $resP->fetch_assoc();
+    
+    if($prog['status'] === 'completed') {
+        echo json_encode(['success' => true, 'already_completed' => true]);
+        exit;
+    }
+    
+    if($stageNum == $prog['current_stage']) {
+        // Advance Stage
+        $nextStage = $stageNum + 1;
+        
+        // Check if this was the last stage
+        $resCount = $conn->query("SELECT COUNT(*) as c FROM skill_test_stages WHERE test_id = $tid");
+        $total = $resCount->fetch_assoc()['c'];
+        
+        if($stageNum >= $total) {
+            // COMPLETED!
+            $conn->query("UPDATE user_skill_progress SET status = 'completed', completed_at = NOW() WHERE user_id = $uid AND test_id = $tid");
+            
+            // 1. Notify User (Badge)
+            $testTitleRes = $conn->query("SELECT title FROM skill_tests WHERE id = $tid");
+            $testTitle = $testTitleRes->fetch_assoc()['title'];
+            
+            $uMsg = "Congratulations! You have successfully completed the '$testTitle' skill test. A badge has been added to your profile.";
+            $stmtU = $conn->prepare("INSERT INTO notifications (user_id, title, message, type) VALUES (?, 'Badge Earned!', ?, 'success')");
+            $stmtU->bind_param("is", $uid, $uMsg);
+            $stmtU->execute();
+            
+            // 2. Notify All Admins
+            $uNameRes = $conn->query("SELECT full_name FROM users WHERE id = $uid");
+            $uName = $uNameRes->fetch_assoc()['full_name'];
+            
+            $aMsg = "User $uName has completed the '$testTitle' assessment.";
+            $admins = $conn->query("SELECT id FROM users WHERE role = 'admin'");
+            while($adm = $admins->fetch_assoc()) {
+                $adminId = $adm['id'];
+                $stmtA = $conn->prepare("INSERT INTO notifications (user_id, title, message, type) VALUES (?, 'Skill Test Completed', ?, 'info')");
+                $stmtA->bind_param("is", $adminId, $aMsg);
+                $stmtA->execute();
+            }
+            
+            echo json_encode(['success' => true, 'test_completed' => true]);
+        } else {
+            // Just advance
+            $conn->query("UPDATE user_skill_progress SET current_stage = $nextStage WHERE user_id = $uid AND test_id = $tid");
+            echo json_encode(['success' => true, 'test_completed' => false]);
+        }
+    } else {
+        // Mismatch, maybe re-playing old stage? Just success.
+        echo json_encode(['success' => true]);
+    }
+    exit;
+}
+
+
+function analyzeSentiment($text) {
+    $text = strtolower($text);
+    $negative_words = ['broken', 'bad', 'fail', 'dirty', 'dangerous', 'delay', 'poor', 'crime', 'noise', 'garbage', 'flood', 'leak', 'slow', 'problem', 'complaint', 'worst', 'hate', 'trash', 'smell', 'dark'];
+    $positive_words = ['great', 'good', 'fast', 'helpful', 'clean', 'safe', 'thanks', 'excellent', 'effective', 'improve', 'benefit', 'love', 'best', 'satisfied', 'resolved'];
+    
+    $score = 0;
+    foreach($positive_words as $w) {
+        if(strpos($text, $w) !== false) $score++;
+    }
+    foreach($negative_words as $w) {
+        if(strpos($text, $w) !== false) $score--;
+    }
+    
+    if($score > 0) return 'positive';
+    if($score < 0) return 'negative';
+    return 'neutral';
+}
+
+
+
+if ($action === 'get_intelligence_data') {
+    if($role !== 'admin') {
+         echo json_encode(['error' => 'Unauthorized']); exit;
+    }
+    
+    $insights = [
+        'sentiment' => ['positive' => 0, 'neutral' => 0, 'negative' => 0],
+        'trends' => [],
+        'prediction' => 0,
+        'urgent_issues' => []
+    ];
+    
+    // 1. NLP: Analyze Citizen Reports (Most recent 100)
+    // Use SELECT * and ORDER BY id DESC (safer than created_at)
+    $res = $conn->query("SELECT * FROM reports ORDER BY id DESC LIMIT 100");
+    if($res) {
+        while($row = $res->fetch_assoc()) {
+            // Handle missing columns gracefully
+            $desc = $row['description'] ?? $row['message'] ?? ''; // fallback
+            $title = $row['title'] ?? 'Report #' . $row['id'];
+            
+            if(!$desc) continue;
+            
+            $sentiment = analyzeSentiment($desc);
+            $insights['sentiment'][$sentiment]++;
+            
+            if(count($insights['urgent_issues']) < 5) {
+                // Formatting
+                $excerpt = strlen($desc) > 50 ? substr($desc, 0, 50).'...' : $desc;
+                $insights['urgent_issues'][] = [
+                    'text' => $excerpt,
+                    'sentiment' => $sentiment,
+                    'title' => $title
+                ];
+            }
+        }
+    }
+    
+    // 2. ML: Trend Analysis
+    // Try using created_at. If it fails, we return empty trends.
+    $rawTrends = [];
+    $dataPoints = [];
+    
+    // Check if created_at exists, if not try 'date' or 'timestamp'
+    // Actually, just try the query.
+    $resTrend = $conn->query("
+        SELECT DATE_FORMAT(created_at, '%Y-%m') as m, COUNT(*) as c 
+        FROM reports 
+        GROUP BY m 
+        ORDER BY m ASC
+        LIMIT 12
+    ");
+    
+    if($resTrend) {
+        while($row = $resTrend->fetch_assoc()) {
+            $rawTrends[$row['m']] = (int)$row['c'];
+        }
+    }
+    
+    // Fill last 6 months
+    for($i = 5; $i >= 0; $i--) {
+        $m = date('Y-m', strtotime("-$i months"));
+        $count = $rawTrends[$m] ?? 0;
+        $insights['trends'][] = ['month' => $m, 'count' => $count];
+        $dataPoints[] = $count;
+    }
+    
+    // Prediction Logic
+    $count = count($dataPoints);
+    if($count >= 2) {
+        $totalGrowth = 0;
+        $growthPoints = 0;
+        for($i = 1; $i < $count; $i++) {
+            if($dataPoints[$i-1] > 0) {
+              $growth = ($dataPoints[$i] - $dataPoints[$i-1]) / $dataPoints[$i-1];
+              $totalGrowth += $growth;
+              $growthPoints++;
+            }
+        }
+        $avgGrowth = $growthPoints > 0 ? $totalGrowth / $growthPoints : 0;
+        
+        $next_val = $dataPoints[$count-1] * (1 + $avgGrowth);
+        $insights['prediction'] = round($next_val);
+    } else {
+        $insights['prediction'] = $dataPoints[$count-1] ?? 0;
+    }
+    
+    // Fallback prediction if 0 but data exists
+    if($insights['prediction'] == 0 && array_sum($dataPoints) > 0) $insights['prediction'] = 1;
+
+    echo json_encode($insights);
+    exit;
+}
+
 echo json_encode(['error' => 'Invalid action']);
 exit;
+

@@ -59,6 +59,9 @@ if (empty($skillRow['skills'])) {
         .section-view.active { display: block; }
         @keyframes fadeIn { from { opacity:0; transform: translateY(5px); } to { opacity:1; transform: translateY(0); } }
         
+        /* Theme active state */
+        .action-btn.active { background: var(--primary) !important; color: #fff !important; border-color: var(--primary) !important; }
+        
         /* Recommendation Cards */
         .rec-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; margin-top: 1.5rem; }
         .rec-card {
@@ -90,6 +93,44 @@ if (empty($skillRow['skills'])) {
         @media(max-width:768px){
             .mobile-toggle { display: block; font-size: 1.5rem; background:none; border:none; color:white; cursor:pointer;}
         }
+
+        /* Sidebar Minimization */
+        .sidebar { transition: all 0.3s ease; overflow: hidden; display: flex; flex-direction: column; }
+        .sidebar-nav { overflow-y: auto; flex: 1; padding-right: 5px; scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.1) transparent; }
+        .sidebar-nav::-webkit-scrollbar { width: 4px; }
+        .sidebar-nav::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
+        
+        .main-content { transition: all 0.3s ease; }
+        .sidebar.minimized { width: 80px; padding: 1.5rem 0.5rem; }
+        .sidebar.minimized .sidebar-header { justify-content: center; flex-direction: column; gap: 1rem; }
+        .sidebar.minimized .logo { font-size: 0.9rem; display: flex; flex-direction: column; align-items: center; }
+        .sidebar.minimized .logo span, .sidebar.minimized .nav-item span, .sidebar.minimized .sidebar-footer span { display: none; }
+        .sidebar.minimized .nav-item { justify-content: center; padding: 0.75rem; width: 100%; }
+        .sidebar.minimized .nav-item i { margin: 0; }
+        .main-content.sidebar-collapsed { margin-left: 80px; }
+        
+        .sidebar-toggle {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid var(--border-color);
+            color: var(--text-muted);
+            cursor: pointer;
+            padding: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            border-radius: 8px;
+            min-width: 32px;
+        }
+        .sidebar-toggle:hover { background: var(--primary); color: #fff; }
+        .sidebar.minimized .sidebar-toggle { width: 40px; height: 40px; margin: 0 auto; }
+
+        /* AI Chat Minimization */
+        .chat-section-container { transition: height 0.3s ease, transform 0.3s ease; }
+        .chat-section-container.minimized { height: 65px; overflow: hidden; transform: translateY(0); max-width: 400px; margin: 0 auto; }
+        .chat-body-ai, .chat-footer-ai { transition: opacity 0.2s; }
+        .chat-section-container.minimized .chat-body-ai, 
+        .chat-section-container.minimized .chat-footer-ai { opacity: 0; pointer-events: none; }
         /* Application Cards */
         .app-list { display: grid; grid-template-columns: 1fr; gap: 1rem; }
         .app-card {
@@ -330,6 +371,74 @@ if (empty($skillRow['skills'])) {
         /* Pulse for active AI */
         .status-dot { width: 10px; height: 10px; background: #10b981; border-radius: 50%; border: 2px solid #0f172a; }
         .ai-typing { font-size: 0.8rem; color: #64748b; margin-left: 0.5rem; display: none; }
+
+        /* --- Skill Test Styles --- */
+        .skill-card {
+            background: rgba(30, 41, 59, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            overflow: hidden;
+            transition: 0.3s;
+            display: flex;
+            flex-direction: column;
+        }
+        .skill-card:hover { transform: translateY(-5px); border-color: var(--primary); }
+        .skill-thumb { height: 160px; width: 100%; object-fit: cover; }
+        .skill-body { padding: 1.5rem; flex: 1; display: flex; flex-direction: column; }
+        .skill-title { font-size: 1.2rem; font-weight: 600; color: #fff; margin-bottom: 0.5rem; }
+        .skill-desc { color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.5rem; flex: 1; }
+        
+        .progress-container { width: 100%; background: rgba(255,255,255,0.1); height: 8px; border-radius: 4px; overflow: hidden; margin-bottom: 1rem; }
+        .progress-bar { height: 100%; background: #10b981; transition: width 0.5s ease; width: 0%; }
+        
+        .stage-list { display: flex; flex-direction: column; gap: 1rem; }
+        .stage-item { 
+            background: rgba(15, 23, 42, 0.5); padding: 1rem; border-radius: 12px; 
+            border: 1px solid rgba(255,255,255,0.05); display: flex; justify-content: space-between; align-items: center;
+        }
+        .stage-item.locked { opacity: 0.5; pointer-events: none; }
+        .stage-item.active { border-color: var(--primary); background: rgba(99, 102, 241, 0.1); }
+        .stage-item.completed { border-color: #10b981; }
+        
+        .stage-check { 
+            width: 24px; height: 24px; border-radius: 50%; border: 2px solid #64748b; 
+            display: flex; align-items: center; justify-content: center; margin-right: 1rem;
+        }
+        .stage-item.completed .stage-check { background: #10b981; border-color: #10b981; color: white; }
+        .stage-item.active .stage-check { border-color: var(--primary); color: var(--primary); }
+
+        /* Stage Completion Animations */
+        #stage-loader-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(15, 23, 42, 0.9); backdrop-filter: blur(8px);
+            display: none; flex-direction: column; align-items: center; justify-content: center;
+            z-index: 10001; animation: fadeIn 0.3s ease;
+        }
+        .premium-loader {
+            width: 60px; height: 60px; border: 4px solid rgba(99, 102, 241, 0.2);
+            border-top: 4px solid var(--primary); border-radius: 50%;
+            animation: spin 1s linear infinite; margin-bottom: 1.5rem;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
+        #stage-success-popup {
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            background: #1e293b; border: 1px solid var(--primary); border-radius: 20px;
+            padding: 2.5rem; text-align: center; z-index: 10002; display: none;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); width: 90%; max-width: 400px;
+            animation: popupScale 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .success-icon-animated {
+            width: 80px; height: 80px; background: rgba(16, 185, 129, 0.1);
+            color: #10b981; border-radius: 50%; display: flex; align-items: center;
+            justify-content: center; margin: 0 auto 1.5rem auto; font-size: 2.5rem;
+        }
+
+        @keyframes popupScale { 
+            0% { transform: translate(-50%, -50%) scale(0.8); opacity: 0; } 
+            100% { transform: translate(-50%, -50%) scale(1); opacity: 1; } 
+        }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     </style>
 </head>
 <body class="dashboard-body">
@@ -338,8 +447,14 @@ if (empty($skillRow['skills'])) {
     <div class="app-container">
         <!-- Sidebar -->
         <aside class="sidebar" id="sidebar">
-            <div class="sidebar-header">
-                <div class="logo">LGU3<span>User</span></div>
+            <div class="sidebar-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+                <div class="logo" style="display: flex; align-items: center; gap: 10px;">
+                    <img src="laforteza_logo.jpg" style="width: 30px; height: 30px; border-radius: 6px; object-fit: cover;">
+                    <div style="font-size: 1.1rem; line-height: 1;">LGU3<span style="display: block; font-size: 0.65rem; font-weight: 500; opacity: 0.7;">BARANGAY 175</span></div>
+                </div>
+                <button class="sidebar-toggle" onclick="toggleSidebar()" id="sidebar-btn" title="Toggle Sidebar">
+                    <i data-feather="chevron-left"></i>
+                </button>
             </div>
             <nav class="sidebar-nav">
                 <a href="#" class="nav-item active" onclick="showSection('home', this)">
@@ -366,9 +481,17 @@ if (empty($skillRow['skills'])) {
                     <i data-feather="book-open"></i>
                     <span>Learning Center</span>
                 </a>
+                <a href="#" class="nav-item" onclick="showSection('skill-test', this)">
+                    <i data-feather="award"></i>
+                    <span>Skill Test</span>
+                </a>
                 <a href="#" class="nav-item" onclick="showSection('ai-chat', this)">
                     <i data-feather="message-circle"></i>
                     <span>AI Assistant</span>
+                </a>
+                <a href="#" class="nav-item" onclick="showSection('generate-id', this)">
+                    <i data-feather="credit-card"></i>
+                    <span>Generate ID</span>
                 </a>
             </nav>
             <div class="sidebar-footer">
@@ -380,8 +503,8 @@ if (empty($skillRow['skills'])) {
         </aside>
 
         <!-- Main Content -->
-        <main class="main-content">
-            <header class="top-bar">
+        <main class="main-content" id="main-content">
+            <header class="top-bar" style="background: var(--card-bg); backdrop-filter: blur(10px);">
                 <button class="mobile-toggle" onclick="document.getElementById('sidebar').classList.toggle('open')">☰</button>
                 <div class="welcome-text">
                     <span>Good Morning, <span id="header-name"><?php echo htmlspecialchars($user_name); ?></span>!</span>
@@ -505,7 +628,37 @@ if (empty($skillRow['skills'])) {
                                     Confirm Name Change
                                 </button>
                             </div>
+
+                            <!-- Theme Settings -->
+                            <div style="margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid rgba(255,255,255,0.05);">
+                               <label>Interface Theme</label>
+                               <div style="display: flex; gap: 1rem; margin-top: 0.5rem;">
+                                   <button type="button" class="action-btn" id="btn-dark" onclick="setTheme('dark')" style="flex:1;">
+                                       <i data-feather="moon" style="width:14px; margin-right:5px; vertical-align:middle;"></i> Dark
+                                   </button>
+                                   <button type="button" class="action-btn" id="btn-light" onclick="setTheme('light')" style="flex:1;">
+                                       <i data-feather="sun" style="width:14px; margin-right:5px; vertical-align:middle;"></i> Light
+                                   </button>
+                               </div>
+                            </div>
                         </form>
+
+                        <!-- BADGES SECTION -->
+                        <div style="margin-top:2.5rem; padding-top:2rem; border-top:1px solid rgba(255,255,255,0.05);">
+                            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:1.5rem;">
+                                <h3 style="margin:0; color:#fff; font-size:1.2rem;">
+                                    <i data-feather="award" style="width:20px; vertical-align:middle; margin-right:8px; color:#fbbf24;"></i>
+                                    Earned Badges
+                                </h3>
+                                <span id="badge-count" style="background:rgba(251, 191, 36, 0.1); color:#fbbf24; padding:0.3rem 0.8rem; border-radius:20px; font-size:0.85rem; font-weight:600;">0</span>
+                            </div>
+                            <div id="badges-container" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(140px, 1fr)); gap:1rem;">
+                                <div style="text-align:center; padding:2rem; color:#64748b; grid-column:1/-1;">
+                                    <i data-feather="award" style="width:40px; opacity:0.3; margin-bottom:0.5rem;"></i>
+                                    <div style="font-size:0.9rem;">Complete skill tests to earn badges!</div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -513,7 +666,11 @@ if (empty($skillRow['skills'])) {
                 <div id="create-report" class="section-view">
                     <div class="page-header" style="text-align: center;">
                         <h2>Create New Report</h2>
-                        <p>Submit a concern or incident to the administration.</p>
+                        <p>Submit incident reports or community feedback.</p>
+                        <div style="font-size:0.8rem; color:#10b981; background:rgba(16, 185, 129, 0.1); display:inline-block; padding:0.4rem 1rem; border-radius:30px; margin-top:0.8rem;">
+                            <i data-feather="cpu" style="width:12px; vertical-align:middle; margin-right:4px;"></i>
+                            <strong>AI Powered:</strong> Your feedback is analyzed by NLP for sentiment & trends!
+                        </div>
                     </div>
                     <div class="content-section" style="padding: 2rem; max-width: 600px; margin: 0 auto; text-align: left;">
                         <form id="reportForm">
@@ -606,11 +763,57 @@ if (empty($skillRow['skills'])) {
                     </div>
                 </div>
 
+                <!-- SKILL TEST SECTION -->
+                <div id="skill-test" class="section-view">
+                    <div class="page-header">
+                        <h2>Professional Skill Tests</h2>
+                        <p>Boost your career by enrolling in free skill assessments. Get certified instantly.</p>
+                    </div>
+
+                    <!-- Catalog View -->
+                    <div id="skill-catalog" style="display: block;">
+                        <div id="skill-list" class="rec-grid"> <!-- reuse grid -->
+                            <div style="color:#aaa; text-align:center; padding:2rem;">Loading skill tests...</div>
+                        </div>
+                    </div>
+
+                    <!-- Active Test View (Hidden by default) -->
+                    <div id="skill-detail-view" style="display: none;">
+                        <button onclick="showSkillCatalog()" class="action-btn" style="background:transparent; border:1px solid #64748b; margin-bottom:1rem;">
+                            <i data-feather="arrow-left" style="width:16px; margin-right:5px; vertical-align:middle;"></i> Back to Catalog
+                        </button>
+                        
+                        <div class="doc-card" style="border:1px solid var(--primary); background: linear-gradient(145deg, rgba(30, 41, 59, 0.8), rgba(15, 23, 42, 0.9));">
+                            <h2 id="active-test-title" style="color:#fff; margin-bottom:0.5rem;">Test Title</h2>
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+                                 <span style="color:#94a3b8; font-size:0.9rem;" id="active-test-stages-count">5 Stages</span>
+                                 <span class="badgex" style="background:rgba(16,185,129,0.2); color:#10b981; padding:2px 8px; border-radius:4px; font-size:0.8rem;" id="active-test-status">In Progress</span>
+                            </div>
+                            
+                            <div style="display:flex; justify-content:space-between; color:#cbd5e1; font-size:0.85rem; margin-bottom:5px;">
+                                <span>Progress</span>
+                                <span id="active-progress-text">0%</span>
+                            </div>
+                            <div class="progress-container">
+                                <div class="progress-bar" id="active-progress-bar"></div>
+                            </div>
+                            
+                            <div id="stages-container" class="stage-list">
+                                <!-- Stages go here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- AI CHATBOT SECTION -->
                 <div id="ai-chat" class="section-view">
-                    <div class="page-header">
-                        <h2>Barangay AI Assistant</h2>
-                        <p>Ask anything about barangay processes, requirements, or programs.</p>
+                     <div class="page-header" style="max-width:700px; margin:0 auto 1.5rem auto;">
+                        <h2>LGU3 AI Assistant</h2>
+                        <p>Ask questions about livelihood programs, certifications, or the system.</p>
+                         <div style="font-size:0.8rem; color:#94a3b8; background:rgba(255,255,255,0.05); padding:0.8rem; border-radius:12px; margin-top:1rem; border:1px solid rgba(255,255,255,0.1);">
+                            <i data-feather="info" style="width:14px; vertical-align:middle; color:#3b82f6;"></i>
+                            <strong>Did you know?</strong> Our Admin uses <em>Natural Language Processing (NLP)</em> to analyze the sentiment of your reports and <em>Machine Learning (ML)</em> to predict future program demand. Your voice matters!
+                        </div>
                     </div>
                     
                     <div class="chat-section-container">
@@ -621,14 +824,17 @@ if (empty($skillRow['skills'])) {
                             <div>
                                 <h4 style="color:white; margin:0;">Smart LGU Assistant</h4>
                                 <div style="display:flex; align-items:center;">
-                                    <div class="status-dot"></div>
-                                    <span style="font-size:0.75rem; color:#64748b; margin-left:0.5rem;">Always Online</span>
-                                    <span class="ai-typing" id="ai-typing">Typing...</span>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="chat-body-ai" id="chat-messages">
+                                     <div class="status-dot"></div>
+                                     <span style="font-size:0.75rem; color:#64748b; margin-left:0.5rem;">Always Online</span>
+                                     <span class="ai-typing" id="ai-typing">Typing...</span>
+                                 </div>
+                             </div>
+                             <button class="sidebar-toggle" onclick="toggleChatMini()" style="margin-left:auto;">
+                                <i data-feather="minus" id="chat-mini-icon"></i>
+                             </button>
+                         </div>
+                         
+                         <div class="chat-body-ai" id="chat-messages">
                             <div class="chat-message ai">
                                 Hello! I am your Barangay AI Assistant. How can I help you today? You can ask me about Barangay 175 requirements, livelihood programs, or how to report an incident.
                             </div>
@@ -643,11 +849,256 @@ if (empty($skillRow['skills'])) {
                     </div>
                 </div>
 
+                <!-- GENERATE ID SECTION -->
+                <div id="generate-id" class="section-view">
+                    <div class="page-header" style="text-align: center;">
+                        <h2>Community Identity</h2>
+                        <p>Generate and download your official Barangay ID</p>
+                    </div>
+                    
+                    <div style="display: flex; flex-direction: column; align-items: center; gap: 3rem; margin-top: 2rem;">
+                        <div id="id-card-view" style="display: flex; flex-wrap: wrap; justify-content: center; gap: 2rem;">
+                            <!-- Front View -->
+                            <div class="id-card-item front-side" id="id-front">
+                                <div class="id-header-premium">
+                                    <div style="display: flex; align-items: center; gap: 10px;">
+                                        <div style="width: 42px; height: 42px; background: #fff; border-radius: 8px; padding: 2px; box-shadow: 0 2px 5px rgba(0,0,0,0.2); overflow: hidden;">
+                                            <img src="laforteza_logo.jpg" style="width:100%; height:100%; object-fit: cover;" alt="Laforteza Logo">
+                                        </div>
+                                        <div style="line-height: 1.2;">
+                                            <div style="font-size: 0.6rem; font-weight: 700; color: #fff; opacity: 0.8; letter-spacing: 0.5px;">REPUBLIC OF THE PHILIPPINES</div>
+                                            <div style="font-size: 0.8rem; font-weight: 800; color: #fff; letter-spacing: -0.2px;">BRGY. 175 LAFORTEZA</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="id-body-premium">
+                                    <div class="id-photo-premium">
+                                        <?php if($user_image): ?>
+                                            <img src="<?php echo $user_image; ?>" style="width:100%; height:100%; object-fit:cover;">
+                                        <?php else: ?>
+                                            <div style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; color:#94a3b8; font-size:1.5rem; font-weight:700;">
+                                                <?php echo $user_initials; ?>
+                                            </div>
+                                        <?php endif; ?>
+                                    </div>
+                                    <div class="id-info-premium">
+                                        <div class="label-tiny">FULL NAME</div>
+                                        <div class="val-name"><?php echo htmlspecialchars($user_name); ?></div>
+                                        <div style="display: flex; gap: 1rem; margin-top: 0.8rem;">
+                                            <div>
+                                                <div class="label-tiny">STATUS</div>
+                                                <div class="val-mini">CITIZEN</div>
+                                            </div>
+                                            <div>
+                                                <div class="label-tiny">ISSUE DATE</div>
+                                                <div class="val-mini"><?php echo date('M d, Y'); ?></div>
+                                            </div>
+                                        </div>
+                                        <div style="margin-top: 0.8rem;">
+                                            <div class="label-tiny">ID NUMBER</div>
+                                            <div class="val-mini" style="font-family: 'Courier New', monospace; letter-spacing: 1px;">LG-<?php echo str_pad($_SESSION['user_id'], 6, '0', STR_PAD_LEFT); ?>-CP</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="id-footer-accent"></div>
+                            </div>
+
+                            <!-- Back View -->
+                            <div class="id-card-item back-side" id="id-back">
+                                <div style="height: 40px; background: #111; margin-bottom: 1.5rem;"></div>
+                                <div style="padding: 0 1.5rem;">
+                                    <div class="label-tiny" style="color: #94a3b8; font-size: 0.6rem;">PERMANENT RESIDENT OF</div>
+                                    <div style="color: #fff; font-size: 0.9rem; margin-bottom: 1rem; font-weight: 600;">Laforteza Oldings, Barangay 175, Caloocan City, PH.</div>
+                                    
+                                    <div style="background: rgba(255,255,255,0.03); padding: 1rem; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
+                                        <div style="font-size: 0.6rem; color: #64748b; margin-bottom: 0.5rem; line-height: 1.4;">
+                                            THIS CARD IS NON-TRANSFERABLE AND IS ISSUED PURSUANT TO THE CITIZENSHIP REGISTRATION ACT. IN CASE OF LOSS, PLEASE REPORT IMMEDIATELY TO THE BARANGAY SECRETARY.
+                                        </div>
+                                        <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: 0.75rem;">
+                                            <div style="padding: 4px; background: white; border-radius: 4px; display: inline-flex;">
+                                                <img src="https://api.qrserver.com/v1/create-qr-code/?size=50x50&data=USER-<?php echo $_SESSION['user_id']; ?>" style="width:45px; height:45px;" alt="QR">
+                                            </div>
+                                            <div style="text-align: right;">
+                                                <div style="width: 100px; height: 1px; background: rgba(255,255,255,0.2); margin-bottom: 5px;"></div>
+                                                <div style="font-size: 0.5rem; color: #94a3b8;">AUTHORIZED SIGNATURE</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div style="display: flex; gap: 1rem; margin-bottom: 2rem;">
+                            <button onclick="printID()" class="primary-action-btn">
+                                <i data-feather="printer" style="width:16px; margin-right:8px; vertical-align:middle;"></i>
+                                Print ID Card
+                            </button>
+                            <button onclick="downloadID()" class="action-btn" style="background: transparent; border: 1px solid var(--primary); color: var(--primary);">
+                                <i data-feather="download" style="width:16px; margin-right:8px; vertical-align:middle;"></i>
+                                Download Digital Copy
+                            </button>
+                        </div>
+                    </div>
+
+                    <style>
+                        .id-card-item {
+                            width: 340px;
+                            height: 215px;
+                            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+                            border-radius: 16px;
+                            position: relative;
+                            overflow: hidden;
+                            border: 1px solid rgba(255, 255, 255, 0.1);
+                            box-shadow: 0 15px 35px rgba(0,0,0,0.5);
+                            color: white;
+                        }
+                        .id-card-item.back-side { background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%); }
+                        
+                        .id-header-premium {
+                            padding: 1.25rem;
+                            background: rgba(99, 102, 241, 0.2);
+                            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+                        }
+                        
+                        .id-body-premium {
+                            padding: 1.25rem;
+                            display: flex;
+                            gap: 1.25rem;
+                            align-items: center;
+                        }
+                        
+                        .id-photo-premium {
+                            width: 100px;
+                            height: 100px;
+                            background: rgba(30, 41, 59, 0.5);
+                            border-radius: 8px;
+                            overflow: hidden;
+                            border: 2px solid rgba(99, 102, 241, 0.3);
+                        }
+                        
+                        .id-info-premium { flex: 1; }
+                        
+                        .label-tiny {
+                            font-size: 0.55rem;
+                            font-weight: 700;
+                            color: var(--primary);
+                            text-transform: uppercase;
+                            letter-spacing: 1px;
+                            margin-bottom: 2px;
+                        }
+                        
+                        .val-name {
+                            font-size: 0.9rem;
+                            font-weight: 800;
+                            color: #fff;
+                            letter-spacing: 0.5px;
+                        }
+                        
+                        .val-mini {
+                            font-size: 0.75rem;
+                            font-weight: 600;
+                            color: #cbd5e1;
+                        }
+                        
+                        .id-footer-accent {
+                            position: absolute;
+                            bottom: 0;
+                            left: 0;
+                            width: 100%;
+                            height: 8px;
+                            background: linear-gradient(90deg, var(--primary), #a855f7);
+                        }
+
+                        @media print {
+                            body * { visibility: hidden !important; }
+                            #id-card-view, #id-card-view * { visibility: visible !important; }
+                            #id-card-view { position: fixed; left: 0; top: 0; width: 100%; display: flex; flex-direction: column; align-items: center; gap: 20px; background: white; padding: 20px; }
+                            .id-card-item { border: 1px solid #111 !important; color: black !important; background: white !important; }
+                            .id-header-premium { background: #eee !important; color: black !important; }
+                            .val-name, .val-mini { color: black !important; }
+                            .id-footer-accent { display: none; }
+                        }
+                    </style>
+                </div>
+
             </div>
         </main>
     </div>
+    <div id="stage-loader-overlay">
+        <div class="premium-loader"></div>
+        <p style="color:white; font-weight:600; letter-spacing:1px;">PROCESSING STAGE...</p>
+    </div>
+
+    <div id="stage-success-popup">
+        <div class="success-icon-animated">
+            <i data-feather="check-circle" style="width:48px; height:48px;"></i>
+        </div>
+        <h2 style="color:white; margin-bottom:0.5rem;">Congrats!</h2>
+        <p style="color:#94a3b8; font-size:1.1rem; font-weight:500;">Good work! Stage Complete.</p>
+    </div>
+
     <script>
         feather.replace();
+
+        // Theme System
+        function setTheme(theme) {
+            if (theme === 'light') {
+                document.body.classList.add('light-theme');
+                if(document.getElementById('btn-light')) document.getElementById('btn-light').classList.add('active');
+                if(document.getElementById('btn-dark')) document.getElementById('btn-dark').classList.remove('active');
+            } else {
+                document.body.classList.remove('light-theme');
+                if(document.getElementById('btn-dark')) document.getElementById('btn-dark').classList.add('active');
+                if(document.getElementById('btn-light')) document.getElementById('btn-light').classList.remove('active');
+            }
+            localStorage.setItem('theme', theme);
+        }
+
+        // Initialize theme on load
+        const savedTheme = localStorage.getItem('theme') || 'dark';
+        setTheme(savedTheme);
+
+        // Sidebar System
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const mainContent = document.getElementById('main-content');
+            const toggleBtn = document.getElementById('sidebar-btn');
+            
+            sidebar.classList.toggle('minimized');
+            mainContent.classList.toggle('sidebar-collapsed');
+            
+            if(sidebar.classList.contains('minimized')) {
+                toggleBtn.innerHTML = '<i data-feather="chevron-right"></i>';
+            } else {
+                toggleBtn.innerHTML = '<i data-feather="chevron-left"></i>';
+            }
+            feather.replace();
+            localStorage.setItem('sidebarMinimized', sidebar.classList.contains('minimized'));
+        }
+
+        function toggleChatMini() {
+            const chat = document.querySelector('.chat-section-container');
+            const icon = document.getElementById('chat-mini-icon');
+            chat.classList.toggle('minimized');
+            
+            if(chat.classList.contains('minimized')) {
+                icon.setAttribute('data-feather', 'maximize-2');
+            } else {
+                icon.setAttribute('data-feather', 'minus');
+            }
+            feather.replace();
+        }
+
+        // Apply saved sidebar state
+        window.addEventListener('load', () => {
+            const isMinimized = localStorage.getItem('sidebarMinimized') === 'true';
+            if(isMinimized) {
+                document.getElementById('sidebar').classList.add('minimized');
+                document.getElementById('main-content').classList.add('sidebar-collapsed');
+                if(document.getElementById('sidebar-btn')) document.getElementById('sidebar-btn').innerHTML = '<i data-feather="chevron-right"></i>';
+                feather.replace();
+            }
+        });
 
         // --- Navigation ---
         function showSection(id, element) {
@@ -662,6 +1113,7 @@ if (empty($skillRow['skills'])) {
             if(id === 'history') fetchHistory();
             if(id === 'schedule') fetchCalendar();
             if(id === 'learning-docs') fetchUserDocs();
+            if(id === 'skill-test') fetchSkillTests();
             if(id === 'ai-chat') {
                 const cb = document.getElementById('chat-messages');
                 cb.scrollTop = cb.scrollHeight;
@@ -899,6 +1351,9 @@ if (empty($skillRow['skills'])) {
             }
         });
 
+        // Load badges on profile view
+        fetchBadges();
+
         // --- Notifications Logic ---
         function toggleNotifs(e) {
             e.stopPropagation();
@@ -940,6 +1395,43 @@ if (empty($skillRow['skills'])) {
                     list.appendChild(item);
                 });
             } catch(e) {}
+        }
+
+        async function fetchBadges() {
+            try {
+                const res = await fetch('api.php?action=get_skill_progress');
+                const data = await res.json();
+                const container = document.getElementById('badges-container');
+                const countBadge = document.getElementById('badge-count');
+                
+                const completed = data.filter(t => t.status === 'completed' || t.user_status === 'completed');
+                countBadge.innerText = completed.length;
+                
+                if(completed.length === 0) {
+                    container.innerHTML = `
+                        <div style="text-align:center; padding:2rem; color:#64748b; grid-column:1/-1;">
+                            <i data-feather="award" style="width:40px; opacity:0.3; margin-bottom:0.5rem;"></i>
+                            <div style="font-size:0.9rem;">Complete skill tests to earn badges!</div>
+                        </div>
+                    `;
+                    feather.replace();
+                    return;
+                }
+                
+                container.innerHTML = '';
+                completed.forEach(test => {
+                    container.innerHTML += `
+                        <div style="background:rgba(255,255,255,0.03); border:1px solid rgba(251, 191, 36, 0.2); border-radius:12px; padding:1rem; text-align:center; transition:transform 0.2s; cursor:pointer;" onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform='translateY(0)'">
+                            <div style="width:60px; height:60px; background:rgba(251, 191, 36, 0.1); border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 0.8rem auto;">
+                                <i data-feather="award" style="width:30px; height:30px; color:#fbbf24;"></i>
+                            </div>
+                            <div style="color:#fff; font-size:0.85rem; font-weight:600; margin-bottom:0.3rem;">${test.title}</div>
+                            <div style="color:#fbbf24; font-size:0.7rem; text-transform:uppercase; letter-spacing:0.5px;">Certified</div>
+                        </div>
+                    `;
+                });
+                feather.replace();
+            } catch(e) { console.error(e); }
         }
 
         async function markAsRead(id) {
@@ -1268,6 +1760,281 @@ if (empty($skillRow['skills'])) {
             currentMonth--;
             if(currentMonth < 0) { currentMonth = 11; currentYear--; }
             renderCalendar();
+        }
+
+        // --- SKILL TEST FUNCTIONS ---
+        let currentTestId = null;
+
+        async function fetchSkillTests() {
+            try {
+                const res = await fetch('api.php?action=get_skill_progress');
+                const data = await res.json();
+                const container = document.getElementById('skill-list');
+                
+                if(data.length === 0) {
+                    container.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:2rem; color:#aaa;">No skill tests available at the moment.</div>';
+                    return;
+                }
+
+                container.innerHTML = '';
+                data.forEach(test => {
+                    const isEnrolled = test.current_stage > 0;
+                    // Use user_status for reliability. Fallback to status if aliased.
+                    const status = test.user_status || test.status; 
+                    const isCompleted = status === 'completed';
+                    
+                    // Calc progress: if completed force 100, else calc based on stage
+                    let progress = 0;
+                    if(isEnrolled) {
+                        if(isCompleted) progress = 100;
+                        else progress = test.total_stages > 0 ? Math.round(((test.current_stage - 1) / test.total_stages) * 100) : 0;
+                    }
+
+                    const btnText = isEnrolled ? (isCompleted ? 'View Certificate' : 'Continue Learning') : 'Enroll Free';
+                    const btnAction = isEnrolled ? `openSkillTest(${test.id}, '${test.title.replace(/'/g, "\\'")}', ${test.total_stages})` : `enrollSkill(${test.id})`;
+                    
+                    container.innerHTML += `
+                        <div class="skill-card">
+                            <img src="${test.thumbnail}" class="skill-thumb" onerror="this.src='https://via.placeholder.com/600x400?text=Skill+Test'">
+                            <div class="skill-body">
+                                <h3 class="skill-title">${test.title}</h3>
+                                <p class="skill-desc">${test.description}</p>
+                                ${isEnrolled ? `
+                                    <div style="margin-bottom:10px;">
+                                        <div style="display:flex; justify-content:space-between; font-size:0.75rem; color:#cbd5e1; margin-bottom:4px;">
+                                            <span>${isCompleted ? 'Completed' : 'In Progress'}</span>
+                                            <span>${progress}%</span>
+                                        </div>
+                                        <div class="progress-container" style="height:4px; margin-bottom:0;"><div class="progress-bar" style="width:${progress}%"></div></div>
+                                    </div>
+                                ` : ''}
+                                <button class="primary-action-btn" onclick="${btnAction}" style="width:100%; margin-top:auto;">${btnText}</button>
+                            </div>
+                        </div>
+                    `;
+                });
+            } catch(e) { console.error(e); }
+        }
+
+        async function enrollSkill(tid) {
+            if(!confirm('Enroll in this skill test for free?')) return;
+            try {
+                const res = await fetch('api.php?action=enroll_skill', {
+                    method: 'POST', body: JSON.stringify({test_id: tid})
+                });
+                const data = await res.json();
+                if(data.success) {
+                    fetchSkillTests(); 
+                    // Automatically open it?
+                    // Let's just refresh list for now as per "attach and start" could mean auto-open but list view needs update first.
+                    // Actually let's just refresh.
+                }
+            } catch(e) { alert('Error enrolling'); }
+        }
+
+        async function openSkillTest(tid, title, totalStages) {
+            currentTestId = tid;
+            document.getElementById('skill-catalog').style.display = 'none';
+            document.getElementById('skill-detail-view').style.display = 'block';
+            document.getElementById('active-test-title').innerText = title;
+            
+            try {
+                // Fetch latest progress
+                const progressRes = await fetch('api.php?action=get_skill_progress');
+                const progressData = await progressRes.json();
+                const myTest = progressData.find(t => t.id == tid);
+                const currentStage = myTest.current_stage;
+                const status = myTest.user_status;
+                
+                document.getElementById('active-test-status').innerText = status === 'completed' ? 'Completed' : 'Stage ' + currentStage + ' of ' + totalStages;
+                const pct = status === 'completed' ? 100 : Math.round(((currentStage - 1) / totalStages) * 100);
+                document.getElementById('active-progress-text').innerText = pct + '%';
+                document.getElementById('active-progress-bar').style.width = pct + '%';
+
+                // Fetch Stages
+                const res = await fetch('api.php?action=get_test_stages&test_id=' + tid);
+                const stages = await res.json();
+                const container = document.getElementById('stages-container');
+                container.innerHTML = '';
+                
+                stages.forEach(stage => {
+                    const num = parseInt(stage.stage_number);
+                    let stateClass = '';
+                    let icon = '<span style="color:#64748b; font-size:0.9rem;">' + num + '</span>';
+                    let btn = '';
+
+                    if (status === 'completed') {
+                        stateClass = 'completed';
+                        icon = '<i data-feather="check" style="width:14px;"></i>';
+                        btn = '<span style="color:#10b981; font-size:0.85rem;">Completed</span>';
+                    } else {
+                        if(num < currentStage) {
+                            stateClass = 'completed';
+                            icon = '<i data-feather="check" style="width:14px;"></i>';
+                            btn = '<span style="color:#10b981; font-size:0.85rem;">Completed</span>';
+                        } else if (num == currentStage) {
+                            stateClass = 'active';
+                            icon = '<span style="color:var(--primary); font-weight:bold;">' + num + '</span>';
+                            btn = `<button class="action-btn" onclick="viewStageContent('${stage.title.replace(/'/g, "\\'")}', '${stage.video_url}', ${num}, ${totalStages})" style="padding:0.4rem 0.8rem; font-size:0.8rem;">Start</button>`;
+                        } else {
+                            stateClass = 'locked';
+                            icon = '<i data-feather="lock" style="width:14px;"></i>';
+                        }
+                    }
+                    
+                    container.innerHTML += `
+                        <div class="stage-item ${stateClass}">
+                            <div style="display:flex; align-items:center;">
+                                <div class="stage-check">${icon}</div>
+                                <div>
+                                    <div style="color:#fff; font-weight:500;">${stage.title}</div>
+                                    <div style="color:#94a3b8; font-size:0.85rem;">${stage.content.substring(0, 50)}...</div>
+                                </div>
+                            </div>
+                            <div>${btn}</div>
+                        </div>
+                    `;
+                });
+                feather.replace();
+            } catch(e) {}
+        }
+
+        function showSkillCatalog() {
+            document.getElementById('skill-catalog').style.display = 'block';
+            document.getElementById('skill-detail-view').style.display = 'none';
+            fetchSkillTests();
+        }
+
+        function viewStageContent(title, url, stageNum, totalStages) {
+            // Check for modal
+            if(!document.getElementById('video-modal')) {
+                const modal = document.createElement('div');
+                modal.id = 'video-modal';
+                modal.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:9999; display:flex; align-items:center; justify-content:center; display:none;';
+                modal.innerHTML = `
+                    <div style="background:#1e293b; padding:1.5rem; border-radius:16px; width:90%; max-width:600px; border:1px solid #334155;">
+                        <h3 id="vm-title" style="color:white; margin-bottom:1rem;"></h3>
+                        <div style="aspect-ratio:16/9; background:#000; margin-bottom:1rem; border-radius:8px; overflow:hidden;">
+                            <iframe id="vm-frame" width="100%" height="100%" frameborder="0" allowfullscreen></iframe>
+                        </div>
+                        <div style="display:flex; justify-content:end; gap:1rem;">
+                            <button onclick="document.getElementById('video-modal').style.display='none'" class="action-btn" style="background:transparent; border:1px solid #64748b;">Close</button>
+                            <button id="vm-complete-btn" class="primary-action-btn">Complete & Continue</button>
+                        </div>
+                    </div>
+                `;
+                document.body.appendChild(modal);
+            }
+            
+            document.getElementById('vm-title').innerText = title;
+            document.getElementById('vm-frame').src = url;
+            document.getElementById('video-modal').style.display = 'flex';
+            document.getElementById('vm-complete-btn').onclick = function() {
+                document.getElementById('video-modal').style.display = 'none';
+                finishStage(stageNum, totalStages);
+                document.getElementById('vm-frame').src = ''; // stop video
+            };
+        }
+
+        async function finishStage(num, totalStages) {
+            const loader = document.getElementById('stage-loader-overlay');
+            const popup = document.getElementById('stage-success-popup');
+            
+            // Show Loader
+            loader.style.display = 'flex';
+            
+            try {
+                const res = await fetch('api.php?action=complete_stage', {
+                    method: 'POST', body: JSON.stringify({test_id: currentTestId, stage_number: num})
+                });
+                const data = await res.json();
+                
+                if(data.success) {
+                    // Slight delay for premium feel
+                    setTimeout(() => {
+                        loader.style.display = 'none';
+                        popup.style.display = 'block';
+                        feather.replace();
+                        
+                        setTimeout(() => {
+                            popup.style.display = 'none';
+                            
+                            // Update list view background
+                            fetchSkillTests(); 
+                            
+                            if(data.test_completed) {
+                                const title = document.getElementById('active-test-title').innerText;
+                                openSkillTest(currentTestId, title, totalStages); // Update to completed view
+                                showCompletionModal();
+                            } else {
+                                const title = document.getElementById('active-test-title').innerText;
+                                openSkillTest(currentTestId, title, totalStages);
+                            }
+                        }, 2000); // Show success for 2 seconds
+                    }, 1000); // Loading for 1 second
+                } else {
+                    loader.style.display = 'none';
+                    alert(data.error || 'Failed to complete stage');
+                }
+            } catch(e) {
+                loader.style.display = 'none';
+                alert('Connection error');
+            }
+        }
+
+        function showCompletionModal() {
+            if(!document.getElementById('completion-styles')) {
+                const style = document.createElement('style');
+                style.id = 'completion-styles';
+                style.innerHTML = `
+                    @keyframes popupScale { 0% { transform:scale(0.8); opacity:0; } 100% { transform:scale(1); opacity:1; } }
+                    @keyframes badgePulse { 0% { transform:scale(1); box-shadow:0 0 0 0 rgba(251, 191, 36, 0.4); } 70% { transform:scale(1.1); box-shadow:0 0 0 20px rgba(251, 191, 36, 0); } 100% { transform:scale(1); box-shadow:0 0 0 0 rgba(251, 191, 36, 0); } }
+                    .confetti { position: absolute; width: 10px; height: 10px; animation: confetti-fall 4s linear infinite; opacity:0.8; }
+                    @keyframes confetti-fall { 0% { transform: translateY(-10vh) rotate(0deg); opacity:1; } 100% { transform: translateY(110vh) rotate(720deg); opacity:0; } }
+                `;
+                document.head.appendChild(style);
+            }
+
+            const modal = document.createElement('div');
+            modal.style.cssText = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:10000; display:flex; align-items:center; justify-content:center; backdrop-filter:blur(5px);";
+            
+            modal.innerHTML = `
+                <div style="background:#1e293b; padding:2.5rem; border-radius:24px; border:1px solid rgba(251, 191, 36, 0.3); text-align:center; max-width:450px; width:90%; position:relative; overflow:hidden; animation: popupScale 0.4s ease-out; box-shadow:0 20px 50px rgba(0,0,0,0.5);">
+                    <div style="position:absolute; top:0; left:0; width:100%; height:6px; background:linear-gradient(90deg, #fbbf24, #d97706);"></div>
+                    <div style="width:100px; height:100px; background:rgba(251, 191, 36, 0.1); border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 1.5rem auto; animation: badgePulse 2s infinite;">
+                        <i data-feather="award" style="width:50px; height:50px; color:#fbbf24;"></i>
+                    </div>
+                    <h2 style="color:#fff; margin-bottom:0.5rem; font-family:'Inter', sans-serif; font-size:1.8rem;">Congratulations!</h2>
+                    <p style="color:#94a3b8; margin-bottom:2rem; line-height:1.5;">You have successfully completed this skill assessment. Your progress has been recorded!</p>
+                    <div style="background:rgba(255,255,255,0.03); padding:1rem; border-radius:12px; margin-bottom:2rem; border:1px solid rgba(255,255,255,0.05);">
+                        <div style="color:#fbbf24; font-weight:700; text-transform:uppercase; font-size:0.75rem; letter-spacing:1px; margin-bottom:0.2rem;">Achievement Unlocked</div>
+                        <div style="color:white; font-size:1.1rem; font-weight:600;">Skill Verified</div>
+                    </div>
+                    <button onclick="this.closest('div').parentElement.remove();" style="background:linear-gradient(135deg, #fbbf24, #d97706); color:#1e293b; border:none; padding:1rem 2.5rem; border-radius:12px; font-weight:700; cursor:pointer; font-size:1rem; width:100%; box-shadow:0 4px 15px rgba(251, 191, 36, 0.3); transition:transform 0.2s;">View Certificate</button>
+                </div>
+            `;
+
+            const colors = ['#fbbf24', '#3b82f6', '#10b981', '#ef4444', '#a855f7'];
+            for(let i=0; i<40; i++) {
+                const c = document.createElement('div');
+                c.className = 'confetti';
+                c.style.left = Math.random() * 100 + '%';
+                c.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                c.style.animationDuration = (Math.random() * 3 + 2) + 's';
+                c.style.animationDelay = (Math.random() * 2) + 's';
+                modal.appendChild(c);
+            }
+
+            document.body.appendChild(modal);
+            feather.replace();
+        }
+
+        function printID() {
+            window.print();
+        }
+
+        function downloadID() {
+            alert('Digital Copy Generated! In a real system, this would trigger a PDF/Image generation. You can now use the Print feature to save as PDF.');
         }
     </script>
 </body>

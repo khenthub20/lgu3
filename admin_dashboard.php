@@ -39,7 +39,7 @@ if ($checkCol && $checkCol->num_rows > 0) {
         @keyframes fadeIn { from { opacity:0; transform: translateY(5px); } to { opacity:1; transform: translateY(0); } }
         
         /* Settings Form */
-        .settings-form { max-width: 500px; }
+        .settings-form { max-width: 600px; margin: 0 auto; }
         .form-group { margin-bottom: 1.5rem; }
         .form-group label { display: block; color: var(--text-muted); margin-bottom: 0.5rem; font-size: 0.9rem; }
         .form-control { width: 100%; padding: 0.75rem; background: var(--input-bg); border: 1px solid var(--border-color); border-radius: 8px; color: #fff; outline: none; }
@@ -50,67 +50,139 @@ if ($checkCol && $checkCol->num_rows > 0) {
         .danger-btn:hover { background: #ef4444; color: #fff; }
         .success-btn { background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.2) !important; transition: all 0.2s; }
         .success-btn:hover { background: #10b981; color: #fff; }
+        
+        /* Theme button active state */
+        .action-btn.active { background: var(--primary) !important; color: #fff !important; border-color: var(--primary) !important; }
+
+        /* Sidebar Minimization & Scrolling */
+        .sidebar { transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); overflow: hidden; display: flex; flex-direction: column; background: var(--sidebar-bg); }
+        .sidebar-nav { overflow-y: auto; flex: 1; padding: 0 0.75rem; scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.05) transparent; }
+        .sidebar-nav::-webkit-scrollbar { width: 4px; }
+        .sidebar-nav::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.05); border-radius: 10px; }
+        
+        .nav-item { position: relative; transition: all 0.2s; margin-bottom: 2px; }
+        .nav-item.active::before { content: ''; position: absolute; left: -12px; top: 20%; height: 60%; width: 4px; background: var(--primary); border-radius: 0 4px 4px 0; box-shadow: 2px 0 10px var(--primary); }
+        .sidebar.minimized .nav-item.active::before { left: -8px; }
+
+        .main-content { transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+        .sidebar.minimized { width: 80px; padding: 1.5rem 0; }
+        .sidebar.minimized .sidebar-header { justify-content: center; padding: 0; }
+        .sidebar.minimized .logo { font-size: 1rem; letter-spacing: 0; }
+        .sidebar.minimized .logo span, .sidebar.minimized .nav-item span, .sidebar.minimized .sidebar-footer span { display: none; }
+        .sidebar.minimized .nav-item { justify-content: center; padding: 0.8rem; border-radius: 12px; margin: 0 10px 5px 10px; }
+        .sidebar.minimized .nav-item i { margin: 0; }
+        .main-content.sidebar-collapsed { margin-left: 80px; }
+        
+        .sidebar-toggle {
+            background: rgba(255,255,255,0.02);
+            border: 1px solid var(--border-color);
+            color: var(--text-muted);
+            cursor: pointer;
+            padding: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+            border-radius: 10px;
+        }
+        .sidebar-toggle:hover { background: var(--primary); color: #fff; transform: scale(1.05); }
+        
+        /* Mobile Menu Toggle */
+        .mobile-toggle { display: none; background: none; border: none; color: var(--text-muted); cursor: pointer; padding: 8px; margin-right: 1rem; }
+        
+        @media (max-width: 768px) {
+            .mobile-toggle { display: block; }
+            .sidebar { transform: translateX(-100%); z-index: 1001; }
+            .sidebar.mobile-open { transform: translateX(0); }
+            .main-content { margin-left: 0 !important; }
+            .sidebar-overlay { 
+                position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+                background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); 
+                z-index: 1000; display: none; 
+            }
+            .sidebar-overlay.active { display: block; }
+        }
     </style>
 </head>
 <body class="dashboard-body">
     <div class="app-container">
         <!-- Sidebar -->
-        <aside class="sidebar">
-            <div class="sidebar-header">
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header" style="margin-bottom: 2rem;">
                 <div class="logo">LGU3<span>Admin</span></div>
             </div>
             <nav class="sidebar-nav">
-                <a href="#" class="nav-item active" onclick="showSection('overview', this)">
+                <a href="#" class="nav-item active" onclick="showSection('overview', this)" title="Overview">
                     <i data-feather="grid"></i>
                     <span>Overview</span>
                 </a>
-                <a href="#" class="nav-item" onclick="showSection('users', this)">
+                <a href="#" class="nav-item" onclick="showSection('users', this)" title="Users">
                     <i data-feather="users"></i>
                     <span>Users</span>
                 </a>
-                <a href="#" class="nav-item" onclick="showSection('reports', this)">
+                <a href="#" class="nav-item" onclick="showSection('reports', this)" title="Reports">
                     <i data-feather="file-text"></i>
                     <span>Reports</span>
                 </a>
-                <a href="#" class="nav-item" onclick="showSection('programs', this)">
+                <a href="#" class="nav-item" onclick="showSection('programs', this)" title="Programs">
                     <i data-feather="briefcase"></i>
                     <span>Programs</span>
                 </a>
-                <a href="#" class="nav-item" onclick="showSection('applications', this)">
+                <a href="#" class="nav-item" onclick="showSection('applications', this)" title="Applications">
                     <i data-feather="folder"></i>
                     <span>Applications</span>
                 </a>
-                <a href="#" class="nav-item" onclick="showSection('learning-docs', this)">
+                <a href="#" class="nav-item" onclick="showSection('learning-docs', this)" title="Learning Docs">
                     <i data-feather="book-open"></i>
                     <span>Learning Docs</span>
                 </a>
-                <a href="#" class="nav-item" onclick="showSection('requests', this)">
+                <a href="#" class="nav-item" onclick="showSection('requests', this)" title="Pending Requests">
                     <i data-feather="bell"></i>
                     <span>Pending Requests</span>
                 </a>
-                <a href="#" class="nav-item" onclick="showSection('calendar', this)">
+                <a href="#" class="nav-item" onclick="showSection('calendar', this)" title="My Calendar">
                     <i data-feather="calendar"></i>
                     <span>My Calendar</span>
                 </a>
-                <a href="#" class="nav-item" onclick="showSection('settings', this)">
+                <a href="#" class="nav-item" onclick="showSection('skill-analytics', this)" title="Skill Analytics">
+                    <i data-feather="bar-chart-2"></i>
+                    <span>Skill Analytics</span>
+                </a>
+                <a href="#" class="nav-item" onclick="showSection('skill-mgmt', this)" title="Manage Skills">
+                    <i data-feather="monitor"></i>
+                    <span>Manage Skills</span>
+                </a>
+                <a href="#" class="nav-item" onclick="showSection('smart-insights', this)" title="Smart Insights">
+                    <i data-feather="cpu"></i>
+                    <span>Smart Insights (AI)</span>
+                </a>
+                <a href="#" class="nav-item" onclick="showSection('settings', this)" title="Settings">
                     <i data-feather="settings"></i>
                     <span>Settings</span>
                 </a>
             </nav>
             <div class="sidebar-footer">
-                <a href="#" class="nav-item logout-btn">
+                <a href="#" class="nav-item logout-btn" style="color: #ef4444;" title="Logout">
                     <i data-feather="log-out"></i>
                     <span>Logout</span>
                 </a>
             </div>
         </aside>
 
+        <!-- Sidebar Overlay for Mobile -->
+        <div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleMobileMenu()"></div>
+
         <!-- Main Content -->
-        <main class="main-content">
+        <main class="main-content" id="main-content">
             <header class="top-bar">
-                <div class="search-bar">
-                    <i data-feather="search"></i>
-                    <input type="text" placeholder="Search...">
+                <div style="display:flex; align-items:center;">
+                    <button class="mobile-toggle" onclick="toggleMobileMenu()">
+                        <i data-feather="menu"></i>
+                    </button>
+                    <div class="search-bar">
+                        <i data-feather="search"></i>
+                        <input type="text" placeholder="Search...">
+                    </div>
                 </div>
                  <div class="user-profile" style="display:flex; align-items:center;">
                     <!-- Notification Bell -->
@@ -436,37 +508,194 @@ if ($checkCol && $checkCol->num_rows > 0) {
                     </div>
 
                     </div>
+
+
+
+                <!-- SECTION: SKILL ANALYTICS -->
+                <div id="skill-analytics" class="section-view">
+                    <div class="page-header">
+                        <h2>Skill Test Analytics</h2>
+                        <p>Monitor enrollment and completion rates.</p>
+                    </div>
+                    
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-icon user-color"><i data-feather="users"></i></div>
+                            <div class="stat-info">
+                                <h3>Total Enrollments</h3>
+                                <p class="stat-value" id="sa-total">--</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon success-color"><i data-feather="award"></i></div>
+                            <div class="stat-info">
+                                <h3>Completions</h3>
+                                <p class="stat-value" id="sa-completed">--</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="sa-test-list" class="content-section" style="padding:1.5rem; display:grid; grid-template-columns: repeat(auto-fill, minmax(400px, 1fr)); gap:1.5rem;">
+                        <div style="text-align:center; padding:2rem; color:#aaa; grid-column:1/-1;">Loading analytics...</div>
+                    </div>
                 </div>
 
-                <!-- SECTION: SETTINGS -->
-                <div id="settings" class="section-view">
 
+
+
+                <!-- SECTION: MANAGE SKILLS (CRUD) -->
+                <div id="skill-mgmt" class="section-view">
+                    <div class="page-header" style="display:flex; justify-content:space-between; align-items:center;">
+                        <div>
+                            <h2>Manage Skill Tests</h2>
+                            <p>Create, edit, and organize skill assessments.</p>
+                        </div>
+                        <button class="primary-action-btn" onclick="openSkillModal()">+ New Skill Test</button>
+                    </div>
+                    
+                    <div id="sm-test-list" class="content-section" style="padding:1.5rem; display:grid; grid-template-columns:repeat(auto-fill, minmax(300px, 1fr)); gap:1.5rem;">
+                        <div style="text-align:center; padding:2rem; color:#aaa; grid-column:1/-1;">Loading tests...</div>
+                    </div>
+                </div>
+
+                <!-- SECTION: SMART INSIGHTS (AI) -->
+                <div id="smart-insights" class="section-view">
                      <div class="page-header">
+                        <h2>LGU Intelligence Hub</h2>
+                        <p>AI-powered analytics using NLP for sentiment and ML for trend prediction.</p>
+                    </div>
+
+                    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap:1.5rem;">
+                        
+                        <!-- NLP: Sentiment Analysis -->
+                        <div class="content-section" style="padding:1.5rem;">
+                            <div class="section-header" style="margin-bottom:1.5rem;">
+                                <div>
+                                    <h3 style="margin-bottom:0.2rem;">Citizen Sentiment (NLP)</h3>
+                                    <p style="font-size:0.8rem; color:#94a3b8;">Real-time analysis of citizen feedback.</p>
+                                </div>
+                                <div class="icon-box" style="background:rgba(139, 92, 246, 0.1); color:#8b5cf6; padding:0.5rem; border-radius:8px;"><i data-feather="message-circle"></i></div>
+                            </div>
+                            
+                            <div style="display:flex; align-items:center; gap:2rem; margin-bottom:2rem;">
+                                <div style="position:relative; width:120px; height:120px; display:flex; align-items:center; justify-content:center;">
+                                    <svg viewBox="0 0 36 36" style="width:100%; height:100%; transform:rotate(-90deg);">
+                                        <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#334155" stroke-width="3" />
+                                        <path id="sentiment-circle" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831" fill="none" stroke="#10b981" stroke-width="3" stroke-dasharray="0, 100" />
+                                    </svg>
+                                    <div style="position:absolute; text-align:center;">
+                                        <div id="sent-score" style="font-size:1.5rem; font-weight:700; color:#fff;">--%</div>
+                                        <div style="font-size:0.6rem; color:#94a3b8;">POSITIVE</div>
+                                    </div>
+                                </div>
+                                <div style="flex:1;">
+                                    <div style="margin-bottom:0.8rem;">
+                                        <div style="display:flex; justify-content:space-between; font-size:0.8rem; margin-bottom:0.3rem;">
+                                            <span style="color:#10b981;">Positive</span>
+                                            <span id="sent-pos-val">0</span>
+                                        </div>
+                                        <div style="height:6px; background:rgba(255,255,255,0.05); border-radius:3px; overflow:hidden;"><div id="sent-pos-bar" style="width:0; height:100%; background:#10b981;"></div></div>
+                                    </div>
+                                    <div style="margin-bottom:0.8rem;">
+                                        <div style="display:flex; justify-content:space-between; font-size:0.8rem; margin-bottom:0.3rem;">
+                                            <span style="color:#fbbf24;">Neutral</span>
+                                            <span id="sent-neu-val">0</span>
+                                        </div>
+                                        <div style="height:6px; background:rgba(255,255,255,0.05); border-radius:3px; overflow:hidden;"><div id="sent-neu-bar" style="width:0; height:100%; background:#fbbf24;"></div></div>
+                                    </div>
+                                    <div>
+                                        <div style="display:flex; justify-content:space-between; font-size:0.8rem; margin-bottom:0.3rem;">
+                                            <span style="color:#ef4444;">Negative</span>
+                                            <span id="sent-neg-val">0</span>
+                                        </div>
+                                        <div style="height:6px; background:rgba(255,255,255,0.05); border-radius:3px; overflow:hidden;"><div id="sent-neg-bar" style="width:0; height:100%; background:#ef4444;"></div></div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <h4 style="font-size:0.9rem; color:#e2e8f0; margin-bottom:1rem; border-bottom:1px solid #334155; padding-bottom:0.5rem;">Recent Analyzed Feedback</h4>
+                            <div id="urgent-issues-list" style="display:flex; flex-direction:column; gap:0.8rem;">
+                                <div style="color:#64748b; font-size:0.8rem; text-align:center;">No urgent issues detected.</div>
+                            </div>
+                        </div>
+
+                        <!-- ML: Trend Prediction -->
+                        <div class="content-section" style="padding:1.5rem;">
+                             <div class="section-header" style="margin-bottom:1.5rem;">
+                                <div>
+                                    <h3 style="margin-bottom:0.2rem;">Activity Prediction (ML)</h3>
+                                    <p style="font-size:0.8rem; color:#94a3b8;">Forecast of next month's report volume</p>
+                                </div>
+                                <div class="icon-box" style="background:rgba(59, 130, 246, 0.1); color:#3b82f6; padding:0.5rem; border-radius:8px;"><i data-feather="trending-up"></i></div>
+                            </div>
+
+                            <div style="background:rgba(0,0,0,0.2); border-radius:12px; padding:1.5rem; text-align:center; margin-bottom:2rem;">
+                                <div style="font-size:0.9rem; color:#94a3b8; margin-bottom:0.5rem;">Forecasted Volume (Next Month)</div>
+                                <div id="pred-val" style="font-size:2.5rem; font-weight:800; color:#3b82f6;">--</div>
+                                <div style="font-size:0.8rem; color:#10b981; margin-top:0.5rem;">Based on 6-month moving average</div>
+                            </div>
+
+                            <h4 style="font-size:0.9rem; color:#e2e8f0; margin-bottom:1rem;">Growth Trend</h4>
+                            <div id="trend-chart" style="height:200px; display:flex; align-items:flex-end; gap:1rem; padding-bottom:1rem; border-bottom:1px solid #334155; margin-bottom:1.5rem;">
+                                <!-- Bars populated by JS -->
+                                <div style="flex:1; text-align:center; color:#64748b; align-self:center;">Insufficient data for trend graph</div>
+                            </div>
+
+                            <div style="background:rgba(255,255,255,0.02); border-radius:8px; padding:1rem;">
+                                <h5 style="color:#94a3b8; font-size:0.8rem; margin:0 0 0.5rem 0;">Model Data Source (Last 6 Months)</h5>
+                                <div id="ml-data-table" style="display:grid; grid-template-columns: 1fr 1fr; gap:0.5rem; font-size:0.8rem; color:#e2e8f0;">
+                                    <!-- Populated by JS -->
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+            <!-- SECTION: SETTINGS -->
+            <div id="settings" class="section-view">
+
+                     <div class="page-header" style="text-align: center;">
                         <h2>Settings</h2>
                         <p>Update system preferences.</p>
                     </div>
                     <div class="content-section" style="padding: 2rem;">
                         <form class="settings-form" onsubmit="event.preventDefault(); alert('Settings saved (Demo)!');">
-                            <div class="form-group">
-                                <label>System Name</label>
-                                <input type="text" class="form-control" value="LGU3 Management System">
-                            </div>
-                            <div class="form-group">
-                                <label>Admin Email</label>
-                                <input type="email" class="form-control" value="admin@lgu3.gov" readonly style="opacity:0.7">
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+                                <div class="form-group">
+                                    <label>System Name</label>
+                                    <input type="text" class="form-control" value="LGU3 Management System">
+                                </div>
+                                <div class="form-group">
+                                    <label>Admin Email</label>
+                                    <input type="email" class="form-control" value="admin@lgu3.gov" readonly style="opacity:0.7">
+                                </div>
                             </div>
                             <div class="form-group">
                                 <label>New Password</label>
                                 <input type="password" class="form-control" placeholder="Leave blank to keep current">
                             </div>
-                             <div class="form-group">
-                                <label>Maintenance Mode</label>
-                                <div class="checkbox-wrapper">
-                                    <input type="checkbox" id="maint">
-                                    <label for="maint" style="display:inline;">Enable System Maintenance</label>
-                                </div>
-                            </div>
-                            <button type="submit" class="primary-action-btn">Save Changes</button>
+                             <div class="form-group" style="background: rgba(255,255,255,0.02); padding: 1.25rem; border-radius: 12px; border: 1px solid var(--border-color);">
+                                 <label style="margin-bottom: 0.8rem; font-weight: 600; color: #fff;">System Controls</label>
+                                 <div class="checkbox-wrapper" style="margin-bottom: 1rem;">
+                                     <input type="checkbox" id="maint">
+                                     <label for="maint" style="display:inline; margin-left: 0.5rem; color: #94a3b8;">Enable System Maintenance Mode</label>
+                                 </div>
+                                 <div style="border-top: 1px solid var(--border-color); padding-top: 1rem;">
+                                     <label style="margin-bottom: 0.5rem; display: block;">Interface Appearance</label>
+                                     <div style="display: flex; gap: 1rem;">
+                                         <button type="button" class="action-btn" id="btn-dark" onclick="setTheme('dark')" style="flex:1; justify-content:center;">
+                                             <i data-feather="moon" style="width:14px; margin-right:8px;"></i> Dark Mode
+                                         </button>
+                                         <button type="button" class="action-btn" id="btn-light" onclick="setTheme('light')" style="flex:1; justify-content:center;">
+                                             <i data-feather="sun" style="width:14px; margin-right:8px;"></i> Light Mode
+                                         </button>
+                                     </div>
+                                 </div>
+                             </div>
+                             <button type="submit" class="primary-action-btn" style="width: 100%; padding: 1rem; margin-top: 1rem; display: flex; align-items: center; justify-content: center; gap: 10px;">
+                                 <i data-feather="save" style="width:18px;"></i> Save Changes
+                             </button>
                         </form>
                     </div>
                 </div>
@@ -742,6 +971,60 @@ if ($checkCol && $checkCol->num_rows > 0) {
                 </div>
             </form>
         </div>
+        </div>
+    </div>
+
+    <!-- Create/Edit Skill Test Modal -->
+    <div class="modal-overlay" id="skillTestModal">
+        <div class="success-modal" style="text-align:left; max-width:400px; padding:2rem;">
+            <h3 style="margin-bottom:1.5rem; color: #fff;" id="stm-title">Add Skill Test</h3>
+            <form onsubmit="event.preventDefault(); saveSkillTest(this);">
+                <input type="hidden" name="id" id="stm-id">
+                <div style="margin-bottom:1rem;">
+                    <label style="display:block; color:#aaa; font-size:0.9rem; margin-bottom:0.5rem;">Test Title</label>
+                    <input type="text" name="title" id="stm-name" class="form-control" required style="width:100%; padding:0.8rem; background:#1e293b; border:1px solid #475569; color:white; border-radius:8px;">
+                </div>
+                <div style="margin-bottom:1rem;">
+                    <label style="display:block; color:#aaa; font-size:0.9rem; margin-bottom:0.5rem;">Description</label>
+                    <textarea name="description" id="stm-desc" class="form-control" required style="width:100%; padding:0.8rem; background:#1e293b; border:1px solid #475569; color:white; border-radius:8px; min-height:80px;"></textarea>
+                </div>
+                <div style="margin-bottom:1.5rem;">
+                     <label style="display:block; color:#aaa; font-size:0.9rem; margin-bottom:0.5rem;">Thumbnail URL</label>
+                     <input type="url" name="thumbnail" id="stm-thumb" class="form-control" required placeholder="https://..." style="width:100%; padding:0.8rem; background:#1e293b; border:1px solid #475569; color:white; border-radius:8px;">
+                </div>
+                <div style="display:flex; gap:1rem;">
+                    <button type="button" onclick="closeSkillModal()" style="flex:1; padding:0.8rem; background:transparent; border:1px solid #475569; color:white; border-radius:8px; cursor:pointer;">Cancel</button>
+                    <button type="submit" style="flex:1; padding:0.8rem; background:var(--primary); border:none; color:white; border-radius:8px; cursor:pointer;">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Manage Stages Modal -->
+    <div class="modal-overlay" id="stagesModal">
+        <div class="success-modal" style="text-align:left; max-width:600px; width:90%; padding:2rem;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
+                <h3 style="margin:0; color: #fff;">Manage Stages</h3>
+                <button onclick="closeStagesModal()" style="background:none; border:none; color:#94a3b8; cursor:pointer;"><i data-feather="x"></i></button>
+            </div>
+            
+            <div id="stm-stages-list" style="max-height:400px; overflow-y:auto; margin-bottom:1.5rem; display:flex; flex-direction:column; gap:1rem;">
+                <!-- Stages populated here -->
+            </div>
+            
+            <div style="background:rgba(255,255,255,0.05); padding:1rem; border-radius:8px; border:1px solid #334155;">
+                <h4 style="color:#fff; margin:0 0 1rem 0; font-size:0.9rem;">Add New Stage</h4>
+                <form onsubmit="event.preventDefault(); addStage(this);">
+                    <input type="hidden" name="test_id" id="stm-stage-tid">
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1rem;">
+                        <input type="text" name="title" placeholder="Stage Title" required class="form-control" style="background:#0f172a;">
+                        <input type="url" name="video_url" placeholder="Video/Content URL" required class="form-control" style="background:#0f172a;">
+                    </div>
+                    <textarea name="content" placeholder="Description/Content" required class="form-control" style="background:#0f172a; min-height:60px; margin-bottom:1rem;"></textarea>
+                    <button type="submit" class="primary-action-btn" style="width:100%; font-size:0.85rem;">Add Stage</button>
+                </form>
+            </div>
+        </div>
     </div>
     
     <script>
@@ -754,18 +1037,32 @@ if ($checkCol && $checkCol->num_rows > 0) {
             document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
             
             // Show target
-            document.getElementById(id).classList.add('active');
+            const targetSection = document.getElementById(id);
+            if(targetSection) targetSection.classList.add('active');
             if(element) element.classList.add('active');
+
+            // Mobile specific: Close menu automatically
+            if(window.innerWidth <= 768) {
+                const sidebar = document.getElementById('sidebar');
+                const overlay = document.getElementById('sidebar-overlay');
+                if(sidebar.classList.contains('mobile-open')) {
+                    sidebar.classList.remove('mobile-open');
+                    overlay.classList.remove('active');
+                }
+            }
 
             // Trigger fetch if needed
             if(id === 'overview') { updateStats(); fetchRecentUsers(); }
-            if(id === 'users') fetchUsers();
-            if(id === 'reports') fetchReports();
-            if(id === 'programs') fetchPrograms();
-            if(id === 'applications') fetchApplications();
-            if(id === 'learning-docs') fetchAdminDocs();
-            if(id === 'requests') fetchRequests();
-            if(id === 'calendar') fetchCalendar();
+            else if(id === 'users') fetchUsers();
+            else if(id === 'reports') fetchReports();
+            else if(id === 'programs') fetchPrograms();
+            else if(id === 'applications') fetchApplications();
+            else if(id === 'learning-docs') fetchAdminDocs();
+            else if(id === 'requests') fetchRequests();
+            else if(id === 'calendar') fetchCalendar();
+            else if(id === 'skill-analytics') fetchSkillAnalytics();
+            else if(id === 'skill-mgmt') fetchSkillTests();
+            else if(id === 'smart-insights') fetchSmartInsights();
             
             feather.replace();
         }
@@ -1240,8 +1537,14 @@ if ($checkCol && $checkCol->num_rows > 0) {
 
         async function fetchRequests() {
             try {
-                const res = await fetch('api.php?action=get_edit_requests');
-                const data = await res.json();
+                // Fetch both name change requests and general notifications
+                const [reqRes, notifRes] = await Promise.all([
+                    fetch('api.php?action=get_edit_requests'),
+                    fetch('api.php?action=get_notifications')
+                ]);
+                
+                const requests = await reqRes.json();
+                const notifications = await notifRes.json();
                 
                 const tableBody = document.getElementById('requests-table');
                 const notifList = document.getElementById('notif-list');
@@ -1249,40 +1552,92 @@ if ($checkCol && $checkCol->num_rows > 0) {
                 
                 if(!tableBody) return;
 
+                // Update Request Table
                 tableBody.innerHTML = '';
-                if(data.length === 0) {
+                if(requests.length === 0) {
                     tableBody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:2rem; color:#64748b;">No pending requests.</td></tr>';
-                    countBadge.style.display = 'none';
-                    notifList.innerHTML = '<div style="padding:2rem; text-align:center; color:#64748b; font-size:0.9rem;">No new requests</div>';
-                    return;
+                } else {
+                    requests.forEach(req => {
+                        tableBody.innerHTML += `
+                            <tr>
+                                <td>${req.full_name}</td>
+                                <td><span class="badge warning">Name Change</span></td>
+                                <td>${req.created_at}</td>
+                                <td>
+                                    <button class="primary-action-btn" style="padding:0.4rem 0.8rem; font-size:0.75rem;" onclick="approveEditRequest(${req.id})">
+                                        <i data-feather="check" style="width:12px; margin-right:4px;"></i> Approve (25m)
+                                    </button>
+                                </td>
+                            </tr>
+                        `;
+                    });
                 }
+
+                // Update Notification Dropdown
+                const unreadNotifs = Array.isArray(notifications) ? notifications.filter(n => n.is_read == 0) : [];
+                const totalCount = requests.length + unreadNotifs.length;
                 
-                countBadge.innerText = data.length;
-                countBadge.style.display = 'block';
+                if(totalCount > 0) {
+                    countBadge.innerText = totalCount;
+                    countBadge.style.display = 'block';
+                } else {
+                    countBadge.style.display = 'none';
+                }
+
                 notifList.innerHTML = '';
                 
-                data.forEach(req => {
-                    tableBody.innerHTML += `
-                        <tr>
-                            <td>${req.full_name}</td>
-                            <td><span class="badge warning">Name Change</span></td>
-                            <td>${req.created_at}</td>
-                            <td>
-                                <button class="primary-action-btn" style="padding:0.4rem 0.8rem; font-size:0.75rem;" onclick="approveEditRequest(${req.id})">
-                                    <i data-feather="check" style="width:12px; margin-right:4px;"></i> Approve (25m)
-                                </button>
-                            </td>
-                        </tr>
-                    `;
-                    
+                // Add Pending Name Requests to dropdown
+                requests.forEach(req => {
                     notifList.innerHTML += `
-                        <div style="padding:1rem; border-bottom:1px solid #334155; cursor:pointer;" onclick="showSection('requests')">
-                            <h5 style="margin:0; font-size:0.85rem; color:#fff;">${req.full_name}</h5>
-                            <p style="margin:5px 0 0 0; font-size:0.75rem; color:#94a3b8;">Requested a name change access.</p>
+                        <div style="padding:1rem; border-bottom:1px solid #334155; cursor:pointer; background:rgba(251, 191, 36, 0.05);" onclick="showSection('requests')">
+                            <div style="display:flex; justify-content:space-between; align-items:start;">
+                                <h5 style="margin:0; font-size:0.85rem; color:#fff;">${req.full_name}</h5>
+                                <span style="font-size:0.6rem; color:#fbbf24; text-transform:uppercase; font-weight:700;">Request</span>
+                            </div>
+                            <p style="margin:5px 0 0 0; font-size:0.75rem; color:#94a3b8;">Requested access to change account name.</p>
+                            <small style="font-size:0.65rem; color:#475569; display:block; margin-top:5px;">${req.created_at}</small>
                         </div>
                     `;
                 });
+
+                // Add General Notifications to dropdown
+                if(Array.isArray(notifications)) {
+                    notifications.forEach(notif => {
+                        const isUnread = notif.is_read == 0;
+                        const bgColor = isUnread ? 'rgba(59, 130, 246, 0.05)' : 'transparent';
+                        const dot = isUnread ? '<span style="width:8px; height:8px; background:var(--primary); border-radius:50%; display:inline-block; margin-right:5px;"></span>' : '';
+                        
+                        notifList.innerHTML += `
+                            <div style="padding:1rem; border-bottom:1px solid #334155; cursor:pointer; background:${bgColor};" onclick="markRead(${notif.id})">
+                                <div style="display:flex; justify-content:space-between; align-items:start;">
+                                    <h5 style="margin:0; font-size:0.85rem; color:#fff;">${dot}${notif.title}</h5>
+                                    <span style="font-size:0.6rem; color:#94a3b8;">${notif.type.toUpperCase()}</span>
+                                </div>
+                                <p style="margin:5px 0 0 0; font-size:0.75rem; color:#94a3b8; line-height:1.4;">${notif.message}</p>
+                                <small style="font-size:0.65rem; color:#475569; display:block; margin-top:5px;">${notif.created_at}</small>
+                            </div>
+                        `;
+                    });
+                }
+
+                if(totalCount === 0 && (!notifications || notifications.length === 0)) {
+                    notifList.innerHTML = '<div style="padding:2rem; text-align:center; color:#64748b; font-size:0.9rem;">No new notifications</div>';
+                }
+
                 feather.replace();
+            } catch(e) {
+                console.error("Fetch Notifs Error:", e);
+            }
+        }
+
+        async function markRead(id) {
+            try {
+                await fetch('api.php?action=mark_read', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({id: id})
+                });
+                fetchRequests(); // Refresh
             } catch(e) {}
         }
 
@@ -1300,6 +1655,38 @@ if ($checkCol && $checkCol->num_rows > 0) {
                     fetchRequests();
                 }
             } catch(e) {}
+        }
+
+
+        function toggleMobileMenu() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebar-overlay');
+            sidebar.classList.toggle('mobile-open');
+            overlay.classList.toggle('active');
+        }
+
+
+        // Apply saved sidebar state
+        window.addEventListener('load', () => {
+            // Sidebar is now permanently expanded
+            localStorage.removeItem('sidebarMinimized');
+
+            // Theme initialization
+            const savedTheme = localStorage.getItem('theme') || 'dark';
+            setTheme(savedTheme);
+        });
+
+        function setTheme(theme) {
+            if (theme === 'light') {
+                document.body.classList.add('light-theme');
+                document.getElementById('btn-light').classList.add('active');
+                document.getElementById('btn-dark').classList.remove('active');
+            } else {
+                document.body.classList.remove('light-theme');
+                document.getElementById('btn-dark').classList.add('active');
+                document.getElementById('btn-light').classList.remove('active');
+            }
+            localStorage.setItem('theme', theme);
         }
 
         function toggleNotifs(e) {
@@ -1571,6 +1958,361 @@ if ($checkCol && $checkCol->num_rows > 0) {
                 if(data.success) fetchCalendar();
                 else alert(data.error);
             } catch(e) {}
+        }
+
+        // --- Skill Analytics ---
+        async function fetchSkillAnalytics() {
+            try {
+                const res = await fetch('api.php?action=get_skill_analytics');
+                const data = await res.json();
+                
+                document.getElementById('sa-total').innerText = data.total_enrollments;
+                document.getElementById('sa-completed').innerText = data.completed_count;
+                
+                const list = document.getElementById('sa-test-list');
+                list.innerHTML = '';
+                
+                if(data.tests.length === 0) {
+                     list.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:2rem; color:#aaa;">No skill tests found.</div>';
+                     return;
+                }
+                
+                data.tests.forEach(test => {
+                    const completionRate = test.enrolled > 0 ? Math.round((test.completed / test.enrolled) * 100) : 0;
+                    
+                    let userRows = '';
+                    if(test.recent_users.length === 0) {
+                        userRows = '<tr><td colspan="4" style="text-align:center; color:#64748b; font-size:0.8rem; padding:0.5rem;">No recent enrollees</td></tr>';
+                    } else {
+                        test.recent_users.slice(0, 3).forEach(u => { // Limit to 3 for compact view
+                            let statusBadge = u.status === 'completed' ? 
+                                '<span style="color:#10b981; font-size:0.75rem;">Done</span>' : 
+                                '<span style="color:#fbbf24; font-size:0.75rem;">Stg ' + u.current_stage + '</span>';
+                            
+                            userRows += `
+                                <tr style="border-bottom:1px solid rgba(255,255,255,0.05);">
+                                    <td style="font-size:0.8rem; color:#e2e8f0; padding:0.5rem 1rem;">${u.full_name}</td>
+                                    <td style="font-size:0.75rem; color:#94a3b8; padding:0.5rem 1rem;">${u.started_at ? u.started_at.split(' ')[0] : '-'}</td>
+                                    <td style="padding:0.5rem 1rem;">${statusBadge}</td>
+                                </tr>
+                            `;
+                        });
+                    }
+
+                    list.innerHTML += `
+                        <div style="background:var(--card-bg); border:1px solid var(--border-color); border-radius:12px; overflow:hidden; display:flex; flex-direction:column;">
+                            <div style="padding:1rem 1.25rem; border-bottom:1px solid var(--border-color); display:flex; justify-content:space-between; align-items:center;">
+                                <div>
+                                    <h3 style="margin:0 0 2px 0; font-size:1rem; color:#fff;">${test.title}</h3>
+                                    <div style="font-size:0.75rem; color:#94a3b8;">
+                                        <span style="color:#fff;">${test.enrolled}</span> Enrolled &bull; 
+                                        <span style="color:#10b981;">${test.completed}</span> Done
+                                    </div>
+                                </div>
+                                <div style="text-align:right;">
+                                    <div style="font-size:1.2rem; font-weight:700; color:${completionRate >= 50 ? '#10b981' : '#f59e0b'}; line-height:1;">${completionRate}%</div>
+                                    <div style="font-size:0.65rem; color:#64748b;">Rate</div>
+                                </div>
+                            </div>
+                            <div style="padding:0; flex:1; background:rgba(0,0,0,0.2);">
+                                <table style="width:100%; border-collapse:collapse;">
+                                    <thead style="background:rgba(255,255,255,0.02);">
+                                        <tr>
+                                            <th style="text-align:left; padding:0.5rem 1rem; font-size:0.7rem; color:#94a3b8; font-weight:500;">Recent User</th>
+                                            <th style="text-align:left; padding:0.5rem 1rem; font-size:0.7rem; color:#94a3b8; font-weight:500;">Date</th>
+                                            <th style="text-align:left; padding:0.5rem 1rem; font-size:0.7rem; color:#94a3b8; font-weight:500;">Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        ${userRows}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+            } catch(e) { console.error(e); }
+        }
+
+        // --- MANAGE SKILLS (CRUD) ---
+        async function fetchSkillTests() {
+            try {
+                const res = await fetch('api.php?action=get_skill_tests');
+                const data = await res.json();
+                const container = document.getElementById('sm-test-list');
+                
+                if(data.length === 0) {
+                     container.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:3rem; color:#64748b; font-size:1.1rem; border:2px dashed #334155; border-radius:16px;">No skill tests created yet.<br><span style="font-size:0.9rem;">Click "+ New Skill Test" to get started.</span></div>';
+                     return;
+                }
+                
+                container.innerHTML = '';
+                data.forEach(t => {
+                    const safeTitle = t.title.replace(/'/g, "\\'");
+                    const safeDesc = t.description.replace(/'/g, "\\'");
+                    container.innerHTML += `
+                        <div class="skill-mgmt-card" style="background:var(--card-bg); border:1px solid var(--border-color); border-radius:12px; overflow:hidden; display:flex; flex-direction:column; box-shadow:0 4px 6px -1px rgba(0,0,0,0.1); transition:transform 0.2s, border-color 0.2s;">
+                            <div style="height:110px; background:url('${t.thumbnail}') center/cover; position:relative;">
+                                <div style="position:absolute; inset:0; background:linear-gradient(to top, rgba(15,23,42,1), transparent);"></div>
+                                <div style="position:absolute; bottom:0.8rem; left:1rem; right:1rem;">
+                                    <h3 style="color:#fff; margin:0; font-size:1rem; text-shadow:0 1px 2px rgba(0,0,0,0.8);">${t.title}</h3>
+                                </div>
+                            </div>
+                            <div style="padding:1rem; flex:1; display:flex; flex-direction:column;">
+                                <p style="color:#94a3b8; font-size:0.8rem; margin-bottom:1rem; flex:1; line-height:1.4;">${t.description.substring(0,80)}...</p>
+                                
+                                <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.5rem; margin-bottom:0.75rem;">
+                                    <button onclick="openSkillModal(${t.id}, '${safeTitle}', '${safeDesc}', '${t.thumbnail}')" 
+                                            style="padding:0.5rem; border-radius:6px; border:1px solid #475569; background:transparent; color:#e2e8f0; font-size:0.75rem; cursor:pointer; transition:all 0.2s; display:flex; align-items:center; justify-content:center; gap:0.3rem;">
+                                        <i data-feather="edit-2" style="width:12px;"></i> Edit
+                                    </button>
+                                    <button onclick="openStagesModal(${t.id}, '${safeTitle}')" 
+                                            style="padding:0.5rem; border-radius:6px; border:1px solid var(--primary); background:rgba(99,102,241,0.1); color:var(--primary); font-size:0.75rem; cursor:pointer; transition:all 0.2s; display:flex; align-items:center; justify-content:center; gap:0.3rem;">
+                                        <i data-feather="list" style="width:12px;"></i> Stages
+                                    </button>
+                                </div>
+                                <button onclick="deleteSkillTest(${t.id})" 
+                                        style="width:100%; border:none; background:transparent; color:#ef4444; font-size:0.75rem; cursor:pointer; opacity:0.8; transition:opacity 0.2s; display:flex; align-items:center; justify-content:center; gap:0.3rem;">
+                                    Delete
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                });
+                feather.replace();
+            } catch(e) { console.error(e); }
+        }
+
+        function openSkillModal(id=null, title='', desc='', thumb='') {
+            document.getElementById('stm-title').innerText = id ? 'Edit Skill Test' : 'Add Skill Test';
+            document.getElementById('stm-id').value = id || '';
+            document.getElementById('stm-name').value = title;
+            document.getElementById('stm-desc').value = desc;
+            document.getElementById('stm-thumb').value = thumb;
+            document.getElementById('skillTestModal').classList.add('show');
+        }
+
+        function closeSkillModal() {
+            document.getElementById('skillTestModal').classList.remove('show');
+        }
+
+        async function saveSkillTest(form) {
+            const formData = new FormData(form);
+            const id = formData.get('id');
+            const action = id ? 'update_skill_test' : 'create_skill_test';
+            
+            const payload = {
+                id: id,
+                title: formData.get('title'),
+                description: formData.get('description'),
+                thumbnail: formData.get('thumbnail')
+            };
+
+            try {
+                const res = await fetch('api.php?action=' + action, {
+                    method:'POST', body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                if(data.success) {
+                    closeSkillModal();
+                    fetchSkillTests();
+                } else {
+                    alert('Error: ' + data.error);
+                }
+            } catch(e) {}
+        }
+
+        async function deleteSkillTest(id) {
+            if(!confirm('Delete this skill test? This will remove all enrollments and progress.')) return;
+            try {
+                const res = await fetch('api.php?action=delete_skill_test', {
+                    method:'POST', body:JSON.stringify({id})
+                });
+                const data = await res.json();
+                if(data.success) fetchSkillTests();
+            } catch(e) {}
+        }
+
+        // --- STAGES MANAGEMENT ---
+        let currentManageTestId = null;
+
+        async function openStagesModal(tid, title) {
+            currentManageTestId = tid;
+            document.getElementById('stm-stage-tid').value = tid;
+            document.getElementById('stagesModal').classList.add('show');
+            fetchStages(tid);
+        }
+
+        function closeStagesModal() {
+            document.getElementById('stagesModal').classList.remove('show');
+        }
+
+        async function fetchStages(tid) {
+            try {
+                const res = await fetch('api.php?action=get_test_stages&test_id=' + tid);
+                const data = await res.json();
+                const list = document.getElementById('stm-stages-list');
+                list.innerHTML = '';
+                
+                if(data.length === 0) {
+                    list.innerHTML = '<div style="text-align:center; padding:1rem; color:#64748b;">No stages added yet.</div>';
+                    return;
+                }
+
+                data.forEach(s => {
+                    list.innerHTML += `
+                        <div style="background:rgba(255,255,255,0.03); padding:0.8rem; border-radius:8px; display:flex; justify-content:space-between; align-items:center;">
+                            <div>
+                                <div style="color:#fff; font-weight:500;">${s.stage_number}. ${s.title}</div>
+                                <div style="color:#64748b; font-size:0.8rem;">${s.content.substring(0,40)}...</div>
+                            </div>
+                            <button onclick="deleteStage(${s.id})" style="background:none; border:none; color:#ef4444; cursor:pointer;"><i data-feather="trash-2" style="width:14px;"></i></button>
+                        </div>
+                    `;
+                });
+                feather.replace();
+            } catch(e) {}
+        }
+
+        async function addStage(form) {
+             const formData = new FormData(form);
+             const payload = {
+                 test_id: formData.get('test_id'),
+                 title: formData.get('title'),
+                 content: formData.get('content'),
+                 video_url: formData.get('video_url')
+             };
+             
+             try {
+                 const res = await fetch('api.php?action=add_test_stage', {
+                     method: 'POST', body: JSON.stringify(payload)
+                 });
+                 const data = await res.json();
+                 if(data.success) {
+                     form.reset();
+                     document.getElementById('stm-stage-tid').value = currentManageTestId; // reset clears hidden too? no, usually not type=hidden but lets be safe
+                     fetchStages(currentManageTestId);
+                 } else {
+                     alert(data.error);
+                 }
+             } catch(e) {}
+        }
+
+        async function deleteStage(id) {
+            if(!confirm('Delete this stage?')) return;
+            try {
+                 const res = await fetch('api.php?action=delete_test_stage', {
+                     method: 'POST', body: JSON.stringify({id})
+                 });
+                 if((await res.json()).success) fetchStages(currentManageTestId);
+            } catch(e) {}
+        }
+
+        // --- SMART INSIGHTS ---
+        async function fetchSmartInsights() {
+            try {
+                const res = await fetch('api.php?action=get_intelligence_data');
+                const data = await res.json();
+                
+                // Sentiment Stats
+                const s = data.sentiment;
+                const total = s.positive + s.neutral + s.negative;
+                const posPct = total > 0 ? Math.round((s.positive / total) * 100) : 0;
+                const negPct = total > 0 ? Math.round((s.negative / total) * 100) : 0;
+                const neuPct = total > 0 ? Math.round((s.neutral / total) * 100) : 0;
+
+                document.getElementById('sent-score').innerText = posPct + '%';
+                document.getElementById('sentiment-circle').setAttribute('stroke-dasharray', `${posPct}, 100`);
+                
+                document.getElementById('sent-pos-val').innerText = s.positive;
+                document.getElementById('sent-neu-val').innerText = s.neutral;
+                document.getElementById('sent-neg-val').innerText = s.negative;
+                
+                document.getElementById('sent-pos-bar').style.width = posPct + '%';
+                document.getElementById('sent-neu-bar').style.width = neuPct + '%';
+                document.getElementById('sent-neg-bar').style.width = negPct + '%';
+
+                // Urgent Issues / Recent Logs (Updated Logic)
+                const uList = document.getElementById('urgent-issues-list');
+                if(data.urgent_issues.length > 0) {
+                    uList.innerHTML = '';
+                    data.urgent_issues.forEach(issue => {
+                        // Color coding based on sentiment
+                        let bg = 'rgba(255,255,255,0.05)';
+                        let color = '#94a3b8';
+                        let icon = 'activity';
+                        
+                        if(issue.sentiment === 'positive') { bg = 'rgba(16, 185, 129, 0.1)'; color = '#10b981'; icon = 'thumbs-up'; }
+                        if(issue.sentiment === 'negative') { bg = 'rgba(239, 68, 68, 0.1)'; color = '#ef4444'; icon = 'alert-triangle'; }
+                        if(issue.sentiment === 'neutral') { bg = 'rgba(251, 191, 36, 0.1)'; color = '#fbbf24'; icon = 'minus'; }
+                        
+                        uList.innerHTML += `
+                            <div style="background:${bg}; border:1px solid ${bg.replace('0.1','0.2')}; padding:0.8rem; border-radius:8px; display:flex; gap:0.8rem; align-items:center;">
+                                <i data-feather="${icon}" style="color:${color}; width:16px;"></i>
+                                <div style="flex:1;">
+                                     <div style="color:#fff; font-size:0.8rem; font-weight:600;">${issue.title || 'Report'}</div>
+                                     <div style="font-size:0.75rem; color:${color}; opacity:0.8;">"${issue.text}"</div>
+                                </div>
+                                <div style="font-size:0.6rem; text-transform:uppercase; font-weight:700; color:${color};">${issue.sentiment}</div>
+                            </div>
+                        `;
+                    });
+                } else {
+                    uList.innerHTML = '<div style="color:#64748b; font-size:0.8rem; text-align:center; padding:1rem; border-radius:8px;">No reports analyzed yet.</div>';
+                }
+
+                // Trends & Prediction
+                document.getElementById('pred-val').innerText = data.prediction;
+                
+                const chart = document.getElementById('trend-chart');
+                const dataTable = document.getElementById('ml-data-table');
+                
+                if(data.trends.length > 0) {
+                    chart.innerHTML = '';
+                    dataTable.innerHTML = '';
+                    
+                    const maxVal = Math.max(...data.trends.map(t => t.count), 10); // Find max for scaling
+                    
+                    data.trends.forEach(t => {
+                        const h = Math.round((t.count / maxVal) * 100);
+                        const displayVal = t.count > 0 ? t.count : '';
+                        
+                        // Chart Bar
+                        chart.innerHTML += `
+                            <div style="flex:1; display:flex; flex-direction:column; align-items:center; gap:0.5rem; height:100%;">
+                                <div style="width:100%; flex:1; display:flex; align-items:flex-end; justify-content:center; position:relative;">
+                                    <div style="position:absolute; bottom:${h}%; margin-bottom:5px; font-size:0.7rem; color:#fff; font-weight:600;">${displayVal}</div>
+                                    <div style="width:100%; height:${h}%; background:var(--primary); border-radius:4px 4px 0 0; opacity:0.8; transition:height 0.5s;"></div>
+                                </div>
+                                <div style="font-size:0.7rem; color:#64748b;">${t.month.split('-')[1]}</div>
+                            </div>
+                        `;
+                        
+                        // Data Table Row
+                        dataTable.innerHTML += `
+                            <div style="display:flex; justify-content:space-between; padding:0.4rem; background:rgba(255,255,255,0.03); border-radius:4px;">
+                                <span>${t.month}</span>
+                                <span style="font-weight:600;">${t.count} reports</span>
+                            </div>
+                        `;
+                    });
+                    
+                    // Add Prediction Bar
+                    const predH = Math.round((data.prediction / maxVal) * 100);
+                    chart.innerHTML += `
+                        <div style="flex:1; display:flex; flex-direction:column; align-items:center; gap:0.5rem; height:100%;">
+                             <div style="width:100%; flex:1; display:flex; align-items:flex-end; justify-content:center; position:relative;">
+                                 <div style="position:absolute; bottom:${predH}%; margin-bottom:5px; font-size:0.7rem; color:#3b82f6; font-weight:700;">${data.prediction}</div>
+                                 <div style="width:100%; height:${predH}%; background:repeating-linear-gradient(45deg, #3b82f6, #3b82f6 5px, rgba(59,130,246,0.5) 5px, rgba(59,130,246,0.5) 10px); border-radius:4px 4px 0 0;"></div>
+                             </div>
+                             <div style="font-size:0.7rem; color:#3b82f6; font-weight:700;">Fcst</div>
+                        </div>
+                    `;
+                }
+                feather.replace();
+
+            } catch(e) { console.error(e); }
         }
 
         function nextMonth() {
