@@ -148,6 +148,10 @@ if ($checkCol && $checkCol->num_rows > 0) {
                     <i data-feather="bar-chart-2"></i>
                     <span>Skill Analytics</span>
                 </a>
+                <a href="#" class="nav-item" onclick="showSection('fix-account', this)" title="Fix Account">
+                    <i data-feather="tool"></i>
+                    <span>Fix Account</span>
+                </a>
                 <a href="#" class="nav-item" onclick="showSection('skill-mgmt', this)" title="Manage Skills">
                     <i data-feather="monitor"></i>
                     <span>Manage Skills</span>
@@ -652,7 +656,85 @@ if ($checkCol && $checkCol->num_rows > 0) {
                     </div>
                 </div>
 
-            <!-- SECTION: SETTINGS -->
+                <!-- SECTION: FIX ACCOUNT -->
+                <div id="fix-account" class="section-view">
+                    <div class="page-header" style="text-align: center;">
+                        <h2>Fix Citizen Account</h2>
+                        <p>Instantly reactivate a suspended account using the citizen's unique Reference ID.</p>
+                    </div>
+
+                    <div style="max-width: 500px; margin: 0 auto;">
+                        <div class="content-section" style="padding: 2.5rem;">
+                            <div style="text-align: center; margin-bottom: 2rem;">
+                                <div style="width: 80px; height: 80px; background: rgba(99, 102, 241, 0.1); color: var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem auto;">
+                                    <i data-feather="tool" style="width: 40px; height: 40px;"></i>
+                                </div>
+                                <h3 style="margin: 0; font-size: 1.5rem;">Reactivate by Reference ID</h3>
+                                <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 0.5rem;">Input the REF ID provided by the citizen to restore their access.</p>
+                            </div>
+
+                            <div style="margin-bottom: 2rem;">
+                                <label style="display: block; margin-bottom: 10px; color: #94a3b8; font-size: 0.85rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">Input Reference ID</label>
+                                <input type="text" id="fix-ref-id" placeholder="e.g., REF-A1B2C3D4" style="width: 100%; padding: 1.2rem; background: var(--input-bg); border: 1px solid var(--border-color); border-radius: 12px; color: #fff; font-size: 1.2rem; font-family: monospace; text-align: center; font-weight: 700; transition: all 0.3s;">
+                            </div>
+
+                            <button onclick="commitFixAccount()" style="width: 100%; padding: 1.2rem; background: var(--primary); color: #fff; border: none; border-radius: 12px; font-weight: 700; font-size: 1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; transition: all 0.3s; box-shadow: 0 10px 20px rgba(99, 102, 241, 0.2);">
+                                <i data-feather="check-circle" style="width: 20px;"></i>
+                                Reactivate Now
+                            </button>
+
+                            <div id="fix-status-box" style="display: none; margin-top: 2rem; padding: 1rem; border-radius: 8px; text-align: center; font-size: 0.9rem; font-weight: 600;"></div>
+                        </div>
+
+                        <div style="margin-top: 2rem; background: rgba(251, 191, 36, 0.05); border: 1px solid rgba(251, 191, 36, 0.2); padding: 1.5rem; border-radius: 16px; display: flex; gap: 15px; align-items: start;">
+                            <i data-feather="alert-triangle" style="color: #fbbf24; flex-shrink: 0; margin-top: 3px;"></i>
+                            <p style="color: #d1d5db; font-size: 0.85rem; line-height: 1.6; margin: 0;">
+                                <strong>Safety Policy:</strong> Only reactivate accounts after verifying the citizen's identity or reviewing their reason for appeal. Reactivating will restore full portal access immediately.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <script>
+                    async function commitFixAccount() {
+                        const refId = document.getElementById('fix-ref-id').value.trim();
+                        const statusBox = document.getElementById('fix-status-box');
+                        
+                        if(!refId) {
+                            alert("Please enter a Reference ID.");
+                            return;
+                        }
+
+                        // Style loading
+                        statusBox.style.display = 'none';
+                        
+                        try {
+                            const res = await fetch('api.php?action=fix_account', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ reference_id: refId })
+                            });
+                            const data = await res.json();
+                            
+                            statusBox.style.display = 'block';
+                            if(data.success) {
+                                statusBox.style.background = 'rgba(16, 185, 129, 0.1)';
+                                statusBox.style.color = '#10b981';
+                                statusBox.innerText = data.message;
+                                document.getElementById('fix-ref-id').value = '';
+                                
+                                // Refresh user list if open
+                                if(typeof fetchUsers === 'function') fetchUsers();
+                            } else {
+                                statusBox.style.background = 'rgba(239, 68, 68, 0.1)';
+                                statusBox.style.color = '#ef4444';
+                                statusBox.innerText = data.error;
+                            }
+                        } catch (e) {
+                            alert("Network error.");
+                        }
+                    }
+                </script>
             <div id="settings" class="section-view">
 
                      <div class="page-header" style="text-align: center;">

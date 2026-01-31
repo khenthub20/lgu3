@@ -230,9 +230,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['verify_otp'])) {
             $email = $_SESSION['signup_data']['email'];
             $password = $_SESSION['signup_data']['password'];
             $hashed_password = password_hash($password, PASSWORD_DEFAULT);
+            $reference_id = 'REF-' . str_pad(mt_rand(0, 99999999), 8, '0', STR_PAD_LEFT);
 
-            $stmt = $conn->prepare("INSERT INTO users (full_name, email, password, role, is_active) VALUES (?, ?, ?, 'user', 1)");
-            $stmt->bind_param("sss", $fullname, $email, $hashed_password);
+            $stmt = $conn->prepare("INSERT INTO users (full_name, email, password, role, is_active, reference_id) VALUES (?, ?, ?, 'user', 1, ?)");
+            $stmt->bind_param("ssss", $fullname, $email, $hashed_password, $reference_id);
 
             if ($stmt->execute()) {
                 $success = "Account created successfully! <a href='index.php' style='color:#6366f1; font-weight:600;'>Login here</a>";

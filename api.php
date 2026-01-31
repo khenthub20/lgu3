@@ -15,10 +15,23 @@ if (!$uid) {
 }
 
 // Admin-only actions
-$admin_actions = ['stats', 'recent_users', 'reports', 'admin_programs', 'create_program', 'admin_applications', 'send_material', 'all_citizens', 'manual_enroll', 'delete_program', 'delete_application', 'update_program', 'upload_doc', 'delete_doc', 'approve_edit', 'get_edit_requests', 'toggle_user_status', 'add_calendar_event', 'delete_calendar_event', 'get_calendar_stats'];
+$admin_actions = ['stats', 'recent_users', 'reports', 'admin_programs', 'create_program', 'admin_applications', 'send_material', 'all_citizens', 'manual_enroll', 'delete_program', 'delete_application', 'update_program', 'upload_doc', 'delete_doc', 'approve_edit', 'get_edit_requests', 'toggle_user_status', 'add_calendar_event', 'delete_calendar_event', 'get_calendar_stats', 'fix_account'];
 if (in_array($action, $admin_actions) && $role !== 'admin') {
      echo json_encode(['error' => 'Unauthorized Access']);
      exit;
+}
+
+// Block deactivated users from performing actions (allow getting notifications/basic check)
+if ($role === 'user') {
+    $resStatus = $conn->query("SELECT is_active FROM users WHERE id = $uid");
+    $userStatus = $resStatus->fetch_assoc();
+    if (isset($userStatus['is_active']) && $userStatus['is_active'] == 0) {
+        $allowed = ['get_notifications', 'mark_read', 'mark_all_read', 'request_reactivation']; // Essential only + reactivation
+        if (!in_array($action, $allowed)) {
+             echo json_encode(['error' => 'Account Suspended. Please contact administrator.']);
+             exit;
+        }
+    }
 }
 
 // Ensure notifications table exists
@@ -897,6 +910,59 @@ if ($action === 'toggle_user_status') {
         $stmtNotif->execute();
         
         echo json_encode(['success' => true]);
+    } else {
+        echo json_encode(['error' => $conn->error]);
+    }
+    exit;
+}
+
+if ($action === 'request_reactivation') {
+    $input = json_decode(file_get_contents('php://input'), true);
+    $reason = $input['reason'] ?? '';
+    $refId = $input['reference_id'] ?? '';
+    
+    // Find admin to notify
+    $adminRes = $conn->query("SELECT id FROM users WHERE role = 'admin' LIMIT 1");
+    if($admin = $adminRes->fetch_assoc()) {
+        $adminId = $admin['id'];
+        $uname = $_SESSION['full_name'];
+        $msg = "User $uname (Ref: $refId) has requested account reactivation. Reason: $reason";
+        
+        $stmt = $conn->prepare("INSERT INTO notifications (user_id, title, message, type) VALUES (?, 'Reactivation Request', ?, 'warning')");
+        $stmt->bind_param("is", $adminId, $msg);
+        $stmt->execute();
+    }
+    
+    echo json_encode(['success' => true]);
+    exit;
+}
+
+if ($action === 'fix_account') {
+    if($role !== 'admin') exit;
+    $input = json_decode(file_get_contents('php://input'), true);
+    $refId = trim($input['reference_id'] ?? '');
+    
+    if(!$refId) {
+        echo json_encode(['error' => 'Reference ID is required']);
+        exit;
+    }
+
+    $stmt = $conn->prepare("UPDATE users SET is_active = 1 WHERE reference_id = ?");
+    $stmt->bind_param("s", $refId);
+    
+    if($stmt->execute()) {
+        if($stmt->affected_rows > 0) {
+            // Find user id to notify them
+            $res = $conn->query("SELECT id FROM users WHERE reference_id = '$refId'");
+            if($u = $res->fetch_assoc()) {
+                $targetUid = $u['id'];
+                $msg = "Your account has been reactivated via Reference ID check. Welcome back!";
+                $conn->query("INSERT INTO notifications (user_id, title, message, type) VALUES ($targetUid, 'Account Reactivated', '$msg', 'success')");
+            }
+            echo json_encode(['success' => true, 'message' => 'Account successfully reactivated.']);
+        } else {
+            echo json_encode(['error' => 'Reference ID not found or already active.']);
+        }
     } else {
         echo json_encode(['error' => $conn->error]);
     }

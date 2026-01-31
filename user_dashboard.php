@@ -14,17 +14,40 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'user') {
 
 // Fetch current user data for profile display
 $uid = $_SESSION['user_id'];
-// Try fetching with profile_image first
-$resUser = $conn->query("SELECT full_name, email, profile_image FROM users WHERE id = $uid");
 
-// If query failed (likely missing column), fallback to basic fetch
+// Robust fetch: try all columns, fallback if any missing (auto-heal handles creation)
+$resUser = $conn->query("SELECT full_name, email, profile_image, is_active, reference_id FROM users WHERE id = $uid");
+
 if (!$resUser) {
-    $resUser = $conn->query("SELECT full_name, email FROM users WHERE id = $uid");
-    $userData = $resUser->fetch_assoc();
-    $userData['profile_image'] = null; // Default to null
+    // If the above failed (likely some columns missing), fetch what we definitely have
+    $baseData = $conn->query("SELECT full_name, email FROM users WHERE id = $uid")->fetch_assoc();
+    
+    // Check for other columns individually to be safe
+    $checkRef = $conn->query("SHOW COLUMNS FROM users LIKE 'reference_id'");
+    $refId = ($checkRef->num_rows > 0) ? $conn->query("SELECT reference_id FROM users WHERE id = $uid")->fetch_assoc()['reference_id'] : null;
+    
+    $checkActive = $conn->query("SHOW COLUMNS FROM users LIKE 'is_active'");
+    $activeVal = ($checkActive->num_rows > 0) ? $conn->query("SELECT is_active FROM users WHERE id = $uid")->fetch_assoc()['is_active'] : 1;
+
+    $userData = [
+        'full_name' => $baseData['full_name'],
+        'email' => $baseData['email'],
+        'profile_image' => null,
+        'is_active' => $activeVal,
+        'reference_id' => $refId
+    ];
 } else {
     $userData = $resUser->fetch_assoc();
 }
+
+// FINAL SAFETY: If reference_id is still empty, generate it now
+if (empty($userData['reference_id']) || !preg_match('/^REF-\d{8}$/', $userData['reference_id'])) {
+    $newRef = 'REF-' . str_pad(mt_rand(0, 99999999), 8, '0', STR_PAD_LEFT);
+    $conn->query("UPDATE users SET reference_id = '$newRef' WHERE id = $uid");
+    $userData['reference_id'] = $newRef;
+}
+
+$is_active = isset($userData['is_active']) ? (int)$userData['is_active'] : 1;
 
 $user_name = $userData['full_name'];
 $user_email = $userData['email'];
@@ -98,6 +121,38 @@ if (empty($skillRow['skills'])) {
         .sidebar { transition: all 0.3s ease; overflow: hidden; display: flex; flex-direction: column; }
         .sidebar-nav { overflow-y: auto; flex: 1; padding-right: 5px; scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.1) transparent; }
         .sidebar-nav::-webkit-scrollbar { width: 4px; }
+        
+        /* Account Locked State */
+        .sidebar.account-suspended .nav-item:not(.logout-btn) { 
+            opacity: 0.5; 
+            pointer-events: none; 
+            cursor: not-allowed;
+            filter: grayscale(1);
+        }
+        .account-lock-overlay {
+            position: fixed;
+            top: 15px;
+            left: 280px;
+            right: 20px;
+            background: rgba(239, 68, 68, 0.15);
+            border: 1px solid #ef4444;
+            backdrop-filter: blur(10px);
+            padding: 1rem 2rem;
+            border-radius: 12px;
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            color: #fff;
+            animation: slideDown 0.5s ease;
+        }
+        @keyframes slideDown { from { transform: translateY(-100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        
+        .main-content.locked-view {
+            filter: blur(2px);
+            pointer-events: none;
+            user-select: none;
+        }
         .sidebar-nav::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
         
         .main-content { transition: all 0.3s ease; }
@@ -445,8 +500,81 @@ if (empty($skillRow['skills'])) {
     <!-- ... body content ... -->
 
     <div class="app-container">
+        <?php if($is_active === 0): ?>
+            <div class="account-lock-overlay">
+                <div style="background: #ef4444; color: white; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                    <i data-feather="lock"></i>
+                </div>
+                <div style="flex: 1;">
+                    <h4 style="margin: 0; font-size: 1rem;">Account Temporarily Suspended</h4>
+                    <p style="margin: 0; font-size: 0.8rem; opacity: 0.8;">Your account is deactivated. Reference ID: <strong style="color: #fff; background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 4px;"><?php echo $userData['reference_id'] ?? 'N/A'; ?></strong></p>
+                </div>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <button onclick="openReactivationModal()" style="background: var(--primary); color: #fff; border: none; padding: 8px 15px; border-radius: 8px; font-weight: 600; font-size: 0.8rem; cursor: pointer;">Request Reactivation</button>
+                    <a href="logout.php" style="color: #fff; text-decoration: none; font-weight: 600; font-size: 0.8rem; background: rgba(255,255,255,0.1); padding: 8px 15px; border-radius: 8px;">Logout</a>
+                </div>
+            </div>
+
+            <!-- Reactivation Request Modal -->
+            <div id="reactivation-modal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: none; align-items: center; justify-content: center; z-index: 10005;">
+                <div style="background: #1e293b; border: 1px solid var(--border-color); padding: 2.5rem; border-radius: 20px; width: 450px; position: relative;">
+                    <h3 style="margin-bottom: 0.5rem; color: #fff;">Request Reactivation</h3>
+                    <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1.5rem;">Please provide a reason why your account should be reactivated.</p>
+                    
+                    <div style="margin-bottom: 1.2rem;">
+                        <label style="font-size: 0.85rem; margin-bottom: 5px;">Reference ID</label>
+                        <input type="text" value="<?php echo $userData['reference_id'] ?? ''; ?>" readonly style="width: 100%; padding: 0.8rem; background: rgba(0,0,0,0.2); border: 1px solid var(--border-color); border-radius: 8px; color: var(--primary); font-family: monospace; font-weight: 700;">
+                    </div>
+
+                    <div style="margin-bottom: 1.5rem;">
+                        <label style="font-size: 0.85rem; margin-bottom: 5px;">Reason for Reactivation</label>
+                        <textarea id="reactivation-reason" placeholder="Explain your situation..." style="width: 100%; padding: 0.8rem; background: var(--input-bg); border: 1px solid var(--border-color); border-radius: 8px; color: #fff; min-height: 120px;"></textarea>
+                    </div>
+
+                    <div style="display: flex; gap: 10px;">
+                        <button onclick="closeReactivationModal()" style="flex: 1; padding: 0.8rem; background: rgba(255,255,255,0.05); color: #fff; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">Cancel</button>
+                        <button onclick="submitReactivationRequest()" style="flex: 2; padding: 0.8rem; background: var(--primary); color: #fff; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">Send Request</button>
+                    </div>
+                </div>
+            </div>
+            
+            <script>
+                function openReactivationModal() {
+                    document.getElementById('reactivation-modal').style.display = 'flex';
+                }
+                function closeReactivationModal() {
+                    document.getElementById('reactivation-modal').style.display = 'none';
+                }
+                async function submitReactivationRequest() {
+                    const reason = document.getElementById('reactivation-reason').value;
+                    const refId = "<?php echo $userData['reference_id']; ?>";
+                    
+                    if(!reason.trim()) {
+                        alert("Please enter a reason.");
+                        return;
+                    }
+
+                    try {
+                        const res = await fetch('api.php?action=request_reactivation', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ reason: reason, reference_id: refId })
+                        });
+                        const data = await res.json();
+                        if(data.success) {
+                            alert("Request sent successfully! Our team will review it.");
+                            closeReactivationModal();
+                        } else {
+                            alert("Error: " + data.error);
+                        }
+                    } catch (e) {
+                        alert("Network error. Please try again.");
+                    }
+                }
+            </script>
+        <?php endif; ?>
         <!-- Sidebar -->
-        <aside class="sidebar" id="sidebar">
+        <aside class="sidebar <?php echo ($is_active === 0) ? 'account-suspended' : ''; ?>" id="sidebar">
             <div class="sidebar-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
                 <div class="logo" style="display: flex; align-items: center; gap: 10px;">
                     <img src="laforteza_logo.jpg" style="width: 30px; height: 30px; border-radius: 6px; object-fit: cover;">
@@ -503,11 +631,15 @@ if (empty($skillRow['skills'])) {
         </aside>
 
         <!-- Main Content -->
-        <main class="main-content" id="main-content">
+        <main class="main-content <?php echo ($is_active === 0) ? 'locked-view' : ''; ?>" id="main-content">
             <header class="top-bar" style="background: var(--card-bg); backdrop-filter: blur(10px);">
                 <button class="mobile-toggle" onclick="document.getElementById('sidebar').classList.toggle('open')">☰</button>
-                <div class="welcome-text">
-                    <span>Good Morning, <span id="header-name"><?php echo htmlspecialchars($user_name); ?></span>!</span>
+                <div class="welcome-text" style="display: flex; flex-direction: column;">
+                    <span style="font-weight: 600;">Good Morning, <span id="header-name"><?php echo htmlspecialchars($user_name); ?></span>!</span>
+                    <span style="font-size: 0.75rem; color: var(--text-muted); display: flex; align-items: center; gap: 5px;">
+                        <i data-feather="hash" style="width: 12px; height: 12px;"></i>
+                        Reference: <b style="color: var(--primary); font-family: monospace; letter-spacing: 1px;"><?php echo htmlspecialchars($userData['reference_id'] ?? 'REF-N/A'); ?></b>
+                    </span>
                 </div>
                 <div class="user-profile" style="display:flex; align-items:center;">
                     <!-- Notification Bell -->
@@ -554,6 +686,14 @@ if (empty($skillRow['skills'])) {
                                 <div class="stat-info">
                                     <h3>Pending</h3>
                                     <p class="stat-value" id="stat-pending">--</p>
+                                </div>
+                            </div>
+                            <!-- Reference ID Card -->
+                            <div class="stat-card">
+                                <div class="stat-icon activity-color"><i data-feather="hash"></i></div>
+                                <div class="stat-info">
+                                    <h3>Reference ID</h3>
+                                    <p class="stat-value" style="font-family: monospace; font-size: 1rem; color: #fff;"><?php echo htmlspecialchars($userData['reference_id'] ?? 'REF-N/A'); ?></p>
                                 </div>
                             </div>
                         </div>
