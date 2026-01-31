@@ -10,11 +10,11 @@ require 'PHPMailer/SMTP.php';
 
 // Configuration
 define('SMTP_HOST', 'smtp.gmail.com');
-define('SMTP_PORT', 465);
+define('SMTP_PORT', 587);
 define('SMTP_USER', 'khentcorpuz71@gmail.com'); 
 define('SMTP_PASS', 'tmyzdqgkxwcjzski'); 
 
-echo "<h2>PHPMailer Diagnostics (Port 465 SSL)</h2>";
+echo "<h2>PHPMailer Diagnostics (Port 587 TLS)</h2>";
 
 if (!extension_loaded('openssl')) {
     echo "<p style='color:red'>ERROR: OpenSSL extension is NOT loaded. Please check php.ini and restart Apache.</p>";
@@ -32,7 +32,7 @@ try {
     $mail->SMTPAuth   = true;
     $mail->Username   = trim(SMTP_USER);
     $mail->Password   = trim(SMTP_PASS);
-    $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;
+    $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
     $mail->Port       = SMTP_PORT;
 
     $mail->SMTPOptions = array(

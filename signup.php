@@ -12,11 +12,17 @@ if (isset($_GET['restart'])) {
 
 $error = '';
 $success = '';
+
+// Diagnostic check for OpenSSL
+if (!extension_loaded('openssl')) {
+    $error = "Critical Error: The 'openssl' extension is not enabled in your PHP configuration. Verification emails cannot be sent. Please enable it in php.ini.";
+}
+
 $step = isset($_SESSION['signup_step']) ? $_SESSION['signup_step'] : 1;
 
 // Email Configuration - Gmail SMTP
 define('SMTP_HOST', 'smtp.gmail.com');
-define('SMTP_PORT', 465); // SSL Port
+define('SMTP_PORT', 587); // TLS Port
 define('SMTP_USER', 'khentcorpuz71@gmail.com');
 define('SMTP_PASS', 'tmyzdqgkxwcjzski');
 
@@ -42,7 +48,7 @@ function sendOTPEmail($to, $fullname, $otp) {
         $mail->SMTPAuth   = true;
         $mail->Username   = trim(SMTP_USER);
         $mail->Password   = trim(SMTP_PASS);
-        $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS; // Use SSL
+        $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS; // Use TLS
         $mail->Port       = SMTP_PORT;
         
         // Fix for Windows/XAMPP SSL issues
