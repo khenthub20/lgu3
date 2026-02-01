@@ -2110,14 +2110,21 @@ if (empty($skillRow['skills'])) {
                 const res = await fetch('api.php?action=enroll_skill', {
                     method: 'POST', body: JSON.stringify({test_id: tid})
                 });
-                const data = await res.json();
+                const text = await res.text();
+                let data;
+                try {
+                    data = JSON.parse(text);
+                } catch(e) {
+                    alert('Server Error: ' + text.substring(0, 100));
+                    return;
+                }
+
                 if(data.success) {
                     fetchSkillTests(); 
-                    // Automatically open it?
-                    // Let's just refresh list for now as per "attach and start" could mean auto-open but list view needs update first.
-                    // Actually let's just refresh.
+                } else {
+                    alert('Enrollment Failed: ' + data.error);
                 }
-            } catch(e) { alert('Error enrolling'); }
+            } catch(e) { alert('Error enrolling: ' + e.message); }
         }
 
         async function openSkillTest(tid, title, totalStages) {
@@ -2235,7 +2242,17 @@ if (empty($skillRow['skills'])) {
                 const res = await fetch('api.php?action=complete_stage', {
                     method: 'POST', body: JSON.stringify({test_id: currentTestId, stage_number: num})
                 });
-                const data = await res.json();
+                
+                const text = await res.text();
+                let data;
+                try {
+                    data = JSON.parse(text);
+                } catch(e) {
+                    console.error('Server Error:', text);
+                    alert('Server Error: ' + text.substring(0, 100));
+                    loader.style.display = 'none';
+                    return;
+                }
                 
                 if(data.success) {
                     // Slight delay for premium feel
@@ -2266,7 +2283,8 @@ if (empty($skillRow['skills'])) {
                 }
             } catch(e) {
                 loader.style.display = 'none';
-                alert('Connection error');
+                console.error(e);
+                alert('Connection error: ' + e.message);
             }
         }
 
