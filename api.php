@@ -731,6 +731,12 @@ if ($action === 'all_citizens') {
     $users = [];
     $query = "SELECT id, first_name, middle_name, last_name, suffix, full_name, email, mobile_number, street, house_number, valid_id_path, created_at, role, is_active FROM users WHERE role = 'user' ORDER BY created_at DESC";
     $result = $conn->query($query);
+    
+    if (!$result) {
+        echo json_encode(['error' => 'Query Failed: ' . $conn->error]);
+        exit;
+    }
+    
     while($row = $result->fetch_assoc()) $users[] = $row;
     echo json_encode($users);
     exit;

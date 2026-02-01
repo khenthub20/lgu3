@@ -2045,12 +2045,23 @@ if ($checkCol && $checkCol->num_rows > 0) {
         async function fetchUsers() {
              try {
                  const response = await fetch('api.php?action=all_citizens');
-                 const users = await response.json();
+                 const text = await response.text();
+                 let users;
+                 try {
+                     users = JSON.parse(text);
+                 } catch(e) {
+                     const tbody = document.getElementById('all-users-table');
+                     if(tbody) tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:var(--danger); padding:2rem;">
+                         Server Error: ${text.substring(0, 100).replace(/</g, "&lt;")}
+                     </td></tr>`;
+                     return;
+                 }
+
                  const tbody = document.getElementById('all-users-table');
                  if(!tbody) return;
                  
                  if (!Array.isArray(users)) {
-                     tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:var(--danger); padding:2rem;">
+                     tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:var(--danger); padding:2rem;">
                         ${users.error || 'Failed to load citizens'}
                      </td></tr>`;
                      return;
@@ -2080,9 +2091,9 @@ if ($checkCol && $checkCol->num_rows > 0) {
                       tbody.innerHTML += `<tr>
                          <td>
                              <div class="user-cell">
-                                 <div class="avatar-sm">${user.full_name.substring(0,2).toUpperCase()}</div>
+                                 <div class="avatar-sm">${user.full_name ? user.full_name.substring(0,2).toUpperCase() : '??'}</div>
                                  <div style="display:flex; flex-direction:column;">
-                                    <span style="${user.is_active == 0 ? 'text-decoration: line-through; color: #64748b;' : ''}; font-weight:600;">${user.full_name}</span>
+                                    <span style="${user.is_active == 0 ? 'text-decoration: line-through; color: #64748b;' : ''}; font-weight:600;">${user.full_name || 'Unknown'}</span>
                                     <small style="color:#64748b; font-size:0.75rem;">${user.email}</small>
                                  </div>
                              </div>
@@ -2106,7 +2117,7 @@ if ($checkCol && $checkCol->num_rows > 0) {
              } catch(e) {
                  console.error(e);
                  const tbody = document.getElementById('all-users-table');
-                 if(tbody) tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; color:var(--danger);">Connection Error</td></tr>';
+                 if(tbody) tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:var(--danger);">Error: ${e.message}</td></tr>`;
              }
         }
 
