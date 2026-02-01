@@ -1499,10 +1499,10 @@ if ($checkCol && $checkCol->num_rows > 0) {
                 <form onsubmit="event.preventDefault(); addStage(this);">
                     <input type="hidden" name="test_id" id="stm-stage-tid">
                     <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1rem;">
-                        <input type="text" name="title" placeholder="Stage Title" required class="form-control" style="background:#0f172a;">
-                        <input type="url" name="video_url" placeholder="Video/Content URL" required class="form-control" style="background:#0f172a;">
+                        <input type="text" name="title" placeholder="Stage Title" required class="form-control" style="background:#0f172a; color:white;">
+                        <input type="url" name="video_url" placeholder="Video/Content URL" required class="form-control" style="background:#0f172a; color:white;">
                     </div>
-                    <textarea name="content" placeholder="Description/Content" required class="form-control" style="background:#0f172a; min-height:60px; margin-bottom:1rem;"></textarea>
+                    <textarea name="content" placeholder="Description/Content" required class="form-control" style="background:#0f172a; min-height:60px; margin-bottom:1rem; color:white;"></textarea>
                     <button type="submit" class="primary-action-btn" style="width:100%; font-size:0.85rem;">Add Stage</button>
                 </form>
             </div>
