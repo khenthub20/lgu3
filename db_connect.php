@@ -1,9 +1,19 @@
 <?php
 // db_connect.php
 $servername = "localhost";
-$username = "live_lgu3_tl"; // Default XAMPP/WAMP user
-$password = "adminhost123";     // Default XAMPP/WAMP pass
-$dbname = "live_lgu3_tl";
+
+// Check if running on localhost
+if ($_SERVER['HTTP_HOST'] == 'localhost' || $_SERVER['HTTP_HOST'] == '127.0.0.1') {
+    // Local Credentials
+    $username = "root";
+    $password = "";
+    $dbname = "lgu3_db";
+} else {
+    // Live/Production Credentials
+    $username = "live_lgu3_tl";
+    $password = "adminhost123";
+    $dbname = "live_lgu3_tl";
+}
 
 // Create connection
 $conn = new mysqli($servername, $username, $password, $dbname);
