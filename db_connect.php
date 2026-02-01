@@ -1,24 +1,17 @@
 <?php
 // db_connect.php
-// For most shared hosting (cPanel, Hostinger, etc.), use 'localhost'
-// For some hosts, you might need to use the actual database server hostname
-$servername = "localhost"; // Try "localhost" first, if it fails, use your hosting provider's DB host
-$username = "live_lgu3_tl";
-$password = "adminhost123";
+$servername = "localhost";
+$username = "live_lgu3_tl"; // Default XAMPP/WAMP user
+$password = "adminhost123";     // Default XAMPP/WAMP pass
 $dbname = "live_lgu3_tl";
 
 // Create connection
 $conn = new mysqli($servername, $username, $password, $dbname);
 
-// Check connection with detailed error
+// Check connection
 if ($conn->connect_error) {
-    // For debugging - remove this in production for security
-    error_log("Database Connection Error: " . $conn->connect_error);
-    die("Connection failed. Please check your database credentials and ensure the database exists. Error: " . $conn->connect_error);
+    die("Connection failed: " . $conn->connect_error);
 }
-
-// Set charset to UTF-8 for proper character handling
-$conn->set_charset("utf8mb4");
 
 // --- SCHEMA AUTO-HEAL: Reference ID ---
 $check = $conn->query("SHOW COLUMNS FROM users LIKE 'reference_id'");

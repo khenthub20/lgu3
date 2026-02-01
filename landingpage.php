@@ -1,35 +1,43 @@
 ﻿<?php
 session_start();
-include 'db_connect.php';
 
-// Fetch some real stats for the landing page
+// Initialize stats with defaults
 $stats = [
     'users' => 0,
     'programs' => 0,
     'completions' => 0,
     'reports' => 0,
-    'employment_rate' => 89 // Default
+    'employment_rate' => 89
 ];
 
-$uRes = $conn->query("SELECT COUNT(*) as count FROM users WHERE role = 'user'");
-if($uRes) $stats['users'] = $uRes->fetch_assoc()['count'];
+$dbConnected = false;
 
-$pRes = $conn->query("SELECT COUNT(*) as count FROM programs");
-if($pRes) $stats['programs'] = $pRes->fetch_assoc()['count'];
+// Try to connect to database safely
+include 'db_connect_safe.php';
+$dbConnected = ($conn !== null && !$conn->connect_error);
 
-$cRes = $conn->query("SELECT COUNT(*) as count FROM user_skill_progress WHERE status = 'completed'");
-if(!$cRes) {
-    // Fallback for older schema if necessary
-    $cRes = $conn->query("SELECT COUNT(*) as count FROM skill_completions");
-}
-if($cRes) $stats['completions'] = $cRes->fetch_assoc()['count'];
-
-$rRes = $conn->query("SELECT COUNT(*) as count FROM reports");
-if($rRes) $stats['reports'] = $rRes->fetch_assoc()['count'];
-
-// Logic for employment rate: Base 85% + small bonus for completions to keep it dynamic
-if ($stats['completions'] > 0) {
-    $stats['employment_rate'] = min(98, 85 + floor($stats['completions'] / 2));
+// Only fetch stats if database is connected
+if ($dbConnected) {
+    $uRes = $conn->query("SELECT COUNT(*) as count FROM users WHERE role = 'user'");
+    if($uRes) $stats['users'] = $uRes->fetch_assoc()['count'];
+    
+    $pRes = $conn->query("SELECT COUNT(*) as count FROM programs");
+    if($pRes) $stats['programs'] = $pRes->fetch_assoc()['count'];
+    
+    $cRes = $conn->query("SELECT COUNT(*) as count FROM user_skill_progress WHERE status = 'completed'");
+    if(!$cRes) {
+        // Fallback for older schema if necessary
+        $cRes = $conn->query("SELECT COUNT(*) as count FROM skill_completions");
+    }
+    if($cRes) $stats['completions'] = $cRes->fetch_assoc()['count'];
+    
+    $rRes = $conn->query("SELECT COUNT(*) as count FROM reports");
+    if($rRes) $stats['reports'] = $rRes->fetch_assoc()['count'];
+    
+    // Logic for employment rate: Base 85% + small bonus for completions to keep it dynamic
+    if ($stats['completions'] > 0) {
+        $stats['employment_rate'] = min(98, 85 + floor($stats['completions'] / 2));
+    }
 }
 
 ?>
