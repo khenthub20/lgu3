@@ -1672,6 +1672,19 @@ if ($action === 'create_announcement') {
     $content = $_POST['content'] ?? '';
     $imagePath = '';
 
+    // Auto-Heal: Ensure table exists and ID is AUTO_INCREMENT
+    $conn->query("CREATE TABLE IF NOT EXISTS announcements (
+        id INT(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
+        title VARCHAR(255) NOT NULL,
+        category VARCHAR(100) NOT NULL,
+        content TEXT NOT NULL,
+        image_path VARCHAR(255) DEFAULT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )");
+    
+    // Attempt to set AUTO_INCREMENT just in case it exists but is broken
+    $conn->query("ALTER TABLE announcements MODIFY id INT(11) NOT NULL AUTO_INCREMENT");
+
     if (isset($_FILES['image']) && $_FILES['image']['error'] == 0) {
         $target_dir = "uploads/announcements/";
         if (!file_exists($target_dir)) {
