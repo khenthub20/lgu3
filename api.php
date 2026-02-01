@@ -15,13 +15,15 @@ $action = $_GET['action'] ?? '';
 $role = $_SESSION['role'] ?? '';
 $uid = $_SESSION['user_id'] ?? 0;
 
-if (!$uid) {
+$allowed_public_actions = ['get_announcements'];
+
+if (!$uid && !in_array($action, $allowed_public_actions)) {
     echo json_encode(['error' => 'Unauthorized']);
     exit;
 }
 
 // Admin-only actions
-$admin_actions = ['stats', 'recent_users', 'reports', 'admin_programs', 'create_program', 'admin_applications', 'send_material', 'all_citizens', 'manual_enroll', 'delete_program', 'delete_application', 'update_program', 'upload_doc', 'delete_doc', 'approve_edit', 'get_edit_requests', 'toggle_user_status', 'add_calendar_event', 'delete_calendar_event', 'get_calendar_stats', 'fix_account'];
+$admin_actions = ['stats', 'recent_users', 'reports', 'admin_programs', 'create_program', 'admin_applications', 'send_material', 'all_citizens', 'manual_enroll', 'delete_program', 'delete_application', 'update_program', 'upload_doc', 'delete_doc', 'approve_edit', 'get_edit_requests', 'toggle_user_status', 'add_calendar_event', 'delete_calendar_event', 'get_calendar_stats', 'fix_account', 'create_announcement', 'delete_announcement', 'get_maintenance', 'sync_maintenance', 'get_analytics'];
 if (in_array($action, $admin_actions) && $role !== 'admin') {
      echo json_encode(['error' => 'Unauthorized Access']);
      exit;
@@ -715,7 +717,7 @@ if ($action === 'chatbot') {
 
 if ($action === 'all_citizens') {
     $users = [];
-    $query = "SELECT id, full_name, email, created_at, role, is_active FROM users WHERE role = 'user' ORDER BY created_at DESC";
+    $query = "SELECT id, first_name, middle_name, last_name, suffix, full_name, email, mobile_number, street, house_number, valid_id_path, created_at, role, is_active FROM users WHERE role = 'user' ORDER BY created_at DESC";
     $result = $conn->query($query);
     while($row = $result->fetch_assoc()) $users[] = $row;
     echo json_encode($users);
@@ -724,7 +726,7 @@ if ($action === 'all_citizens') {
 
 if ($action === 'recent_users') {
     $users = [];
-    $query = "SELECT id, full_name, email, created_at, role FROM users ORDER BY created_at DESC LIMIT 5";
+    $query = "SELECT id, full_name, email, created_at, role, is_active FROM users ORDER BY created_at DESC LIMIT 5";
     $result = $conn->query($query);
     while($row = $result->fetch_assoc()) $users[] = $row;
     echo json_encode($users);
@@ -1642,6 +1644,67 @@ function analyzeSentiment($text) {
 
 
 
+if ($action === 'get_announcements') {
+    $announcements = [];
+    $res = $conn->query("SELECT * FROM announcements ORDER BY created_at DESC");
+    if($res) {
+        while($row = $res->fetch_assoc()) $announcements[] = $row;
+    }
+    echo json_encode($announcements);
+    exit;
+}
+
+if ($action === 'create_announcement') {
+    $title = $_POST['title'] ?? '';
+    $cat = $_POST['category'] ?? '';
+    $content = $_POST['content'] ?? '';
+    $imagePath = '';
+
+    if (isset($_FILES['image']) && $_FILES['image']['error'] == 0) {
+        $target_dir = "uploads/announcements/";
+        if (!file_exists($target_dir)) mkdir($target_dir, 0777, true);
+        
+        $fileName = time() . "_" . basename($_FILES["image"]["name"]);
+        $target_file = $target_dir . $fileName;
+        
+        if (move_uploaded_file($_FILES["image"]["tmp_name"], $target_file)) {
+            $imagePath = $target_file;
+        }
+    }
+
+    $stmt = $conn->prepare("INSERT INTO announcements (title, category, content, image_path) VALUES (?, ?, ?, ?)");
+    $stmt->bind_param("ssss", $title, $cat, $content, $imagePath);
+    
+    if ($stmt->execute()) {
+        echo json_encode(['success' => true]);
+    } else {
+        echo json_encode(['error' => $conn->error]);
+    }
+    exit;
+}
+
+if ($action === 'delete_announcement') {
+    $input = json_decode(file_get_contents('php://input'), true);
+    $id = $input['id'];
+    
+    // Get image path to delete file
+    $res = $conn->query("SELECT image_path FROM announcements WHERE id = $id");
+    if ($row = $res->fetch_assoc()) {
+        if (!empty($row['image_path']) && file_exists($row['image_path'])) {
+            unlink($row['image_path']);
+        }
+    }
+    
+    $stmt = $conn->prepare("DELETE FROM announcements WHERE id = ?");
+    $stmt->bind_param("i", $id);
+    if ($stmt->execute()) {
+        echo json_encode(['success' => true]);
+    } else {
+        echo json_encode(['error' => $conn->error]);
+    }
+    exit;
+}
+
 if ($action === 'get_intelligence_data') {
     if($role !== 'admin') {
          echo json_encode(['error' => 'Unauthorized']); exit;
@@ -1749,6 +1812,227 @@ if ($action === 'get_intelligence_data') {
     if($insights['prediction'] == 0 && array_sum($dataPoints) > 0) $insights['prediction'] = 1;
 
     echo json_encode($insights);
+    exit;
+}
+
+if ($action === 'get_maintenance') {
+    $maint = [];
+    $sql = "SELECT ms.*, u.full_name, u.reference_id as user_ref 
+            FROM maintenance_schedules ms 
+            LEFT JOIN users u ON ms.user_id = u.id 
+            ORDER BY ms.scheduled_date ASC";
+    $res = $conn->query($sql);
+    if($res) {
+        while($row = $res->fetch_assoc()) {
+            $maint[] = $row;
+        }
+    }
+    echo json_encode($maint);
+    exit;
+}
+
+if ($action === 'sync_maintenance') {
+    // 1. Detect maintenance from reports
+    $detector = [
+        'Plumbing/Water' => ['leak', 'tubig', 'faucet', 'toilet', 'flush', 'water'],
+        'Electrical' => ['kuryente', 'light', 'outage', 'wire', 'koryente', 'electricity', 'ilaw'],
+        'Infrastructure' => ['road', 'bridge', 'pavement', 'crack', 'building', 'wall', 'daan', 'tulay'],
+        'Sanitation' => ['garbage', 'trash', 'waste', 'basura', 'drain', 'canal', 'kanal']
+    ];
+    
+    $allKeywords = [];
+    foreach($detector as $cat => $kws) $allKeywords = array_merge($allKeywords, $kws);
+    
+    $whereClause = [];
+    foreach($allKeywords as $k) $whereClause[] = "title LIKE '%$k%' OR description LIKE '%$k%'";
+    $whereStr = implode(' OR ', $whereClause);
+    
+    $reports = $conn->query("SELECT * FROM reports WHERE status = 'pending' AND ($whereStr)");
+    $syncedCount = 0;
+    
+    if($reports) {
+        while($r = $reports->fetch_assoc()) {
+            $maint_id = 'CIMM-' . str_pad($r['id'], 4, '0', STR_PAD_LEFT);
+            
+            // Check if already exists
+            $exists = $conn->query("SELECT id FROM maintenance_schedules WHERE maint_id = '$maint_id'");
+            if($exists->num_rows == 0) {
+                $facility = $r['title']; // Use report title as facility/location
+                
+                // Determine type
+                $type = 'General Maintenance';
+                $combinedText = strtolower($r['title'] . ' ' . $r['description']);
+                foreach($detector as $cat => $kws) {
+                    foreach($kws as $kw) {
+                        if(strpos($combinedText, $kw) !== false) {
+                            $type = $cat;
+                            break 2;
+                        }
+                    }
+                }
+
+                $date = date('Y-m-d H:i:s', strtotime('+2 days')); // Schedule for soon
+                $uid_val = $r['user_id'] ? $r['user_id'] : 'NULL';
+                
+                // Priority based on certain words
+                $priority = 'Medium';
+                if(strpos($combinedText, 'urgent') !== false || strpos($combinedText, 'danger') !== false || strpos($combinedText, 'bahid') !== false) {
+                    $priority = 'High';
+                }
+
+                $sql = "INSERT INTO maintenance_schedules (maint_id, facility, maint_type, scheduled_date, duration, priority, status, user_id) 
+                        VALUES (?, ?, ?, ?, 'TBD', ?, 'Scheduled', $uid_val)";
+                $stmt = $conn->prepare($sql);
+                $stmt->bind_param("sssss", $maint_id, $facility, $type, $date, $priority);
+                if($stmt->execute()) $syncedCount++;
+            }
+        }
+    }
+    
+    echo json_encode(['success' => true, 'synced_count' => $syncedCount]);
+    exit;
+}
+
+if ($action === 'get_analytics') {
+    $data = [
+        'summary' => [
+            'total_this_month' => 0,
+            'approval_rate' => 0,
+            'utilization' => '0%', // Resolution Rate
+            'total_users' => 0,
+            'available_facilities' => 3, // Logic categories
+            'total_all_time' => 0,
+            'avg_per_user' => 0
+        ],
+        'status_breakdown' => [
+            'approved' => 0, 'pending' => 0, 'rejected' => 0, 'cancelled' => 0
+        ],
+        'trends' => [
+            'labels' => [],
+            'data' => []
+        ],
+        'top_facilities' => [ // Top Issues
+            'labels' => [],
+            'data' => []
+        ],
+        'facility_utilization' => [], // Report Categories Breakdown
+        'outcomes' => [],
+        'sentiments' => [
+            'positive' => 0, 'neutral' => 0, 'negative' => 0
+        ]
+    ];
+
+    // Schema Patch: Check correct timestamp column
+    $tsCol = 'created_at';
+    $checkTS = $conn->query("SHOW COLUMNS FROM reports LIKE 'submitted_at'");
+    if($checkTS && $checkTS->num_rows > 0) $tsCol = 'submitted_at';
+
+    // 1. Basic Stats
+    $totalUsers = $conn->query("SELECT COUNT(*) as c FROM users WHERE role = 'user'")->fetch_assoc()['c'];
+    $data['summary']['total_users'] = $totalUsers;
+    
+    $totalAllTime = $conn->query("SELECT COUNT(*) as c FROM reports")->fetch_assoc()['c'];
+    $data['summary']['total_all_time'] = $totalAllTime;
+    
+    if($totalUsers > 0) $data['summary']['avg_per_user'] = round($totalAllTime / $totalUsers, 1);
+
+    // 2. This Month Stats
+    $thisMonth = date('Y-m');
+    $resThisMonth = $conn->query("SELECT COUNT(*) as c FROM reports WHERE $tsCol LIKE '$thisMonth%'");
+    $data['summary']['total_this_month'] = $resThisMonth->fetch_assoc()['c'];
+
+    $resApproved = $conn->query("SELECT COUNT(*) as c FROM reports WHERE $tsCol LIKE '$thisMonth%' AND status = 'approved'");
+    $approvedThisMonth = $resApproved->fetch_assoc()['c'];
+    
+    $resRejected = $conn->query("SELECT COUNT(*) as c FROM reports WHERE $tsCol LIKE '$thisMonth%' AND (status = 'rejected' OR status = 'denied')");
+    $rejectedThisMonth = $resRejected->fetch_assoc()['c'];
+
+    if($data['summary']['total_this_month'] > 0) {
+        $data['summary']['approval_rate'] = round(($approvedThisMonth / $data['summary']['total_this_month']) * 100, 1);
+        $resolutionRate = round((($approvedThisMonth + $rejectedThisMonth) / $data['summary']['total_this_month']) * 100, 1);
+        $data['summary']['utilization'] = $resolutionRate . '%';
+    }
+
+    // 3. Status Breakdown (This Month)
+    $resStatus = $conn->query("SELECT status, COUNT(*) as c FROM reports WHERE $tsCol LIKE '$thisMonth%' GROUP BY status");
+    while($row = $resStatus->fetch_assoc()) {
+        $data['status_breakdown'][strtolower($row['status'])] = (int)$row['c'];
+    }
+
+    // 4. Trends (Last 6 Months)
+    for($i = 5; $i >= 0; $i--) {
+        $m = date('Y-m', strtotime("-$i months"));
+        $label = date('M Y', strtotime("-$i months"));
+        $data['trends']['labels'][] = $label;
+        $count = $conn->query("SELECT COUNT(*) as c FROM reports WHERE $tsCol LIKE '$m%'")->fetch_assoc()['c'];
+        $data['trends']['data'][] = (int)$count;
+    }
+
+    // 5. Categorization Logic (Virtual Categories)
+    $categories = [
+        'Infrastructure' => ['road', 'bridge', 'light', 'water', 'pipe', 'leak', 'broken'],
+        'Security' => ['police', 'crime', 'theft', 'fight', 'noise', 'curfew', 'safe'],
+        'Health & Sanitation' => ['garbage', 'trash', 'flood', 'drain', 'clinic', 'covid', 'health'],
+        'Public Service' => ['permit', 'request', 'assistance', 'form', 'help']
+    ];
+    
+    $catCounts = ['Infrastructure' => 0, 'Security' => 0, 'Health & Sanitation' => 0, 'Public Service' => 0, 'General' => 0];
+    
+    $resCats = $conn->query("SELECT title FROM reports");
+    while($row = $resCats->fetch_assoc()) {
+        $t = strtolower($row['title']);
+        $matched = false;
+        foreach($categories as $cat => $keywords) {
+            foreach($keywords as $k) {
+                if(strpos($t, $k) !== false) {
+                    $catCounts[$cat]++;
+                    $matched = true;
+                    break 2;
+                }
+            }
+        }
+        if(!$matched) $catCounts['General']++;
+    }
+
+    // 6. Top Issues (Labels)
+    arsort($catCounts);
+    $top5 = array_slice($catCounts, 0, 5);
+    foreach($top5 as $cat => $count) {
+        $data['top_facilities']['labels'][] = $cat;
+        $data['top_facilities']['data'][] = $count;
+    }
+
+    // 7. Category Utilization (Resolution status within categories for this month)
+    foreach($catCounts as $cat => $count) {
+        if($count > 0) {
+            $perc = round(($count / $totalAllTime) * 100, 1);
+            $data['facility_utilization'][] = ['name' => $cat, 'count' => $count, 'percentage' => $perc];
+        }
+    }
+
+    // 8. Outcomes Table (Global Total)
+    $resOut = $conn->query("SELECT status, COUNT(*) as c FROM reports GROUP BY status");
+    $allRes = [];
+    while($row = $resOut->fetch_assoc()) $allRes[$row['status']] = $row['c'];
+    $totalGlobal = array_sum($allRes);
+
+    // 9. Sentiment Breakdown
+    $checkSent = $conn->query("SHOW COLUMNS FROM reports LIKE 'sentiment'");
+    if($checkSent && $checkSent->num_rows > 0) {
+        $resSent = $conn->query("SELECT sentiment, COUNT(*) as c FROM reports GROUP BY sentiment");
+        while($row = $resSent->fetch_assoc()) {
+            $s = strtolower($row['sentiment'] ?? 'neutral');
+            if(isset($data['sentiments'][$s])) $data['sentiments'][$s] = (int)$row['c'];
+        }
+    }
+    
+    foreach(['approved', 'pending', 'rejected'] as $s) {
+        $count = $allRes[$s] ?? 0;
+        $share = $totalGlobal > 0 ? round(($count / $totalGlobal) * 100, 1) : 0;
+        $data['outcomes'][] = ['status' => ucfirst($s), 'count' => $count, 'share' => $share];
+    }
+
+    echo json_encode($data);
     exit;
 }
 

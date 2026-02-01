@@ -45,27 +45,127 @@ if ($stats['completions'] > 0) {
         :root {
             --lp-primary: #6366f1;
             --lp-primary-dark: #4f46e5;
-            --lp-bg: #0f1115;
-            --lp-card: #1e293b;
-            --lp-text: #f8fafc;
-            --lp-text-muted: #94a3b8;
-            --lp-border: rgba(255, 255, 255, 0.1);
+            --lp-bg: #ffffff;
+            --lp-card: #f9fafb;
+            --lp-text: #111827;
+            --lp-text-muted: #4b5563;
+            --lp-border: #e5e7eb;
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
-        body { background: var(--lp-bg); color: var(--lp-text); line-height: 1.6; overflow-x: hidden; }
+        /* Announcement Specific Styles */
+        #announcements {
+            padding: 80px 10%;
+            background: #ffffff;
+        }
+        .announcement-card {
+            background: var(--lp-card);
+            border-radius: 20px;
+            overflow: hidden;
+            border: 1px solid #e5e7eb;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+        }
+        .announcement-card:hover {
+            transform: translateY(-10px);
+            border-color: var(--lp-primary);
+            box-shadow: 0 30px 60px rgba(99, 102, 241, 0.1);
+        }
+        .ann-badge {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: var(--lp-primary);
+            color: #fff;
+            padding: 6px 14px;
+            border-radius: 8px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            z-index: 2;
+            box-shadow: 0 4px 10px rgba(99, 102, 241, 0.4);
+        }
+        .ann-image {
+            width: 100%;
+            height: 240px;
+            object-fit: cover;
+            border-bottom: 3px solid var(--lp-primary);
+        }
+        .ann-content {
+            padding: 1.5rem;
+        }
+        .ann-date {
+            font-size: 0.75rem;
+            color: var(--lp-text-muted);
+            margin-bottom: 0.8rem;
+            display: block;
+        }
+        .ann-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--lp-text);
+            margin-bottom: 1rem;
+            line-height: 1.4;
+        }
+        .ann-text {
+            color: var(--lp-text-muted);
+            font-size: 0.9rem;
+            line-height: 1.6;
+            margin-bottom: 1.5rem;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        .ann-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--lp-primary);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: gap 0.3s;
+        }
+        .ann-link:hover { gap: 12px; }
+        .view-all-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            background: #f3f4f6;
+            border: 1px solid #e5e7eb;
+            color: #111827;
+            padding: 1rem 2.5rem;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 600;
+            margin-top: 4rem;
+            transition: all 0.3s;
+        }
+        .view-all-btn:hover {
+            background: var(--lp-primary);
+            border-color: var(--lp-primary);
+            transform: scale(1.05);
+            box-shadow: 0 15px 30px rgba(99, 102, 241, 0.2);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+        body { background: var(--lp-bg); color: var(--lp-text); line-height: 1.6; overflow-x: hidden; text-rendering: optimizeLegibility; }
 
         /* Navigation */
         nav {
             height: 65px; width: 100%; display: flex; align-items: center; justify-content: space-between;
             padding: 0 8%; position: fixed; top: 0; z-index: 1000;
-            background: rgba(15, 17, 21, 0.8); backdrop-filter: blur(15px); border-bottom: 1px solid var(--lp-border);
+            background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(15px); border-bottom: 1px solid var(--lp-border);
         }
-        .logo { font-size: 1.1rem; font-weight: 800; color: #fff; letter-spacing: -0.5px; }
+        .logo { font-size: 1.1rem; font-weight: 800; color: #111827; letter-spacing: -0.5px; }
         .logo span { color: var(--lp-primary); }
         .nav-links { display: flex; gap: 1.8rem; }
         .nav-links a { text-decoration: none; color: var(--lp-text-muted); font-size: 0.85rem; font-weight: 550; transition: 0.3s; }
-        .nav-links a:hover { color: #fff; }
+        .nav-links a:hover { color: var(--lp-primary); }
         .nav-btns { display: flex; gap: 0.75rem; }
         .btn-outline { padding: 0.45rem 1.2rem; border-radius: 6px; border: 1px solid var(--lp-primary); color: var(--lp-primary); text-decoration: none; font-weight: 600; font-size: 0.8rem; transition: 0.3s; }
         .btn-outline:hover { background: rgba(99, 102, 241, 0.1); }
@@ -73,29 +173,29 @@ if ($stats['completions'] > 0) {
         .btn-filled:hover { background: var(--lp-primary-dark); transform: translateY(-1px); }
 
         /* Mobile Menu */
-        .mobile-menu-btn { display: none; background: transparent; border: none; color: #fff; cursor: pointer; padding: 5px; }
+        .mobile-menu-btn { display: none; background: transparent; border: none; color: #111827; cursor: pointer; padding: 5px; }
         .mobile-nav-overlay {
             position: fixed; top: 0; right: -100%; width: 100%; height: 100vh;
-            background: rgba(15, 17, 21, 0.98); backdrop-filter: blur(20px);
+            background: rgba(255, 255, 255, 0.98); backdrop-filter: blur(20px);
             z-index: 2000; transition: 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
             display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2rem;
             padding: 2rem;
         }
         .mobile-nav-overlay.open { right: 0; }
-        .mobile-nav-overlay a { color: #fff; text-decoration: none; font-size: 1.5rem; font-weight: 700; }
-        .mobile-close { position: absolute; top: 20px; right: 20px; color: #fff; cursor: pointer; }
+        .mobile-nav-overlay a { color: #111827; text-decoration: none; font-size: 1.5rem; font-weight: 700; }
+        .mobile-close { position: absolute; top: 20px; right: 20px; color: #111827; cursor: pointer; }
 
         /* Hero Section */
         .hero {
             padding: 160px 10% 100px; display: grid; grid-template-columns: 1fr 1fr; align-items: center; gap: 4rem;
-            background: radial-gradient(circle at 80% 20%, rgba(99, 102, 241, 0.15), transparent 40%);
+            background: radial-gradient(circle at 80% 20%, rgba(99, 102, 241, 0.05), transparent 40%);
         }
         .hero-content h1 { font-size: 4rem; font-weight: 800; line-height: 1.1; margin-bottom: 1.5rem; letter-spacing: -2px; }
         .hero-content p { font-size: 1.25rem; color: var(--lp-text-muted); margin-bottom: 2.5rem; max-width: 500px; }
         .hero-image { position: relative; }
         .hero-image img { width: 100%; border-radius: 24px; box-shadow: 0 30px 60px rgba(0,0,0,0.5); }
         .floating-card {
-            position: absolute; background: rgba(30, 41, 59, 0.8); backdrop-filter: blur(10px);
+            position: absolute; background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px);
             padding: 1rem; border-radius: 12px; border: 1px solid var(--lp-border);
             display: flex; align-items: center; gap: 1rem;
             animation: float 4s infinite ease-in-out;
@@ -103,14 +203,14 @@ if ($stats['completions'] > 0) {
         @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-15px); } }
 
         /* Stats */
-        .stats-bar { padding: 4rem 10%; display: flex; justify-content: space-around; background: rgba(255,255,255,0.02); }
+        .stats-bar { padding: 4rem 10%; display: flex; justify-content: space-around; background: #f9fafb; border-top: 1px solid #e5e7eb; border-bottom: 1px solid #e5e7eb; }
         .stat-item { text-align: center; }
-        .stat-item h2 { font-size: 2.5rem; color: #fff; margin-bottom: 0.5rem; }
+        .stat-item h2 { font-size: 2.5rem; color: #111827; margin-bottom: 0.5rem; }
         .stat-item p { color: var(--lp-text-muted); text-transform: uppercase; font-size: 0.8rem; letter-spacing: 1px; }
 
         /* Features */
         .section-label { color: var(--lp-primary); font-weight: 700; text-transform: uppercase; letter-spacing: 2px; font-size: 0.8rem; margin-bottom: 1rem; display: block; }
-        .features { padding: 100px 10%; background: #0b0d11; }
+        .features { padding: 100px 10%; background: #ffffff; }
         .section-header { margin-bottom: 4rem; max-width: 700px; }
         .section-header h2 { font-size: 2.5rem; margin-bottom: 1rem; }
         .feature-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2rem; }
@@ -128,30 +228,30 @@ if ($stats['completions'] > 0) {
         .story-flex { display: flex; gap: 4rem; align-items: center; margin-bottom: 6rem; }
         .story-flex:nth-child(even) { flex-direction: row-reverse; }
         .story-img { flex: 1; position: relative; }
-        .story-img img { width: 100%; border-radius: 24px; }
+        .story-img img { width: 100%; border-radius: 24px; box-shadow: 0 20px 40px rgba(0,0,0,0.05); }
         .story-content { flex: 1; }
         .story-tag { background: var(--lp-primary); color: #fff; padding: 0.4rem 1rem; border-radius: 20px; font-size: 0.75rem; font-weight: 700; margin-bottom: 1rem; display: inline-block; }
-        .story-content h2 { font-size: 2.5rem; margin-bottom: 1.5rem; line-height: 1.2; }
+        .story-content h2 { font-size: 2.5rem; color: #111827; margin-bottom: 1.5rem; line-height: 1.2; }
         .story-content p { color: var(--lp-text-muted); font-size: 1.1rem; margin-bottom: 2rem; }
 
         /* Testimonials */
         .testimonials { padding: 100px 10%; background: radial-gradient(circle at 10% 80%, rgba(236, 72, 153, 0.05), transparent 30%); }
         .test-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2rem; }
-        .test-card { padding: 2rem; background: rgba(30, 41, 59, 0.5); border-radius: 20px; border: 1px solid var(--lp-border); position: relative; }
-        .test-card i { color: var(--lp-primary); opacity: 0.3; margin-bottom: 1rem; }
+        .test-card { padding: 2rem; background: #ffffff; border-radius: 20px; border: 1px solid var(--lp-border); position: relative; box-shadow: 0 10px 20px rgba(0,0,0,0.02); }
+        .test-card i { color: var(--lp-primary); opacity: 0.1; margin-bottom: 1rem; }
         .test-user { display: flex; align-items: center; gap: 1rem; margin-top: 1.5rem; }
         .test-user img { width: 45px; height: 45px; border-radius: 50%; background: #334155; }
-        .test-user-info h4 { font-size: 1rem; margin: 0; }
+        .test-user-info h4 { font-size: 1rem; margin: 0; color: #111827; }
         .test-user-info p { font-size: 0.8rem; color: var(--lp-text-muted); margin: 0; }
 
         /* Footer */
-        footer { padding: 80px 10% 40px; background: #080a0d; border-top: 1px solid var(--lp-border); }
+        footer { padding: 80px 10% 40px; background: #f9fafb; border-top: 1px solid var(--lp-border); }
         .footer-grid { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 4rem; margin-bottom: 4rem; }
-        .footer-col h4 { margin-bottom: 1.5rem; font-size: 1.1rem; }
+        .footer-col h4 { margin-bottom: 1.5rem; font-size: 1.1rem; color: #111827; }
         .footer-col ul { list-style: none; }
         .footer-col ul li { margin-bottom: 0.8rem; }
         .footer-col ul li a { text-decoration: none; color: var(--lp-text-muted); transition: 0.3s; }
-        .footer-col ul li a:hover { color: #fff; }
+        .footer-col ul li a:hover { color: var(--lp-primary); }
         .footer-bottom { border-top: 1px solid var(--lp-border); padding-top: 2rem; display: flex; justify-content: space-between; color: var(--lp-text-muted); font-size: 0.9rem; }
 
         @media (max-width: 968px) {
@@ -184,16 +284,16 @@ if ($stats['completions'] > 0) {
         }
 
         /* Programs Grid Specific */
-        .programs-section { padding: 100px 10%; background: #0f1115; }
+        .programs-section { padding: 100px 10%; background: #ffffff; }
         .program-cat-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 2rem; margin-top: 3rem; }
-        .program-cat-card { background: rgba(255,255,255,0.02); border: 1px solid var(--lp-border); border-radius: 20px; padding: 2rem; }
+        .program-cat-card { background: #f9fafb; border: 1px solid var(--lp-border); border-radius: 20px; padding: 2rem; }
         .program-cat-card h3 { color: var(--lp-primary); margin-bottom: 1.5rem; display: flex; align-items: center; gap: 10px; }
         .program-list-items { list-style: none; display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
         .program-list-items li { color: var(--lp-text-muted); font-size: 0.9rem; display: flex; align-items: center; gap: 8px; }
         .program-list-items li::before { content: 'ΓåÆ'; color: var(--lp-primary); font-weight: bold; }
 
         /* Team Section */
-        .team-section { padding: 100px 10%; background: #0b0d11; border-top: 1px solid var(--lp-border); }
+        .team-section { padding: 100px 10%; background: #f9fafb; border-top: 1px solid var(--lp-border); }
         .team-grid { 
             display: grid; 
             grid-template-columns: repeat(4, 1fr); 
@@ -235,8 +335,8 @@ if ($stats['completions'] > 0) {
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            backdrop-filter: blur(10px);
-            background: rgba(30, 41, 59, 0.4);
+            background: #ffffff;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.03);
         }
 
         .team-card-front {
@@ -244,10 +344,10 @@ if ($stats['completions'] > 0) {
         }
 
         .team-card-back {
-            background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(30, 41, 59, 0.9));
+            background: linear-gradient(135deg, #f8fafc, #eff6ff);
             transform: rotateY(180deg);
             border-color: var(--lp-primary);
-            padding: 2rem;
+            padding: 2.5rem;
             display: flex;
             flex-direction: column;
             justify-content: center;
@@ -269,9 +369,9 @@ if ($stats['completions'] > 0) {
             filter: contrast(1.05) brightness(1.05) saturate(1.1);
         }
         
-        .team-card h3 { font-size: 1.1rem; margin-bottom: 0.5rem; color: #fff; font-weight: 700; }
-        .team-card-front p { color: var(--lp-primary); font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 1rem; }
-        .role-desc { color: var(--lp-text-muted); font-size: 0.85rem; line-height: 1.5; font-weight: 400; }
+        .team-card h3 { font-size: 1.2rem; margin-bottom: 0.5rem; color: #1e293b; font-weight: 800; }
+        .team-card-front p { color: var(--lp-primary); font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 1rem; }
+        .role-desc { color: #475569; font-size: 0.9rem; line-height: 1.6; font-weight: 500; }
         
         .motivation-title {
             color: var(--lp-primary);
@@ -283,11 +383,11 @@ if ($stats['completions'] > 0) {
         }
         
         .motivation-quote {
-            color: #fff;
-            font-size: 0.95rem;
+            color: #334155;
+            font-size: 1rem;
             font-style: italic;
             line-height: 1.6;
-            opacity: 0.9;
+            font-weight: 500;
         }
 
         .team-social { display: flex; justify-content: center; gap: 1rem; margin-top: 1.5rem; }
@@ -306,6 +406,78 @@ if ($stats['completions'] > 0) {
 
         @media (max-width: 1100px) { .team-grid { grid-template-columns: repeat(2, 1fr); } }
         @media (max-width: 600px) { .team-grid { grid-template-columns: 1fr; } }
+
+        /* FAQ Section Styles */
+        .faq-section {
+            padding: 100px 10%;
+            background: #ffffff;
+            border-top: 1px solid var(--lp-border);
+        }
+        .faq-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem 4rem;
+            margin-top: 4rem;
+        }
+        .faq-item {
+            border-bottom: 1px solid var(--lp-border);
+            padding: 1.5rem 0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .faq-header {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            width: 100%;
+        }
+        .faq-toggle {
+            width: 30px;
+            height: 30px;
+            border: 1px solid #cbd5e1;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--lp-text-muted);
+            font-size: 1.2rem;
+            flex-shrink: 0;
+            transition: all 0.3s ease;
+        }
+        .faq-question {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #1e293b;
+            line-height: 1.4;
+        }
+        .faq-answer {
+            max-height: 0;
+            overflow: hidden;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            color: var(--lp-text-muted);
+            font-size: 0.95rem;
+            padding-left: 3.4rem;
+            margin-top: 0;
+            opacity: 0;
+        }
+        .faq-item.active .faq-answer {
+            max-height: 200px;
+            margin-top: 1rem;
+            opacity: 1;
+        }
+        .faq-item.active .faq-toggle {
+            background: var(--lp-primary);
+            border-color: var(--lp-primary);
+            color: #fff;
+            transform: rotate(45deg);
+        }
+        .faq-item:hover .faq-question {
+            color: var(--lp-primary);
+        }
+
+        @media (max-width: 968px) {
+            .faq-grid { grid-template-columns: 1fr; gap: 0; }
+        }
     </style>
 </head>
 <body>
@@ -321,6 +493,7 @@ if ($stats['completions'] > 0) {
             <a href="#stories">Success Stories</a>
             <a href="#testimonials">Community</a>
             <a href="#team">Meet the Team</a>
+            <a href="#faqs">FAQs</a>
             <a href="#location">Location</a>
         </div>
         <div class="nav-btns">
@@ -339,6 +512,7 @@ if ($stats['completions'] > 0) {
         <a href="#programs" onclick="toggleMobileNav()">Programs</a>
         <a href="#stories" onclick="toggleMobileNav()">Stories</a>
         <a href="#team" onclick="toggleMobileNav()">The Team</a>
+        <a href="#faqs" onclick="toggleMobileNav()">FAQs</a>
         <a href="#location" onclick="toggleMobileNav()">Location</a>
         <hr style="width:50px; border:1px solid var(--lp-primary); opacity:0.3;">
         <a href="index.php" style="color:var(--lp-primary);">Login</a>
@@ -347,8 +521,14 @@ if ($stats['completions'] > 0) {
 
     <header class="hero">
         <div class="hero-content">
+            <!-- REAL-TIME CLOCK -->
+            <div id="real-time-clock" style="margin-bottom: 2rem; background: var(--lp-primary); padding: 1rem 1.5rem; border-radius: 12px; display: inline-block; box-shadow: 0 10px 20px rgba(99, 102, 241, 0.2); border: none;">
+                <div id="clock-date" style="font-size: 0.9rem; font-weight: 600; color: rgba(255,255,255,0.9); letter-spacing: 0.5px; margin-bottom: 4px; text-transform: uppercase;"></div>
+                <div id="clock-time" style="font-size: 1.5rem; font-weight: 800; color: #ffffff; font-family: 'Outfit', sans-serif;"></div>
+            </div>
+            <br>
             <span class="section-label">Empowering Communities</span>
-            <h1 style="font-size: 3.5rem;">LGU3 Livelihood Training Program</h1>
+            <h1 style="font-size: 3.5rem; color: #111827;">LGU3 Livelihood Training Program</h1>
             <p>Access free world-class technical training, livelihood initiatives, and AI-powered career coaching integrated with your local government unit.</p>
             <div style="display: flex; gap: 1rem; margin-bottom: 2rem;">
                 <a href="signup.php" class="btn-filled" style="padding: 1rem 2.5rem; font-size: 1.1rem;">Join for Free</a>
@@ -505,7 +685,7 @@ if ($stats['completions'] > 0) {
     <section class="success-stories" id="stories">
         <div class="section-header" style="text-align: center; margin: 0 auto 5rem;">
             <span class="section-label">Impact Gallery</span>
-            <h2>Livelihood Program Success</h2>
+            <h2 style="color: #111827;">Livelihood Program Success</h2>
         </div>
 
         <div class="story-flex">
@@ -514,15 +694,15 @@ if ($stats['completions'] > 0) {
             </div>
             <div class="story-content">
                 <span class="story-tag">Sustainable Development</span>
-                <h2>Barangay 175 Laforteza Oldings: The Green Revolution</h2>
-                <p>Through our Livelihood Program, residents of Barangay 175 Laforteza Oldings transformed vacant lots into thriving urban hydroponic gardens, now supplying fresh organic produce to local markets.</p>
+                <h2>Baranggay Laforteza Holdings 264: The Green Revolution</h2>
+                <p>Through our Livelihood Program, residents of Baranggay Laforteza Holdings 264 transformed vacant lots into thriving urban hydroponic gardens, now supplying fresh organic produce to local markets.</p>
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-top: 2rem;">
                     <div>
-                        <h4 style="color: #fff; font-size: 1.5rem;">24</h4>
+                        <h4 style="color: #111827; font-size: 1.5rem;">24</h4>
                         <p style="font-size: 0.8rem;">Families Empowered</p>
                     </div>
                     <div>
-                        <h4 style="color: #fff; font-size: 1.5rem;">$1.2k</h4>
+                        <h4 style="color: #111827; font-size: 1.5rem;">$1.2k</h4>
                         <p style="font-size: 0.8rem;">Monthly Rev Generated</p>
                     </div>
                 </div>
@@ -535,7 +715,7 @@ if ($stats['completions'] > 0) {
             </div>
             <div class="story-content">
                 <span class="story-tag">Digital Inclusion</span>
-                <h2>Barangay Central: Bridging the Digital Divide</h2>
+                <h2 style="color: #111827;">Barangay Central: Bridging the Digital Divide</h2>
                 <p>By leveraging our specialized IT and Digital Marketing modules, over 50 youth in Barangay Central are now working as remote freelancers for international clients.</p>
                 <a href="signup.php" class="btn-outline" style="display:inline-block; margin-top:1.5rem;">Learn Digital Skills</a>
             </div>
@@ -547,7 +727,7 @@ if ($stats['completions'] > 0) {
             </div>
             <div class="story-content">
                 <span class="story-tag">Entrepreneurship</span>
-                <h2>Angel's Journey: From Training to Business</h2>
+                <h2 style="color: #111827;">Angel's Journey: From Training to Business</h2>
                 <p>"Angel's Corner" started as a dream during a livelihood workshop. Today, Angel runs a successful local cafe and employs three other graduates from the same program.</p>
                 <blockquote style="border-left: 4px solid var(--lp-primary); padding-left: 1.5rem; color: var(--lp-text-muted); font-style: italic;">
                     "LGU3 gave me more than just a certificate; it gave me the confidence and the resource network to start my own legacy."
@@ -556,10 +736,31 @@ if ($stats['completions'] > 0) {
         </div>
     </section>
 
+    <section class="announcements-section" id="announcements">
+        <div class="section-header" style="text-align: center; margin: 0 auto 4rem;">
+            <span class="section-label">Latest News</span>
+            <h2 style="color: #111827;">Announcements & Updates</h2>
+            <p style="color: var(--lp-text-muted); margin-top: 1rem;">Latest advisories from Baranggay 624 laforteza holdings.</p>
+        </div>
+        <div id="announcement-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem;">
+            <!-- Announcements will be loaded here by JavaScript -->
+            <div style="grid-column: 1/-1; text-align: center; padding: 4rem; background: rgba(255,255,255,0.02); border-radius: 20px;">
+                <i data-feather="loader" style="width: 48px; height: 48px; color: var(--lp-primary); margin-bottom: 1rem;"></i>
+                <h3 style="color: #fff;">Loading Announcements...</h3>
+                <p style="color: var(--lp-text-muted);">Please wait while we fetch the latest updates.</p>
+            </div>
+        </div>
+        <div style="text-align: center;">
+            <a href="announcements.php" class="view-all-btn">
+                View All Announcements <i data-feather="arrow-right"></i>
+            </a>
+        </div>
+    </section>
+
     <section class="testimonials" id="testimonials">
         <div class="section-header" style="text-align: center; margin: 0 auto 4rem;">
             <span class="section-label">Community Feedback</span>
-            <h2>What your neighbors are saying.</h2>
+            <h2 style="color: #111827;">What your neighbors are saying.</h2>
         </div>
         <div class="test-grid">
             <div class="test-card">
@@ -568,7 +769,7 @@ if ($stats['completions'] > 0) {
                 <div class="test-user">
                     <div class="test-user-info">
                         <h4>Maria Santos</h4>
-                        <p>Barangay 175 Laforteza Oldings</p>
+                        <p>Baranggay Laforteza Holdings 264</p>
                     </div>
                 </div>
             </div>
@@ -595,10 +796,10 @@ if ($stats['completions'] > 0) {
         </div>
     </section>
 
-    <section class="partner-barangays" id="barangays" style="padding: 80px 10%; background: rgba(30, 41, 59, 0.2);">
+    <section class="partner-barangays" id="barangays" style="padding: 80px 10%; background: #f9fafb;">
         <div class="section-header" style="text-align: center; margin: 0 auto 4rem;">
             <span class="section-label">Our Coverage</span>
-            <h2>Active Partner Barangays</h2>
+            <h2 style="color: #111827;">Active Partner Barangays</h2>
             <p style="color: var(--lp-text-muted); margin-top: 1rem;">Join the growing list of communities benefiting from our localized training programs.</p>
         </div>
         
@@ -609,31 +810,31 @@ if ($stats['completions'] > 0) {
                     <img src="laforteza_logo.jpg" style="width: 100%; height: 100%; object-fit: cover; border-radius: 4px;">
                 </div>
                 <div>
-                    <h4 style="color: #fff; margin: 0;">Barangay 175</h4>
-                    <p style="color: var(--lp-text-muted); font-size: 0.8rem; margin: 0;">Laforteza Oldings (HQ)</p>
+                    <h4 style="color: #111827; margin: 0;">Baranggay Laforteza</h4>
+                    <p style="color: var(--lp-text-muted); font-size: 0.8rem; margin: 0;">Holdings 264 (HQ)</p>
                 </div>
                 <span style="margin-left: auto; color: #10b981; font-size: 0.7rem; font-weight: 700; background: rgba(16, 185, 129, 0.1); padding: 4px 8px; border-radius: 12px;">ACTIVE</span>
             </div>
 
             <!-- BRGY Central -->
-            <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--lp-border); padding: 1.5rem; border-radius: 16px; display: flex; align-items: center; gap: 15px;">
-                <div style="width: 40px; height: 40px; background: rgba(255,255,255,0.05); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: var(--lp-text-muted);">
+            <div style="background: #ffffff; border: 1px solid var(--lp-border); padding: 1.5rem; border-radius: 16px; display: flex; align-items: center; gap: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.02);">
+                <div style="width: 40px; height: 40px; background: #f3f4f6; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: var(--lp-primary);">
                     <i data-feather="map-pin"></i>
                 </div>
                 <div>
-                    <h4 style="color: #fff; margin: 0;">Barangay Central</h4>
+                    <h4 style="color: #111827; margin: 0;">Barangay Central</h4>
                     <p style="color: var(--lp-text-muted); font-size: 0.8rem; margin: 0;">District 1 Portal</p>
                 </div>
                 <span style="margin-left: auto; color: #10b981; font-size: 0.7rem; font-weight: 700; background: rgba(16, 185, 129, 0.1); padding: 4px 8px; border-radius: 12px;">ACTIVE</span>
             </div>
 
             <!-- BRGY Poblacion -->
-            <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--lp-border); padding: 1.5rem; border-radius: 16px; display: flex; align-items: center; gap: 15px;">
-                <div style="width: 40px; height: 40px; background: rgba(255,255,255,0.05); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: var(--lp-text-muted);">
+            <div style="background: #ffffff; border: 1px solid var(--lp-border); padding: 1.5rem; border-radius: 16px; display: flex; align-items: center; gap: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.02);">
+                <div style="width: 40px; height: 40px; background: #f3f4f6; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: var(--lp-primary);">
                     <i data-feather="map-pin"></i>
                 </div>
                 <div>
-                    <h4 style="color: #fff; margin: 0;">Barangay Poblacion</h4>
+                    <h4 style="color: #111827; margin: 0;">Barangay Poblacion</h4>
                     <p style="color: var(--lp-text-muted); font-size: 0.8rem; margin: 0;">Community Learning Center</p>
                 </div>
                 <span style="margin-left: auto; color: #10b981; font-size: 0.7rem; font-weight: 700; background: rgba(16, 185, 129, 0.1); padding: 4px 8px; border-radius: 12px;">ACTIVE</span>
@@ -646,7 +847,7 @@ if ($stats['completions'] > 0) {
     <section class="team-section" id="team">
         <div class="section-header" style="text-align: center; margin: 0 auto 0;">
             <span class="section-label">The Creators</span>
-            <h2>Meet the Elite Team</h2>
+            <h2 style="color: #111827;">Meet the Elite Team</h2>
             <p style="color: var(--lp-text-muted); margin-top: 1rem;">The passionate individuals behind the LGU3 Livelihood Training Program Portal.</p>
         </div>
 
@@ -748,22 +949,119 @@ if ($stats['completions'] > 0) {
             </div>
         </div>
     </section>
+    
+    <section class="faq-section" id="faqs">
+        <div class="section-header" style="text-align: center; margin: 0 auto 0;">
+            <h2 style="color: #111827; font-size: 2.8rem; font-weight: 800;">
+                <span style="color: #f59e0b;">FAQs:</span> Everything You Need to Know
+            </h2>
+            <p style="color: var(--lp-text-muted); margin-top: 1rem;">Common questions about the Baranggay 175 Holdings Livelihood Program.</p>
+        </div>
 
-    <section class="location-section" id="location" style="padding: 100px 10%; background: #0f1115;">
+        <div class="faq-grid">
+            <!-- Col 1 -->
+            <div class="faq-col">
+                <div class="faq-item" onclick="this.classList.toggle('active')">
+                    <div class="faq-header">
+                        <div class="faq-toggle">+</div>
+                        <div class="faq-question">What is the Baranggay 175 Holdings Livelihood Program?</div>
+                    </div>
+                    <div class="faq-answer">
+                        It is a community-driven initiative providing free technical, digital, and vocational training to residents to improve employment and entrepreneurship opportunities in our district.
+                    </div>
+                </div>
+
+                <div class="faq-item" onclick="this.classList.toggle('active')">
+                    <div class="faq-header">
+                        <div class="faq-toggle">+</div>
+                        <div class="faq-question">How do I join a training program?</div>
+                    </div>
+                    <div class="faq-answer">
+                        Simply create an account via the "Get Started" button, complete your profile, and browse the "Programs" section in your citizen dashboard to enroll in your preferred track.
+                    </div>
+                </div>
+
+                <div class="faq-item" onclick="this.classList.toggle('active')">
+                    <div class="faq-header">
+                        <div class="faq-toggle">+</div>
+                        <div class="faq-question">Is there any fee for the courses?</div>
+                    </div>
+                    <div class="faq-answer">
+                        No. Every training program offered under the LGU3 Livelihood system is 100% free for all registered residents of Baranggay 175 Holdings.
+                    </div>
+                </div>
+
+                <div class="faq-item" onclick="this.classList.toggle('active')">
+                    <div class="faq-header">
+                        <div class="faq-toggle">+</div>
+                        <div class="faq-question">Are certificates provided upon completion?</div>
+                    </div>
+                    <div class="faq-answer">
+                        Yes, residents who successfully complete a program and pass the final skill assessment will receive an official digital certificate verified by the LGU.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Col 2 -->
+            <div class="faq-col">
+                <div class="faq-item" onclick="this.classList.toggle('active')">
+                    <div class="faq-header">
+                        <div class="faq-toggle">+</div>
+                        <div class="faq-question">Can I apply for multiple programs at once?</div>
+                    </div>
+                    <div class="faq-answer">
+                        To ensure quality learning, we recommend focusing on one program at a time. However, you can apply for a new one immediately after finishing your current track.
+                    </div>
+                </div>
+
+                <div class="faq-item" onclick="this.classList.toggle('active')">
+                    <div class="faq-header">
+                        <div class="faq-toggle">+</div>
+                        <div class="faq-question">What if I don't have a computer for digital courses?</div>
+                    </div>
+                    <div class="faq-answer">
+                        Baranggay 175 Holdings provides a dedicated computer laboratory with free high-speed internet for all residents enrolled in Digital & IT Literacy tracks.
+                    </div>
+                </div>
+
+                <div class="faq-item" onclick="this.classList.toggle('active')">
+                    <div class="faq-header">
+                        <div class="faq-toggle">+</div>
+                        <div class="faq-question">How does the AI Career Assistant work?</div>
+                    </div>
+                    <div class="faq-answer">
+                        Our AI analyzes your skill progress and provides personalized recommendations, help with applications, and real-time career coaching based on local market trends.
+                    </div>
+                </div>
+
+                <div class="faq-item" onclick="this.classList.toggle('active')">
+                    <div class="faq-header">
+                        <div class="faq-toggle">+</div>
+                        <div class="faq-question">How can I track my application status?</div>
+                    </div>
+                    <div class="faq-answer">
+                        You can view the real-time status of all your applications, reports, and training progress in the "My History" and "Learning Management" sections of your portal.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="location-section" id="location" style="padding: 100px 10%; background: #ffffff;">
         <div class="section-header" style="text-align: center; margin: 0 auto 4rem;">
             <span class="section-label">Visit Us</span>
-            <h2>Training Center Location</h2>
+            <h2 style="color: #111827;">Training Center Location</h2>
             <p style="color: var(--lp-text-muted); margin-top: 1rem;">Our central hub is easily accessible for all residents. Drop by to learn more about our programs.</p>
         </div>
 
         <div style="display: grid; grid-template-columns: 1fr 1.5fr; gap: 4rem; align-items: start;">
             <div class="location-info">
-                <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--lp-border); padding: 2.5rem; border-radius: 24px;">
+                <div style="background: #f9fafb; border: 1px solid var(--lp-border); padding: 2.5rem; border-radius: 24px;">
                     <div style="margin-bottom: 2rem;">
                         <h4 style="color: var(--lp-primary); margin-bottom: 0.5rem; display: flex; align-items: center; gap: 10px;">
                             <i data-feather="map-pin"></i> Primary Address
                         </h4>
-                        <p style="color: #fff; font-size: 1.1rem; line-height: 1.6; font-weight: 500;">
+                        <p style="color: #111827; font-size: 1.1rem; line-height: 1.6; font-weight: 500;">
                             Barangay 174, <br>
                             Caloocan City, <br>
                             Metro Manila, Philippines
@@ -799,12 +1097,12 @@ if ($stats['completions'] > 0) {
                 </div>
             </div>
 
-            <div class="map-container" style="border-radius: 24px; overflow: hidden; height: 450px; border: 1px solid var(--lp-border); box-shadow: 0 20px 40px rgba(0,0,0,0.4);">
+            <div class="map-container" style="border-radius: 24px; overflow: hidden; height: 450px; border: 1px solid var(--lp-border); box-shadow: 0 10px 30px rgba(0,0,0,0.05);">
                 <iframe 
                     src="https://maps.google.com/maps?q=14.758252,121.044014&z=15&output=embed" 
                     width="100%" 
                     height="100%" 
-                    style="border:0; filter: grayscale(1) invert(0.9) contrast(1.2) opacity(0.8);" 
+                    style="border:0; filter: grayscale(1) contrast(1.1) opacity(0.9);" 
                     allowfullscreen="" 
                     loading="lazy">
                 </iframe>
@@ -815,7 +1113,7 @@ if ($stats['completions'] > 0) {
     <footer>
         <div class="footer-grid">
             <div class="footer-col" style="padding-right: 2rem;">
-                <div class="logo" style="margin-bottom: 1.5rem;">LGU3<span>Livelihood Training Program</span></div>
+                <div class="logo" style="margin-bottom: 1.5rem; color: #111827;">LGU3<span>Livelihood Training Program</span></div>
                 <p style="color: var(--lp-text-muted); font-size: 0.9rem;">Empowering every citizen through localized digital learning, career coaching, and technical training. Join our community and build your future today.</p>
             </div>
             <div class="footer-col">
@@ -841,14 +1139,14 @@ if ($stats['completions'] > 0) {
                 <ul>
                     <li><a href="#location">Location</a></li>
                     <li><a href="javascript:void(0)" onclick="comingSoon()">Help Center</a></li>
-                    <li><a href="javascript:void(0)" onclick="comingSoon()">Privacy Policy</a></li>
-                    <li><a href="javascript:void(0)" onclick="comingSoon()">Terms of Service</a></li>
+                    <li><a href="privacy.php">Privacy Policy</a></li>
+                    <li><a href="privacy.php">Terms of Service</a></li>
                     <li><a href="javascript:void(0)" onclick="comingSoon()">Contact Us</a></li>
                 </ul>
             </div>
         </div>
         <div class="footer-bottom">
-            <p>&copy; 2026 LGU3 Management System. All rights reserved.</p>
+            <p>&copy; 2026 Baranggay Laforteza Holdings 264. All rights reserved.</p>
             <div style="display: flex; gap: 1.5rem;">
                 <a href="#"><i data-feather="facebook" style="width: 18px;"></i></a>
                 <a href="#"><i data-feather="twitter" style="width: 18px;"></i></a>
@@ -859,6 +1157,74 @@ if ($stats['completions'] > 0) {
 
     <script>
         feather.replace();
+
+        // REAL-TIME CLOCK FUNCTION
+        function updateClock() {
+            const now = new Date();
+            
+            // Format Date: Sunday, February 1, 2026
+            const dateOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            const dateStr = now.toLocaleDateString('en-US', dateOptions);
+            
+            // Format Time: 11:45:38 PM
+            const timeOptions = { hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: true };
+            const timeStr = now.toLocaleTimeString('en-US', timeOptions);
+            
+            const dateEl = document.getElementById('clock-date');
+            const timeEl = document.getElementById('clock-time');
+            
+            if(dateEl) dateEl.textContent = dateStr;
+            if(timeEl) timeEl.textContent = timeStr;
+        }
+        
+        setInterval(updateClock, 1000);
+        updateClock(); // Initial call
+
+        async function fetchAnnouncements() {
+            try {
+                const res = await fetch('api.php?action=get_announcements');
+                const data = await res.json();
+                const grid = document.getElementById('announcement-grid');
+                
+                if (!data || data.length === 0) {
+                    grid.innerHTML = `
+                        <div style="grid-column: 1/-1; text-align: center; padding: 4rem; background: rgba(255,255,255,0.02); border-radius: 20px;">
+                            <i data-feather="info" style="width: 48px; height: 48px; color: var(--lp-primary); margin-bottom: 1rem;"></i>
+                            <h3 style="color: #fff;">No Recent Announcements</h3>
+                            <p style="color: var(--lp-text-muted);">Check back later for community updates and advisories.</p>
+                        </div>
+                    `;
+                    feather.replace();
+                    return;
+                }
+
+                grid.innerHTML = '';
+                // Only show top 3 latest on landing page
+                data.slice(0, 3).forEach(ann => {
+                    const img = ann.image_path || 'https://images.unsplash.com/photo-1544027993-37dbfe43562a?q=80&w=1000';
+                    const date = new Date(ann.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                    
+                    grid.innerHTML += `
+                        <div class="announcement-card">
+                            <span class="ann-badge">${ann.category || 'ADVISORY'}</span>
+                            <img src="${img}" class="ann-image" alt="${ann.title}">
+                            <div class="ann-content">
+                                <span class="ann-date">${date}</span>
+                                <h3 class="ann-title">${ann.title}</h3>
+                                <p class="ann-text">${ann.content}</p>
+                                <a href="view_announcement.php?id=${ann.id}" class="ann-link">Read More <i data-feather="arrow-right" style="width:16px;"></i></a>
+                            </div>
+                        </div>
+                    `;
+                });
+                feather.replace();
+            } catch (e) {
+                console.error("Failed to fetch announcements", e);
+            }
+        }
+
+        // Initialize fetch
+        fetchAnnouncements();
 
         // Smooth scroll for nav links
         document.querySelectorAll('a[href^="#"]').forEach(anchor => {

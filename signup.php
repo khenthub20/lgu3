@@ -18,7 +18,15 @@ if (!extension_loaded('openssl')) {
     $error = "Critical Error: The 'openssl' extension is not enabled in your PHP configuration. Verification emails cannot be sent. Please enable it in php.ini.";
 }
 
-$step = isset($_SESSION['signup_step']) ? $_SESSION['signup_step'] : 1;
+$step = isset($_SESSION['signup_step']) ? $_SESSION['signup_step'] : 0;
+
+// STEP 0: Process Terms Acceptance
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['accept_terms'])) {
+    $_SESSION['signup_step'] = 1;
+    header("Location: signup.php");
+    exit();
+}
+
 
 // Email Configuration - Gmail SMTP
 define('SMTP_HOST', 'smtp.gmail.com');
@@ -109,18 +117,26 @@ function sendOTPEmail($to, $fullname, $otp) {
 
 // STEP 1: Process Initial Registration
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['send_otp'])) {
-    $fullname = trim($_POST['fullname']);
+    $first_name = trim($_POST['first_name']);
+    $middle_name = trim($_POST['middle_name']);
+    $last_name = trim($_POST['last_name']);
+    $suffix = trim($_POST['suffix']);
     $email = trim($_POST['email']);
+    $mobile_number = trim($_POST['mobile_number']);
+    $street = $_POST['street'];
+    $house_number = trim($_POST['house_number']);
     $password = $_POST['password'];
-    $confirm_password = $_POST['confirm_password'];
+
+    // Password Validation: min 8 chars, uppercase, lowercase, number
+    $password_valid = preg_match('/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/', $password);
 
     // Basic Validations
-    if (empty($fullname) || empty($email) || empty($password)) {
-        $error = "All fields are required.";
-    } elseif ($password !== $confirm_password) {
-        $error = "Passwords do not match.";
-    } elseif (strlen($password) < 6) {
-        $error = "Password must be at least 6 characters.";
+    if (empty($first_name) || empty($last_name) || empty($email) || empty($street) || empty($house_number) || empty($password)) {
+        $error = "Please fill in all required fields marked with *.";
+    } elseif (strlen($first_name) < 2) {
+        $error = "First name must be at least 2 characters.";
+    } elseif (!$password_valid) {
+        $error = "Password must be at least 8 characters with uppercase, lowercase, and a number.";
     } else {
         // Check if email exists
         $stmt = $conn->prepare("SELECT id FROM users WHERE email = ?");
@@ -131,27 +147,59 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['send_otp'])) {
         if ($stmt->num_rows > 0) {
             $error = "Email is already registered. Please login.";
         } else {
-            // Generate OTP
-            $otp = str_pad(mt_rand(0, 999999), 6, '0', STR_PAD_LEFT);
-            $otp_expiry = date("Y-m-d H:i:s", strtotime("+10 minutes"));
-            
-            // Store simple data in session (Removed Bio/AI Fields)
-            $_SESSION['signup_data'] = [
-                'fullname' => $fullname,
-                'email' => $email,
-                'password' => $password,
-                'otp' => $otp,
-                'otp_expiry' => $otp_expiry
-            ];
-            
-            // Send Email
-            if (sendOTPEmail($email, $fullname, $otp)) {
-                $_SESSION['signup_step'] = 2; // Move to Step 2
-                $success = "Verification code sent to your email.";
-                header("Location: signup.php");
-                exit();
-            } else {
-                $error = "Failed to send verification email. Please check your internet connection or email address.";
+            // Handle File Upload (Optional)
+            $valid_id_path = '';
+            if (isset($_FILES['valid_id']) && $_FILES['valid_id']['error'] == 0) {
+                $allowed = ['pdf', 'jpg', 'jpeg', 'png'];
+                $filename = $_FILES['valid_id']['name'];
+                $ext = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
+                $size = $_FILES['valid_id']['size'];
+
+                if (!in_array($ext, $allowed)) {
+                    $error = "Invalid file type. Only PDF, JPG, and PNG are allowed.";
+                } elseif ($size > 5 * 1024 * 1024) {
+                    $error = "File size exceeds 5MB limit.";
+                } else {
+                    $newName = 'ID_' . time() . '_' . uniqid() . '.' . $ext;
+                    if (!is_dir('uploads/ids')) mkdir('uploads/ids', 0777, true);
+                    $target = 'uploads/ids/' . $newName;
+                    if (move_uploaded_file($_FILES['valid_id']['tmp_name'], $target)) {
+                        $valid_id_path = $target;
+                    }
+                }
+            }
+
+            if (!$error) {
+                // Generate OTP
+                $otp = str_pad(mt_rand(0, 999999), 6, '0', STR_PAD_LEFT);
+                $otp_expiry = date("Y-m-d H:i:s", strtotime("+10 minutes"));
+                
+                // Store detailed data in session
+                $_SESSION['signup_data'] = [
+                    'first_name' => $first_name,
+                    'middle_name' => $middle_name,
+                    'last_name' => $last_name,
+                    'suffix' => $suffix,
+                    'email' => $email,
+                    'mobile_number' => $mobile_number,
+                    'street' => $street,
+                    'house_number' => $house_number,
+                    'valid_id_path' => $valid_id_path,
+                    'password' => $password,
+                    'otp' => $otp,
+                    'otp_expiry' => $otp_expiry
+                ];
+                
+                // Send Email
+                $fullname = trim("$first_name $last_name");
+                if (sendOTPEmail($email, $fullname, $otp)) {
+                    $_SESSION['signup_step'] = 2; // Move to Step 2
+                    $success = "Verification code sent to your email.";
+                    header("Location: signup.php");
+                    exit();
+                } else {
+                    $error = "Failed to send verification email. Please check your internet connection or email address.";
+                }
             }
         }
         $stmt->close();
@@ -168,16 +216,24 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['verify_otp'])) {
             $error = "OTP has expired. Please request a new one.";
         } else {
             // Create Account (Reverted to basic fields)
-            $fullname = $session_data['fullname'];
+            $first_name = $session_data['first_name'];
+            $middle_name = $session_data['middle_name'];
+            $last_name = $session_data['last_name'];
+            $suffix = $session_data['suffix'];
+            $fullname = trim("$first_name $middle_name $last_name $suffix");
             $email = $session_data['email'];
+            $mobile = $session_data['mobile_number'];
+            $street = $session_data['street'];
+            $house_number = $session_data['house_number'];
+            $vid = $session_data['valid_id_path'];
             $password = $session_data['password'];
             
             $hashed_password = password_hash($password, PASSWORD_DEFAULT);
             $reference_id = 'REF-' . str_pad(mt_rand(0, 99999999), 8, '0', STR_PAD_LEFT);
 
             // Insert into DB
-            $stmt = $conn->prepare("INSERT INTO users (full_name, email, password, role, is_active, reference_id) VALUES (?, ?, ?, 'user', 1, ?)");
-            $stmt->bind_param("ssss", $fullname, $email, $hashed_password, $reference_id);
+            $stmt = $conn->prepare("INSERT INTO users (first_name, middle_name, last_name, suffix, full_name, email, mobile_number, street, house_number, valid_id_path, password, role, is_active, reference_id, barangay) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'user', 1, ?, 'Baranggay Laforteza Holdings 264')");
+            $stmt->bind_param("ssssssssssss", $first_name, $middle_name, $last_name, $suffix, $fullname, $email, $mobile, $street, $house_number, $vid, $hashed_password, $reference_id);
             
             if ($stmt->execute()) {
                 $user_id = $stmt->insert_id;
@@ -189,7 +245,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['verify_otp'])) {
                 unset($_SESSION['signup_data']);
                 unset($_SESSION['signup_step']);
                 
-                // Redirect to Dashboard (Assessment will happen there)
+                // Redirect to Dashboard
                 header("Location: user_dashboard.php?new_user=1");
                 exit();
             } else {
@@ -213,26 +269,26 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['verify_otp'])) {
         :root {
             --primary: #6366f1;
             --primary-dark: #4f46e5;
-            --glass-bg: rgba(15, 23, 42, 0.7);
-            --glass-border: rgba(255, 255, 255, 0.08);
-            --text-main: #f8fafc;
-            --text-muted: #94a3b8;
+            --glass-bg: rgba(255, 255, 255, 0.8);
+            --glass-border: rgba(0, 0, 0, 0.08);
+            --text-main: #0f172a;
+            --text-muted: #475569;
         }
 
         * { box-sizing: border-box; margin:0; padding:0; }
 
         body {
             font-family: 'Outfit', sans-serif;
-            background: #020617;
+            background: #ffffff;
             color: var(--text-main);
-            min-height: 100vh;
+            height: 100vh;
             display: flex;
-            overflow-x: hidden;
+            overflow: hidden;
         }
 
         /* --- LEFT SIDE: SLIDER --- */
         .slider-section {
-            flex: 1.2;
+            flex: 1;
             position: relative;
             overflow: hidden;
             display: flex;
@@ -259,7 +315,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['verify_otp'])) {
         .slider-overlay {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: linear-gradient(to top, #020617 10%, rgba(2,6,23,0.3) 100%);
+            background: rgba(255, 255, 255, 0.1); /* Minimal tint instead of heavy fog */
             z-index: 1;
         }
 
@@ -275,22 +331,23 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['verify_otp'])) {
             font-weight: 800;
             line-height: 1.1;
             margin-bottom: 1rem;
-            background: linear-gradient(135deg, #fff 0%, #cbd5e1 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+            color: #0f172a;
+            text-shadow: 0 2px 4px rgba(255,255,255,0.8), 0 0 20px rgba(255,255,255,0.3);
         }
 
         .slider-desc {
             font-size: 1.2rem;
-            color: #cbd5e1;
+            color: #0f172a;
             line-height: 1.6;
             margin-bottom: 2rem;
+            font-weight: 500;
+            text-shadow: 0 1px 2px rgba(255,255,255,0.8);
         }
 
         /* --- RIGHT SIDE: LOGIN/SIGNUP --- */
         .login-section {
-            flex: 0.8;
-            background: rgba(2, 6, 23, 0.95);
+            flex: 1;
+            background: #ffffff;
             position: relative;
             display: flex;
             flex-direction: column;
@@ -298,14 +355,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['verify_otp'])) {
             align-items: center;
             padding: 2rem;
             border-left: 1px solid var(--glass-border);
-            backdrop-filter: blur(20px);
         }
 
         /* Flying Elements */
         .flying-icon {
             position: absolute;
             opacity: 0.1;
-            color: #fff;
+            color: var(--primary);
             animation: floatAnim 10s infinite linear;
             pointer-events: none;
             z-index: 0;
@@ -320,43 +376,49 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['verify_otp'])) {
 
         .login-card {
             width: 100%;
-            max-width: 440px;
+            max-width: 850px;
             z-index: 10;
             animation: fadeIn 1s ease-out;
-            max-height: 90vh; /* Prevent overflow on small screens */
-            overflow-y: auto;
-            padding-right: 5px; /* Scrollbar space */
+            padding: 1.5rem 2rem;
         }
         
         /* Custom Scrollbar */
         .login-card::-webkit-scrollbar { width: 5px; }
-        .login-card::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+        .login-card::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.1); border-radius: 4px; }
 
         .brand-header {
-            margin-bottom: 2rem;
+            margin-bottom: 0.8rem;
             text-align: center;
         }
 
         .brand-logo {
-            width: 50px; height: 50px;
-            background: linear-gradient(135deg, #6366f1, #a855f7);
-            border-radius: 14px;
+            width: 70px; height: 70px;
+            background: #ffffff;
+            border-radius: 16px;
             display: flex; align-items: center; justify-content: center;
             margin: 0 auto 1rem;
-            box-shadow: 0 10px 25px rgba(99, 102, 241, 0.3);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+            border: 1px solid var(--glass-border);
         }
 
-        .input-group { position: relative; margin-bottom: 1.25rem; }
+        .input-group { position: relative; margin-bottom: 1.1rem; }
         
         .input-field {
             width: 100%;
-            background: rgba(30, 41, 59, 0.5);
+            background: #f8fafc;
             border: 1px solid var(--glass-border);
             border-radius: 14px;
             padding: 1rem 1rem 1rem 3rem;
-            color: #fff;
+            color: var(--text-main);
             font-size: 0.95rem;
             transition: 0.3s;
+            color-scheme: light;
+        }
+
+        select.input-field option {
+            background-color: #ffffff;
+            color: #0f172a;
         }
 
         .input-field:focus {
@@ -414,7 +476,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['verify_otp'])) {
             border-radius: 12px;
             background: rgba(30, 41, 59, 0.5);
             border: 1px solid var(--glass-border);
-            color: #fff;
+            color: var(--text-main);
         }
         
         .otp-inputs input:focus {
@@ -426,7 +488,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['verify_otp'])) {
             display: flex; justify-content: center; gap: 0.5rem; margin-bottom: 2rem;
         }
         .step-dot {
-            width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,0.1); transition: 0.3s;
+            width: 8px; height: 8px; border-radius: 50%; background: rgba(0,0,0,0.1); transition: 0.3s;
         }
         .step-dot.active {
             background: var(--primary); width: 24px; border-radius: 10px;
@@ -441,6 +503,27 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['verify_otp'])) {
 
         .signup-text { text-align: center; margin-top: 2rem; color: var(--text-muted); font-size: 0.9rem; }
         .signup-text a { color: var(--primary); text-decoration: none; font-weight: 600; }
+
+        /* Terms Modal-like style */
+        .terms-container {
+            max-height: 400px;
+            overflow-y: auto;
+            background: rgba(15, 23, 42, 0.5);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            font-size: 0.9rem;
+            color: #cbd5e1;
+            line-height: 1.6;
+        }
+        .terms-container::-webkit-scrollbar { width: 5px; }
+        .terms-container::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+        .terms-container h3 { color: #fff; margin: 1.5rem 0 0.8rem; font-size: 1.1rem; }
+        .terms-container h3:first-child { margin-top: 0; }
+        .terms-container p { margin-bottom: 1rem; }
+        .terms-container ul { margin-bottom: 1rem; padding-left: 1.2rem; }
+        .terms-container li { margin-bottom: 0.5rem; }
 
         @media (max-width: 900px) {
             body { height: auto; }
@@ -471,8 +554,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['verify_otp'])) {
             <h1 class="slider-title" id="slider-title">Join the<br>Movement.</h1>
             <p class="slider-desc" id="slider-desc">Start your journey today. Register to access exclusive livelihood programs and training.</p>
             <div style="display:flex; gap:0.5rem; margin-top:1rem;">
-                <span style="width:12px; height:12px; background:#fff; border-radius:50%; opacity:1;"></span>
-                <span style="width:12px; height:12px; background:#fff; border-radius:50%; opacity:0.3;"></span>
+                <span style="width:12px; height:12px; background:var(--primary); border-radius:50%; opacity:1;"></span>
+                <span style="width:12px; height:12px; background:var(--primary); border-radius:50%; opacity:0.3;"></span>
             </div>
         </div>
     </div>
@@ -487,18 +570,27 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['verify_otp'])) {
         <div class="login-card">
             <div class="brand-header">
                 <div class="brand-logo">
-                    <i data-feather="feather" style="color:#fff; width:28px; height:28px;"></i>
+                    <img src="laforteza_logo.jpg" alt="Logo" style="width:100%; height:100%; object-fit:cover;">
                 </div>
-                <h2 style="font-size:1.8rem; font-weight:700; margin-bottom:0.5rem; color:#fff;">
-                    <?php echo $step == 1 ? 'Create Account' : 'Verify Email'; ?>
+                <h2 style="font-size:1.8rem; font-weight:700; margin-bottom:0.5rem; color:var(--text-main);">
+                    <?php 
+                        if ($step == 0) echo 'Terms & Policies';
+                        else if ($step == 1) echo 'Create Account';
+                        else echo 'Verify Email';
+                    ?>
                 </h2>
                 <p style="color:var(--text-muted); font-size:0.9rem;">
-                    <?php echo $step == 1 ? 'Enter your details below to get started' : 'We sent a code to your email'; ?>
+                    <?php 
+                        if ($step == 0) echo 'Please review our terms before proceeding';
+                        else if ($step == 1) echo 'Enter your details below to get started';
+                        else echo 'We sent a code to your email';
+                    ?>
                 </p>
             </div>
 
             <!-- Steps -->
             <div class="step-indicator">
+                <div class="step-dot <?php echo $step >= 0 ? 'active' : ''; ?>"></div>
                 <div class="step-dot <?php echo $step >= 1 ? 'active' : ''; ?>"></div>
                 <div class="step-dot <?php echo $step >= 2 ? 'active' : ''; ?>"></div>
             </div>
@@ -516,35 +608,158 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['verify_otp'])) {
                 </div>
             <?php endif; ?>
 
-            <?php if($step == 1): ?>
-                <!-- STEP 1 FORM -->
+            <?php if($step == 0): ?>
+                <!-- STEP 0: TERMS AND CONDITIONS -->
+                <div class="terms-container">
+                    <h3>Terms and Conditions</h3>
+                    <p>These Terms and Conditions govern the use of the Baranggay Laforteza Holdings 264 Public Facilities Reservation System. By accessing the portal, citizens, organizations, and partner agencies agree to observe the policies set by the Municipal Facilities Management Office.</p>
+                    
+                    <p>Reservations are considered tentative until a confirmation notice is issued by the LGU. The LGU reserves the right to reassign, reschedule, or decline requests to ensure continuity of essential public services, disaster response operations, and official functions.</p>
+                    
+                    <p>Users shall provide accurate contact information, submit complete supporting documents, and settle applicable fees within the prescribed period. Non-compliance may result in cancellation without prejudice to future bookings.</p>
+                    
+                    <p>Any unauthorized commercial activity, political gathering without clearance, or activity that jeopardizes public safety is strictly prohibited. Damages to facilities shall be charged to the reserving party and may include administrative sanctions.</p>
+                    
+                    <p>By proceeding, you acknowledge that you have read and understood these terms and agree to comply with all LGU directives related to facility utilization.</p>
+
+                    <h3>Data Privacy Policy</h3>
+                    <h4>1. Data Controller</h4>
+                    <p>The Baranggay Laforteza Holdings 264 Public Facilities Reservation System is operated by the Baranggay Laforteza Holdings 264 Facilities Management Office. We are committed to protecting your personal data in accordance with the Data Privacy Act of 2012 (Republic Act No. 10173) and its Implementing Rules and Regulations.</p>
+
+                    <h4>2. Data Protection Officer</h4>
+                    <p>For privacy concerns, you may contact our Data Protection Officer:<br>
+                    Email: dpo@laforteza.gov.ph<br>
+                    Office: Baranggay Laforteza Holdings 264 Facilities Management Office</p>
+
+                    <h4>3. What Data We Collect</h4>
+                    <ul>
+                        <li>Identity Information: Name, valid ID (optional)</li>
+                        <li>Contact Information: Email address, mobile number</li>
+                        <li>Address Information: Street, house number (to verify residency in Baranggay Laforteza Holdings 264)</li>
+                        <li>Reservation Details: Facility, date, time, purpose, number of attendees</li>
+                    </ul>
+
+                    <h4>4. Why We Collect Your Data</h4>
+                    <p>We process your personal data based on your consent, legitimate government function, and legal obligations to maintain records as required by government regulations.</p>
+
+                    <h4>5. How We Use Your Data</h4>
+                    <p>Your information is used solely for verifying identity, processing reservations, communicating updates, and improving service delivery through anonymized analytics.</p>
+
+                    <h4>6. Data Sharing</h4>
+                    <p>We do not sell or share your personal data with third parties, except when required by law, to protect public safety, or with other LGU offices for official coordination.</p>
+
+                    <h4>7. Data Retention</h4>
+                    <p>Personal data is retained for 3-5 years after activity/reservation as per COA regulations and audit purposes.</p>
+
+                    <h4>8. Your Rights</h4>
+                    <p>Under the Data Privacy Act, you have the right to access, rectify, erase, object, and withdraw consent. Contact our DPO to exercise these rights.</p>
+                </div>
+
                 <form method="POST" action="">
-                    <div class="input-group">
-                        <i data-feather="user" class="input-icon"></i>
-                        <input type="text" name="fullname" class="input-field" placeholder="Full Name" required autocomplete="name">
+                    <label style="display: flex; align-items: flex-start; gap: 10px; margin-bottom: 1.5rem; cursor: pointer; color: #cbd5e1;">
+                        <input type="checkbox" name="agree" required style="margin-top: 4px;">
+                        <span style="font-size: 0.85rem;">I have read and agree to the Terms and Conditions and Data Privacy Policy.</span>
+                    </label>
+                    <button type="submit" name="accept_terms" class="submit-btn">
+                        I Agree & Continue <i data-feather="check-circle" style="width:16px;"></i>
+                    </button>
+                    <div class="signup-text">
+                        Already have an account? <a href="index.php">Sign In</a>
+                    </div>
+                </form>
+
+            <?php elseif($step == 1): ?>
+                <!-- STEP 1 FORM -->
+                <form method="POST" action="" enctype="multipart/form-data">
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px;">
+                        <div class="input-group">
+                            <label style="display:block; font-size:0.8rem; color:var(--text-muted); margin-bottom:5px;">First Name *</label>
+                            <i data-feather="user" class="input-icon" style="top:calc(50% + 12px);"></i>
+                            <input type="text" name="first_name" class="input-field" placeholder="Juan" required minlength="2">
+                            <span style="font-size:0.7rem; color:#fca5a5; display:none;" id="fn-error">⚠️ First name must be at least 2 characters</span>
+                        </div>
+                        <div class="input-group">
+                            <label style="display:block; font-size:0.8rem; color:var(--text-muted); margin-bottom:5px;">Middle Name</label>
+                            <i data-feather="user" class="input-icon" style="top:calc(50% + 12px);"></i>
+                            <input type="text" name="middle_name" class="input-field" placeholder="Santos">
+                        </div>
+                    </div>
+
+                    <div style="display:grid; grid-template-columns:2fr 1fr; gap:20px;">
+                        <div class="input-group">
+                            <label style="display:block; font-size:0.8rem; color:var(--text-muted); margin-bottom:5px;">Last Name *</label>
+                            <i data-feather="user" class="input-icon" style="top:calc(50% + 12px);"></i>
+                            <input type="text" name="last_name" class="input-field" placeholder="Dela Cruz" required>
+                        </div>
+                        <div class="input-group">
+                            <label style="display:block; font-size:0.8rem; color:var(--text-muted); margin-bottom:5px;">Suffix</label>
+                            <i data-feather="plus-circle" class="input-icon" style="top:calc(50% + 12px);"></i>
+                            <input type="text" name="suffix" class="input-field" placeholder="Jr., Sr., III">
+                        </div>
                     </div>
                     
-                    <div class="input-group">
-                        <i data-feather="mail" class="input-icon"></i>
-                        <input type="email" name="email" class="input-field" placeholder="Email Address" required autocomplete="email">
-                    </div>
-
-                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px;">
                         <div class="input-group">
-                            <i data-feather="lock" class="input-icon"></i>
-                            <input type="password" name="password" class="input-field" placeholder="Password" required autocomplete="new-password">
+                            <label style="display:block; font-size:0.8rem; color:var(--text-muted); margin-bottom:5px;">Email Address *</label>
+                            <i data-feather="mail" class="input-icon" style="top:calc(50% + 12px);"></i>
+                            <input type="email" name="email" class="input-field" placeholder="official@lgu.gov.ph" required>
                         </div>
+
                         <div class="input-group">
-                            <i data-feather="check" class="input-icon"></i>
-                            <input type="password" name="confirm_password" class="input-field" placeholder="Confirm" required autocomplete="new-password">
+                            <label style="display:block; font-size:0.8rem; color:var(--text-muted); margin-bottom:5px;">Mobile Number</label>
+                            <i data-feather="phone" class="input-icon" style="top:calc(50% + 12px);"></i>
+                            <input type="text" name="mobile_number" class="input-field" placeholder="+63 900 000 0000" pattern="[\+]?[0-9\s\-]{10,15}">
                         </div>
                     </div>
 
-                    <button type="submit" name="send_otp" class="submit-btn" style="cursor:pointer;">
-                        Continue <i data-feather="arrow-right" style="width:16px;"></i>
+                    <div style="display:grid; grid-template-columns:2fr 1fr; gap:20px;">
+                        <div class="input-group">
+                            <label style="display:block; font-size:0.8rem; color:var(--text-muted); margin-bottom:5px;">Street *</label>
+                            <i data-feather="map-pin" class="input-icon" style="top:calc(50% + 12px);"></i>
+                            <select name="street" class="input-field" required style="cursor:pointer;">
+                                <option value="" style="background:#0f172a;">-- Select Street --</option>
+                                <option value="Visayas Avenue">Visayas Avenue</option>
+                                <option value="Tandang Sora Avenue">Tandang Sora Avenue</option>
+                                <option value="Congress Extension">Congress Extension</option>
+                                <option value="Cenacle Street">Cenacle Street</option>
+                                <option value="Union Village">Union Village</option>
+                                <option value="Tierra Bella">Tierra Bella</option>
+                                <option value="Sanville">Sanville</option>
+                                <option value="Philand">Philand</option>
+                                <option value="Laforteza Main">Laforteza Main Street</option>
+                            </select>
+                        </div>
+
+                        <div class="input-group">
+                            <label style="display:block; font-size:0.8rem; color:var(--text-muted); margin-bottom:5px;">House Number *</label>
+                            <i data-feather="home" class="input-icon" style="top:calc(50% + 12px);"></i>
+                            <input type="text" name="house_number" class="input-field" placeholder="123" required style="padding-left:3rem;">
+                        </div>
+                    </div>
+                    <p style="font-size:0.7rem; color:var(--text-muted); margin-top:-0.8rem; margin-bottom:1.5rem;">Registration is limited to residents of Baranggay Laforteza Holdings 264.</p>
+
+                    <div style="display:grid; grid-template-columns:1fr 1.2fr; gap:20px;">
+                        <div class="input-group">
+                            <label style="display:block; font-size:0.8rem; color:var(--text-muted); margin-bottom:5px;">Password *</label>
+                            <i data-feather="lock" class="input-icon" style="top:calc(50% + 12px);"></i>
+                            <input type="password" name="password" class="input-field" placeholder="Create a strong password" required minlength="8" id="pass-field">
+                            <p style="font-size:0.65rem; color:var(--text-muted); margin-top:3px;">Min. 8 chars (A-z, 0-9)</p>
+                        </div>
+
+                        <div class="input-group">
+                            <label style="display:block; font-size:0.8rem; color:var(--text-muted); margin-bottom:5px;">Upload Valid ID (Optional)</label>
+                            <input type="file" name="valid_id" class="input-field" style="padding:0.7rem 1rem; height:auto;" accept=".pdf,.jpg,.jpeg,.png">
+                            <p style="font-size:0.65rem; color:var(--text-muted); margin-top:3px; line-height:1.2;">
+                                Activated immediately. PDF, JPG, PNG (Max 5MB).
+                            </p>
+                        </div>
+                    </div>
+
+                    <button type="submit" name="send_otp" class="submit-btn" style="cursor:pointer; margin-top:0.5rem; padding: 1.1rem;">
+                        Continue to Verification <i data-feather="arrow-right" style="width:16px;"></i>
                     </button>
                     
-                    <div class="signup-text">
+                    <div class="signup-text" style="margin-top: 1rem;">
                         Already have an account? <a href="index.php">Sign In</a>
                     </div>
                 </form>
@@ -552,7 +767,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['verify_otp'])) {
             <?php elseif($step == 2): ?>
                 <!-- STEP 2 FORM -->
                 <form method="POST" action="">
-                    <div style="text-align:center; margin-bottom:1.5rem; color:#fff;">
+                    <div style="text-align:center; margin-bottom:1.5rem; color:var(--text-main);">
                         Enter the 6-digit code sent to<br>
                         <strong style="color:var(--primary);"><?php echo htmlspecialchars($_SESSION['signup_data']['email']); ?></strong>
                     </div>

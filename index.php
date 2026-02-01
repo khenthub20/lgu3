@@ -54,26 +54,26 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         :root {
             --primary: #6366f1;
             --primary-dark: #4f46e5;
-            --glass-bg: rgba(15, 23, 42, 0.7);
-            --glass-border: rgba(255, 255, 255, 0.08);
-            --text-main: #f8fafc;
-            --text-muted: #94a3b8;
+            --glass-bg: rgba(255, 255, 255, 0.8);
+            --glass-border: rgba(0, 0, 0, 0.08);
+            --text-main: #0f172a;
+            --text-muted: #475569;
         }
 
         * { box-sizing: border-box; margin:0; padding:0; }
 
         body {
             font-family: 'Outfit', sans-serif;
-            background: #020617;
+            background: #ffffff;
             color: var(--text-main);
-            min-height: 100vh;
+            height: 100vh;
             display: flex;
-            overflow-x: hidden;
+            overflow: hidden;
         }
 
         /* --- LEFT SIDE: SLIDER --- */
         .slider-section {
-            flex: 1.2;
+            flex: 1;
             position: relative;
             overflow: hidden;
             display: flex;
@@ -101,7 +101,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         .slider-overlay {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: linear-gradient(to top, #020617 10%, rgba(2,6,23,0.3) 100%);
+            background: rgba(255, 255, 255, 0.1); /* Minimal tint instead of heavy fog */
             z-index: 1;
         }
 
@@ -117,22 +117,23 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             font-weight: 800;
             line-height: 1.1;
             margin-bottom: 1rem;
-            background: linear-gradient(135deg, #fff 0%, #cbd5e1 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+            color: #0f172a;
+            text-shadow: 0 2px 4px rgba(255,255,255,0.8), 0 0 20px rgba(255,255,255,0.3);
         }
 
         .slider-desc {
             font-size: 1.2rem;
-            color: #cbd5e1;
+            color: #0f172a;
             line-height: 1.6;
             margin-bottom: 2rem;
+            font-weight: 500;
+            text-shadow: 0 1px 2px rgba(255,255,255,0.8);
         }
 
         /* --- RIGHT SIDE: LOGIN --- */
         .login-section {
-            flex: 0.8;
-            background: rgba(2, 6, 23, 0.95);
+            flex: 1;
+            background: #ffffff;
             position: relative;
             display: flex;
             flex-direction: column;
@@ -140,14 +141,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             align-items: center;
             padding: 2rem;
             border-left: 1px solid var(--glass-border);
-            backdrop-filter: blur(20px);
         }
 
         /* Flying Elements (Floating Icons) */
         .flying-icon {
             position: absolute;
             opacity: 0.1;
-            color: #fff;
+            color: var(--primary);
             animation: floatAnim 10s infinite linear;
             pointer-events: none;
             z-index: 0;
@@ -170,7 +170,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             padding: 10px;
         }
         .login-card::-webkit-scrollbar { width: 4px; }
-        .login-card::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
+        .login-card::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.1); border-radius: 10px; }
 
         .brand-header {
             margin-bottom: 2.5rem;
@@ -178,23 +178,25 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
 
         .brand-logo {
-            width: 60px; height: 60px;
-            background: linear-gradient(135deg, #6366f1, #a855f7);
+            width: 70px; height: 70px;
+            background: #ffffff;
             border-radius: 16px;
             display: flex; align-items: center; justify-content: center;
             margin: 0 auto 1.5rem;
-            box-shadow: 0 10px 25px rgba(99, 102, 241, 0.3);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+            border: 1px solid var(--glass-border);
         }
 
         .input-group { position: relative; margin-bottom: 1.5rem; }
         
         .input-field {
             width: 100%;
-            background: rgba(30, 41, 59, 0.5);
+            background: #f8fafc;
             border: 1px solid var(--glass-border);
             border-radius: 14px;
             padding: 1.1rem 1rem 1.1rem 3rem;
-            color: #fff;
+            color: var(--text-main);
             font-size: 1rem;
             transition: 0.3s;
         }
@@ -255,17 +257,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             margin-top: 1.5rem;
             padding: 0.6rem 1.2rem;
             border-radius: 99px;
-            background: rgba(255,255,255,0.03);
-            border: 1px solid rgba(255,255,255,0.1);
+            background: rgba(0,0,0,0.03);
+            border: 1px solid var(--glass-border);
             color: var(--text-muted);
             text-decoration: none;
             font-size: 0.85rem;
             transition: all 0.3s ease;
         }
         .explore-btn:hover {
-            background: rgba(255,255,255,0.08);
-            border-color: rgba(255,255,255,0.2);
-            color: #fff;
+            background: rgba(99, 102, 241, 0.08);
+            border-color: var(--primary);
+            color: var(--primary);
             transform: translateY(-2px);
         }
 
@@ -308,12 +310,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         <div class="slider-bg" style="background-image: url('livelihood_hero_premium.png');"></div>
 
         <div class="slider-content">
-            <h1 class="slider-title" id="slider-title">Barangay 175<br>Holdings Inc.</h1>
+            <h1 class="slider-title" id="slider-title">Baranggay<br>Laforteza Holdings 264</h1>
             <p class="slider-desc" id="slider-desc">Empowering our community through sustainable livelihood programs and advanced digital training.</p>
             <div style="display:flex; gap:0.5rem;">
-                <span style="width:12px; height:12px; background:#fff; border-radius:50%; opacity:1;"></span>
-                <span style="width:12px; height:12px; background:#fff; border-radius:50%; opacity:0.3;"></span>
-                <span style="width:12px; height:12px; background:#fff; border-radius:50%; opacity:0.3;"></span>
+                <span style="width:12px; height:12px; background:var(--primary); border-radius:50%; opacity:1;"></span>
+                <span style="width:12px; height:12px; background:var(--primary); border-radius:50%; opacity:0.3;"></span>
+                <span style="width:12px; height:12px; background:var(--primary); border-radius:50%; opacity:0.3;"></span>
             </div>
         </div>
     </div>
@@ -329,9 +331,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         <div class="login-card">
             <div class="brand-header">
                 <div class="brand-logo">
-                    <i data-feather="shield" style="color:#fff; width:32px; height:32px;"></i>
+                    <img src="laforteza_logo.jpg" alt="Logo" style="width:100%; height:100%; object-fit:cover;">
                 </div>
-                <h2 style="font-size:2rem; font-weight:700; margin-bottom:0.5rem; color:#fff;">Welcome Back</h2>
+                <h2 style="font-size:2rem; font-weight:700; margin-bottom:0.5rem; color:var(--text-main);">Welcome Back</h2>
                 <p style="color:var(--text-muted);">Access your professional livelihood portal</p>
             </div>
 
@@ -374,7 +376,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         // Slider Logic
         const slides = document.querySelectorAll('.slider-bg');
         const titles = [
-            'Barangay 175<br>Holdings Inc.',
+            'Baranggay<br>Laforteza Holdings 264',
             'Skills for<br>Success',
             'Community<br>Growth'
         ];

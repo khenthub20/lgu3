@@ -14,13 +14,13 @@
 }
 
 body.light-theme {
-    --bg-color: #f8fafc;
+    --bg-color: #f1f5f9;
     --card-bg: #ffffff;
     --sidebar-bg: #ffffff;
-    --text-main: #1e293b;
-    --text-muted: #64748b;
-    --border-color: #e2e8f0;
-    --input-bg: #f1f5f9;
+    --text-main: #0f172a;
+    --text-muted: #475569;
+    --border-color: #cbd5e1;
+    --input-bg: #ffffff;
 }
 
 * {
@@ -193,7 +193,7 @@ body:not(.dashboard-body) {
     top: 0;
     font-size: 0.75rem;
     color: var(--primary);
-    background: #1a1d23;
+    background: var(--bg-color);
 }
 
 .toggle-password {
@@ -386,7 +386,7 @@ body:not(.dashboard-body) {
 .sidebar-header .logo {
     font-size: 1.25rem;
     font-weight: 700;
-    color: #fff;
+    color: var(--text-main);
     letter-spacing: -0.5px;
 }
 
@@ -586,7 +586,7 @@ body:not(.dashboard-body) {
 .stat-value {
     font-size: 1.5rem;
     font-weight: 700;
-    color: #fff;
+    color: var(--text-main);
     margin-bottom: 0.25rem;
 }
 
@@ -662,7 +662,7 @@ td {
     padding: 1rem 1.5rem;
     font-size: 0.9rem;
     border-bottom: 1px solid var(--border-color);
-    color: #e2e8f0;
+    color: var(--text-main);
 }
 
 tr:last-child td {

@@ -102,11 +102,11 @@ if (empty($skillRow['skills'])) {
         
         /* Profile Image Styles */
         .profile-upload-container { display: flex; flex-direction: column; align-items: center; gap: 1rem; margin-bottom: 2rem; }
-        .profile-preview { width: 120px; height: 120px; border-radius: 50%; object-fit: cover; border: 4px solid var(--card-bg); box-shadow: 0 0 0 2px var(--primary); background: #334155; display: flex; align-items: center; justify-content: center; font-size: 2rem; color: #fff; overflow:hidden;}
+        .profile-preview { width: 120px; height: 120px; border-radius: 50%; object-fit: cover; border: 4px solid var(--card-bg); box-shadow: 0 0 0 2px var(--primary); background: #334155; display: flex; align-items: center; justify-content: center; font-size: 2rem; color: var(--text-main); overflow:hidden;}
         .profile-preview img { width: 100%; height: 100%; object-fit: cover; }
         
         /* Form Styles */
-        .form-control { width: 100%; padding: 0.8rem; background: var(--input-bg); border: 1px solid var(--border-color); border-radius: 8px; color: #fff; margin-bottom: 1rem; }
+        .form-control { width: 100%; padding: 0.8rem; background: var(--input-bg); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-main); margin-bottom: 1rem; }
         .form-control:focus { border-color: var(--primary); outline: none; }
         label { display: block; margin-bottom: 0.5rem; color: var(--text-muted); font-size: 0.9rem; }
         textarea.form-control { resize: vertical; min-height: 120px; }
@@ -148,7 +148,7 @@ if (empty($skillRow['skills'])) {
             display: flex;
             align-items: center;
             gap: 15px;
-            color: #fff;
+            color: var(--text-main);
             animation: slideDown 0.5s ease;
         }
         @keyframes slideDown { from { transform: translateY(-100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
@@ -182,7 +182,7 @@ if (empty($skillRow['skills'])) {
             border-radius: 8px;
             min-width: 32px;
         }
-        .sidebar-toggle:hover { background: var(--primary); color: #fff; }
+        .sidebar-toggle:hover { background: var(--primary); color: var(--text-main); }
         .sidebar.minimized .sidebar-toggle { width: 40px; height: 40px; margin: 0 auto; }
 
         /* AI Chat Minimization */
@@ -210,12 +210,12 @@ if (empty($skillRow['skills'])) {
             transform: scale(1.01);
             box-shadow: 0 10px 20px -10px rgba(0,0,0,0.3);
         }
-        .app-info h4 { margin: 0; color: #fff; font-size: 1.05rem; }
+        .app-info h4 { margin: 0; color: var(--text-main); font-size: 1.05rem; }
         .app-info p { margin: 0.25rem 0 0; color: var(--text-muted); font-size: 0.85rem; }
         
         .download-btn {
             background: var(--primary);
-            color: white;
+            color: var(--text-main);
             padding: 0.6rem 1.2rem;
             border-radius: 10px;
             text-decoration: none;
@@ -241,7 +241,7 @@ if (empty($skillRow['skills'])) {
         .notif-container { position: relative; margin-right: 1.5rem; cursor: pointer; }
         .notif-badge { 
             position: absolute; top: -5px; right: -5px; 
-            background: #ef4444; color: white; width: 18px; height: 18px; 
+            background: #ef4444; color: var(--text-main); width: 18px; height: 18px; 
             border-radius: 50%; font-size: 0.7rem; display: flex; 
             align-items: center; justify-content: center; font-weight: bold;
             display: none; /* Shown via JS */
@@ -259,7 +259,7 @@ if (empty($skillRow['skills'])) {
         .notif-item { padding: 1rem; border-bottom: 1px solid #334155; transition: 0.2s; }
         .notif-item:hover { background: rgba(255,255,255,0.05); }
         .notif-item.unread { background: rgba(99, 102, 241, 0.05); border-left: 3px solid var(--primary); }
-        .notif-item h5 { margin: 0 0 0.25rem 0; font-size: 0.9rem; color: #fff; }
+        .notif-item h5 { margin: 0 0 0.25rem 0; font-size: 0.9rem; color: var(--text-main); }
         .notif-item p { margin: 0; font-size: 0.8rem; color: #94a3b8; line-height: 1.4; }
         .notif-item small { color: #64748b; font-size: 0.7rem; margin-top: 0.5rem; display: block; }
         .notif-empty { padding: 2rem; text-align: center; color: #64748b; font-size: 0.9rem; }
@@ -267,7 +267,7 @@ if (empty($skillRow['skills'])) {
         /* Learning Center Premium Cards */
         .doc-card {
             background: linear-gradient(145deg, rgba(30, 41, 59, 0.4), rgba(15, 23, 42, 0.6));
-            border: 1px solid rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-color);
             border-radius: 20px;
             padding: 1.75rem;
             position: relative;
@@ -297,7 +297,7 @@ if (empty($skillRow['skills'])) {
         .doc-title {
             font-size: 1.15rem;
             font-weight: 600;
-            color: #fff;
+            color: var(--text-main);
             margin: 0;
             line-height: 1.4;
         }
@@ -322,7 +322,7 @@ if (empty($skillRow['skills'])) {
         }
         .download-btn-premium {
             background: var(--primary);
-            color: white;
+            color: var(--text-main);
             width: 100%;
             padding: 0.9rem;
             border-radius: 12px;
@@ -347,7 +347,7 @@ if (empty($skillRow['skills'])) {
             max-width: 700px;
             margin: 0 auto;
             background: rgba(30, 41, 59, 0.4);
-            border: 1px solid rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-color);
             border-radius: 20px;
             overflow: hidden;
             backdrop-filter: blur(10px);
@@ -368,7 +368,7 @@ if (empty($skillRow['skills'])) {
             display: flex;
             align-items: center;
             justify-content: center;
-            color: white;
+            color: var(--text-main);
         }
         .chat-body-ai {
             flex: 1;
@@ -395,7 +395,7 @@ if (empty($skillRow['skills'])) {
         .chat-message.user {
             align-self: flex-end;
             background: var(--primary);
-            color: white;
+            color: var(--text-main);
             border-bottom-right-radius: 2px;
         }
         .chat-footer-ai {
@@ -410,13 +410,13 @@ if (empty($skillRow['skills'])) {
             border: 1px solid rgba(255, 255, 255, 0.1);
             padding: 1rem;
             border-radius: 12px;
-            color: white;
+            color: var(--text-main);
             font-family: inherit;
         }
         .ai-input:focus { outline: none; border-color: var(--primary); }
         .ai-send-btn {
             background: var(--primary);
-            color: white;
+            color: var(--text-main);
             border: none;
             width: 50px;
             border-radius: 12px;
@@ -445,7 +445,7 @@ if (empty($skillRow['skills'])) {
         .skill-card:hover { transform: translateY(-5px); border-color: var(--primary); }
         .skill-thumb { height: 160px; width: 100%; object-fit: cover; }
         .skill-body { padding: 1.5rem; flex: 1; display: flex; flex-direction: column; }
-        .skill-title { font-size: 1.2rem; font-weight: 600; color: #fff; margin-bottom: 0.5rem; }
+        .skill-title { font-size: 1.2rem; font-weight: 600; color: var(--text-main); margin-bottom: 0.5rem; }
         .skill-desc { color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.5rem; flex: 1; }
         
         .progress-container { width: 100%; background: rgba(255,255,255,0.1); height: 8px; border-radius: 4px; overflow: hidden; margin-bottom: 1rem; }
@@ -464,7 +464,7 @@ if (empty($skillRow['skills'])) {
             width: 24px; height: 24px; border-radius: 50%; border: 2px solid #64748b; 
             display: flex; align-items: center; justify-content: center; margin-right: 1rem;
         }
-        .stage-item.completed .stage-check { background: #10b981; border-color: #10b981; color: white; }
+        .stage-item.completed .stage-check { background: #10b981; border-color: #10b981; color: var(--text-main); }
         .stage-item.active .stage-check { border-color: var(--primary); color: var(--primary); }
 
         /* Stage Completion Animations */
@@ -499,6 +499,116 @@ if (empty($skillRow['skills'])) {
             100% { transform: translate(-50%, -50%) scale(1); opacity: 1; } 
         }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        /* Comprehensive Light Theme Overrides */
+        body.light-theme {
+            background-color: #f1f5f9 !important;
+            color: #0f172a !important;
+        }
+
+        body.light-theme .main-content {
+            background-color: #f1f5f9 !important;
+        }
+
+        body.light-theme .top-bar {
+            background: rgba(255, 255, 255, 0.8) !important;
+            border-bottom: 1px solid #cbd5e1 !important;
+            backdrop-filter: blur(10px);
+        }
+
+        body.light-theme .sidebar {
+            background: #ffffff !important;
+            border-right: 1px solid #cbd5e1 !important;
+        }
+
+        body.light-theme .doc-card,
+        body.light-theme .skill-card,
+        body.light-theme .stat-card,
+        body.light-theme .app-card,
+        body.light-theme .content-section,
+        body.light-theme .chat-section-container,
+        body.light-theme .notif-dropdown,
+        body.light-theme .stage-item {
+            background: #ffffff !important;
+            border-color: #cbd5e1 !important;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03) !important;
+        }
+
+        body.light-theme h1, 
+        body.light-theme h2, 
+        body.light-theme h3, 
+        body.light-theme h4,
+        body.light-theme .stat-value,
+        body.light-theme .doc-title,
+        body.light-theme .skill-title,
+        body.light-theme .val-name,
+        body.light-theme #header-name,
+        body.light-theme .nav-item.active {
+            color: #0f172a !important;
+        }
+
+        body.light-theme p, 
+        body.light-theme span:not(.notif-badge):not(.badge), 
+        body.light-theme label,
+        body.light-theme .nav-item,
+        body.light-theme .stat-info h3,
+        body.light-theme .app-info p {
+            color: #475569 !important;
+        }
+
+        body.light-theme .nav-item:hover,
+        body.light-theme .nav-item.active {
+            background: rgba(99, 102, 241, 0.08) !important;
+            color: var(--primary) !important;
+        }
+
+        body.light-theme .ai-input {
+            background: #f8fafc !important;
+            color: #0f172a !important;
+            border-color: #cbd5e1 !important;
+        }
+
+        body.light-theme .chat-message.ai {
+            background: #f1f5f9 !important;
+            color: #1e293b !important;
+        }
+
+        body.light-theme .form-control {
+            background: #ffffff !important;
+            color: #0f172a !important;
+            border-color: #cbd5e1 !important;
+        }
+
+        body.light-theme .sidebar-header .logo {
+            color: #0f172a !important;
+        }
+
+        body.light-theme .notif-item:hover {
+            background: #f8fafc !important;
+        }
+
+        body.light-theme .notif-header {
+            border-bottom: 1px solid #cbd5e1 !important;
+            color: #0f172a !important;
+        }
+
+        body.light-theme .avatar {
+            border: 2px solid #ffffff;
+            box-shadow: 0 0 0 1px #cbd5e1;
+        }
+
+        body.light-theme td {
+            color: #0f172a !important;
+        }
+
+        body.light-theme th {
+            color: #475569 !important;
+        }
+
+        body.light-theme .badge.warning {
+            color: #b45309 !important;
+            background: rgba(180, 83, 9, 0.1) !important;
+        }
     </style>
 </head>
 <body class="dashboard-body">
@@ -507,23 +617,23 @@ if (empty($skillRow['skills'])) {
     <div class="app-container">
         <?php if($is_active === 0): ?>
             <div class="account-lock-overlay">
-                <div style="background: #ef4444; color: white; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                <div style="background: #ef4444; color: var(--text-main); width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
                     <i data-feather="lock"></i>
                 </div>
                 <div style="flex: 1;">
                     <h4 style="margin: 0; font-size: 1rem;">Account Temporarily Suspended</h4>
-                    <p style="margin: 0; font-size: 0.8rem; opacity: 0.8;">Your account is deactivated. Reference ID: <strong style="color: #fff; background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 4px;"><?php echo $userData['reference_id'] ?? 'N/A'; ?></strong></p>
+                    <p style="margin: 0; font-size: 0.8rem; opacity: 0.8;">Your account is deactivated. Reference ID: <strong style="color: var(--text-main); background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 4px;"><?php echo $userData['reference_id'] ?? 'N/A'; ?></strong></p>
                 </div>
                 <div style="display: flex; gap: 10px; align-items: center;">
-                    <button onclick="openReactivationModal()" style="background: var(--primary); color: #fff; border: none; padding: 8px 15px; border-radius: 8px; font-weight: 600; font-size: 0.8rem; cursor: pointer;">Request Reactivation</button>
-                    <a href="logout.php" style="color: #fff; text-decoration: none; font-weight: 600; font-size: 0.8rem; background: rgba(255,255,255,0.1); padding: 8px 15px; border-radius: 8px;">Logout</a>
+                    <button onclick="openReactivationModal()" style="background: var(--primary); color: var(--text-main); border: none; padding: 8px 15px; border-radius: 8px; font-weight: 600; font-size: 0.8rem; cursor: pointer;">Request Reactivation</button>
+                    <a href="logout.php" style="color: var(--text-main); text-decoration: none; font-weight: 600; font-size: 0.8rem; background: rgba(255,255,255,0.1); padding: 8px 15px; border-radius: 8px;">Logout</a>
                 </div>
             </div>
 
             <!-- Reactivation Request Modal -->
             <div id="reactivation-modal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: none; align-items: center; justify-content: center; z-index: 10005;">
                 <div style="background: #1e293b; border: 1px solid var(--border-color); padding: 2.5rem; border-radius: 20px; width: 450px; position: relative;">
-                    <h3 style="margin-bottom: 0.5rem; color: #fff;">Request Reactivation</h3>
+                    <h3 style="margin-bottom: 0.5rem; color: var(--text-main);">Request Reactivation</h3>
                     <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1.5rem;">Please provide a reason why your account should be reactivated.</p>
                     
                     <div style="margin-bottom: 1.2rem;">
@@ -533,12 +643,12 @@ if (empty($skillRow['skills'])) {
 
                     <div style="margin-bottom: 1.5rem;">
                         <label style="font-size: 0.85rem; margin-bottom: 5px;">Reason for Reactivation</label>
-                        <textarea id="reactivation-reason" placeholder="Explain your situation..." style="width: 100%; padding: 0.8rem; background: var(--input-bg); border: 1px solid var(--border-color); border-radius: 8px; color: #fff; min-height: 120px;"></textarea>
+                        <textarea id="reactivation-reason" placeholder="Explain your situation..." style="width: 100%; padding: 0.8rem; background: var(--input-bg); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-main); min-height: 120px;"></textarea>
                     </div>
 
                     <div style="display: flex; gap: 10px;">
-                        <button onclick="closeReactivationModal()" style="flex: 1; padding: 0.8rem; background: rgba(255,255,255,0.05); color: #fff; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">Cancel</button>
-                        <button onclick="submitReactivationRequest()" style="flex: 2; padding: 0.8rem; background: var(--primary); color: #fff; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">Send Request</button>
+                        <button onclick="closeReactivationModal()" style="flex: 1; padding: 0.8rem; background: rgba(255,255,255,0.05); color: var(--text-main); border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">Cancel</button>
+                        <button onclick="submitReactivationRequest()" style="flex: 2; padding: 0.8rem; background: var(--primary); color: var(--text-main); border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">Send Request</button>
                     </div>
                 </div>
             </div>
@@ -677,7 +787,7 @@ if (empty($skillRow['skills'])) {
                 <!-- HOME SECTION -->
                 <div id="home" class="section-view active">
                     <div style="margin-bottom: 2.5rem;">
-                        <h3 style="margin-bottom:1.25rem; font-size:1.1rem; color:#fff; display:flex; align-items:center; gap:0.5rem;">
+                        <h3 style="margin-bottom:1.25rem; font-size:1.1rem; color: var(--text-main); display:flex; align-items:center; gap:0.5rem;">
                             <i data-feather="activity" style="width:18px; color:var(--primary);"></i> Your Activity
                         </h3>
                         <div class="stats-grid" style="margin-bottom:0;">
@@ -700,7 +810,7 @@ if (empty($skillRow['skills'])) {
                                 <div class="stat-icon activity-color"><i data-feather="hash"></i></div>
                                 <div class="stat-info">
                                     <h3>Reference ID</h3>
-                                    <p class="stat-value" style="font-family: monospace; font-size: 1rem; color: #fff;"><?php echo htmlspecialchars($userData['reference_id'] ?? 'REF-N/A'); ?></p>
+                                    <p class="stat-value" style="font-family: monospace; font-size: 1rem; color: var(--text-main);"><?php echo htmlspecialchars($userData['reference_id'] ?? 'REF-N/A'); ?></p>
                                 </div>
                             </div>
                         </div>
@@ -720,7 +830,7 @@ if (empty($skillRow['skills'])) {
                     
                     <div style="margin-top: 3rem;">
                         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
-                            <h3 style="font-size:1.1rem; color:#fff;">My Learning Programs</h3>
+                            <h3 style="font-size:1.1rem; color: var(--text-main);">My Learning Programs</h3>
                             <span style="font-size:0.8rem; color:var(--text-muted);" id="app-count">0 Programs</span>
                         </div>
                         <div id="my-applications-list" class="app-list">
@@ -736,76 +846,84 @@ if (empty($skillRow['skills'])) {
                         <h2>My Profile</h2>
                         <p>Manage your account settings</p>
                     </div>
-                    <div class="content-section" style="padding: 2rem; max-width: 500px; margin: 0 auto; text-align: left;">
-                        <form id="profileForm">
-                            <div class="profile-upload-container">
-                                <div class="profile-preview" id="preview-container">
-                                    <?php if($user_image): ?>
-                                        <img src="<?php echo $user_image; ?>" id="preview-img">
-                                    <?php else: ?>
-                                        <span id="preview-text"><?php echo $user_initials; ?></span>
-                                        <img src="" id="preview-img" style="display:none;">
-                                    <?php endif; ?>
-                                </div>
-                                <input type="file" id="profile_image" name="profile_image" accept="image/*" style="display:none;" onchange="previewFile()">
-                                <div style="display:flex; gap:0.5rem; margin-top:1rem; justify-content:center; width:100%;">
-                                    <button type="button" class="action-btn" onclick="document.getElementById('profile_image').click()" style="padding:0.6rem 1rem; font-size:0.85rem; flex:1;">Change Picture</button>
-                                    <button type="button" id="save-photo-btn" class="primary-action-btn" style="display:none; padding:1.1rem 1.5rem; font-size:0.85rem; width:auto; flex:1; margin:0;" onclick="uploadProfilePicture()">Save New Photo</button>
-                                </div>
-                            </div>
-                            
-                            <div id="edit-auth-notice" style="display:none; background:rgba(16, 185, 129, 0.1); border:1px solid #10b981; padding:0.75rem; border-radius:10px; margin-bottom:1.5rem; color:#10b981; font-size:0.85rem; text-align:center;">
-                                <i data-feather="check-circle" style="width:14px; vertical-align:middle; margin-right:5px;"></i>
-                                Authorized! You have <span id="auth-timer" style="font-weight:700;">25:00</span> remaining to change your name.
-                            </div>
-
-                            <label>Full Name</label>
-                            <div style="position:relative; margin-bottom:1.5rem;">
-                                <input type="text" id="profile-name-input" name="full_name" class="form-control" value="<?php echo htmlspecialchars($user_name); ?>" readonly style="margin-bottom:0; padding-right:45px;">
-                                <div id="lock-icon" style="position:absolute; right:15px; top:50%; transform:translateY(-50%); color:#64748b;">
-                                    <i data-feather="lock" style="width:18px;"></i>
-                                </div>
-                            </div>
-                            
-                            <label>Email Address</label>
-                            <input type="email" class="form-control" value="<?php echo htmlspecialchars($user_email); ?>" readonly style="background:rgba(255,255,255,0.02); color:#64748b;">
-                            
-                            <div id="profile-actions" style="margin-top:2rem;">
-                                <button type="button" id="request-perm-btn" onclick="requestEditPermission()" class="action-btn" style="width:100%; border:1px dashed var(--primary); background:transparent; display:block;">
-                                    Request Admin Access to Change Name
-                                </button>
-                                <button type="submit" id="save-profile-btn" class="primary-action-btn" style="width:100%; display:none;">
-                                    Confirm Name Change
-                                </button>
-                            </div>
-
-                            <!-- Theme Settings -->
-                            <div style="margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid rgba(255,255,255,0.05);">
-                               <label>Interface Theme</label>
-                               <div style="display: flex; gap: 1rem; margin-top: 0.5rem;">
-                                   <button type="button" class="action-btn" id="btn-dark" onclick="setTheme('dark')" style="flex:1;">
-                                       <i data-feather="moon" style="width:14px; margin-right:5px; vertical-align:middle;"></i> Dark
-                                   </button>
-                                   <button type="button" class="action-btn" id="btn-light" onclick="setTheme('light')" style="flex:1;">
-                                       <i data-feather="sun" style="width:14px; margin-right:5px; vertical-align:middle;"></i> Light
-                                   </button>
-                               </div>
-                            </div>
-                        </form>
-
-                        <!-- BADGES SECTION -->
-                        <div style="margin-top:2.5rem; padding-top:2rem; border-top:1px solid rgba(255,255,255,0.05);">
-                            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:1.5rem;">
-                                <h3 style="margin:0; color:#fff; font-size:1.2rem;">
-                                    <i data-feather="award" style="width:20px; vertical-align:middle; margin-right:8px; color:#fbbf24;"></i>
-                                    Earned Badges
+                    <div class="content-section" style="padding: 2.5rem; max-width: 1000px; margin: 0 auto; text-align: left;">
+                        <div style="display: flex; gap: 3rem; flex-wrap: wrap;">
+                            <!-- Account Settings Column -->
+                            <div style="flex: 1.2; min-width: 320px;">
+                                <h3 style="margin-bottom: 1.5rem; color: var(--text-main); font-size: 1.2rem; display: flex; align-items: center; gap: 10px;">
+                                    <i data-feather="settings" style="width: 20px; color: var(--primary);"></i> Account Settings
                                 </h3>
-                                <span id="badge-count" style="background:rgba(251, 191, 36, 0.1); color:#fbbf24; padding:0.3rem 0.8rem; border-radius:20px; font-size:0.85rem; font-weight:600;">0</span>
+                                <form id="profileForm">
+                                    <div class="profile-upload-container">
+                                        <div class="profile-preview" id="preview-container">
+                                            <?php if($user_image): ?>
+                                                <img src="<?php echo $user_image; ?>" id="preview-img">
+                                            <?php else: ?>
+                                                <span id="preview-text"><?php echo $user_initials; ?></span>
+                                                <img src="" id="preview-img" style="display:none;">
+                                            <?php endif; ?>
+                                        </div>
+                                        <input type="file" id="profile_image" name="profile_image" accept="image/*" style="display:none;" onchange="previewFile()">
+                                        <div style="display:flex; gap:0.5rem; margin-top:1rem; justify-content:center; width:100%;">
+                                            <button type="button" class="action-btn" onclick="document.getElementById('profile_image').click()" style="padding:0.6rem 1rem; font-size:0.85rem; flex:1;">Change Picture</button>
+                                            <button type="button" id="save-photo-btn" class="primary-action-btn" style="display:none; padding:1.1rem 1.5rem; font-size:0.85rem; width:auto; flex:1; margin:0;" onclick="uploadProfilePicture()">Save Photo</button>
+                                        </div>
+                                    </div>
+                                    
+                                    <div id="edit-auth-notice" style="display:none; background:rgba(16, 185, 129, 0.1); border:1px solid #10b981; padding:0.75rem; border-radius:10px; margin-bottom:1.5rem; color:#10b981; font-size:0.85rem; text-align:center;">
+                                        <i data-feather="check-circle" style="width:14px; vertical-align:middle; margin-right:5px;"></i>
+                                        Authorized! You have <span id="auth-timer" style="font-weight:700;">25:00</span> remaining to change your name.
+                                    </div>
+
+                                    <label>Full Name</label>
+                                    <div style="position:relative; margin-bottom:1.5rem;">
+                                        <input type="text" id="profile-name-input" name="full_name" class="form-control" value="<?php echo htmlspecialchars($user_name); ?>" readonly style="margin-bottom:0; padding-right:45px;">
+                                        <div id="lock-icon" style="position:absolute; right:15px; top:50%; transform:translateY(-50%); color:#64748b;">
+                                            <i data-feather="lock" style="width:18px;"></i>
+                                        </div>
+                                    </div>
+                                    
+                                    <label>Email Address</label>
+                                    <input type="email" class="form-control" value="<?php echo htmlspecialchars($user_email); ?>" readonly style="background: var(--input-bg); color:#64748b;">
+                                    
+                                    <div id="profile-actions" style="margin-top:2rem;">
+                                        <button type="button" id="request-perm-btn" onclick="requestEditPermission()" class="action-btn" style="width:100%; border:1px dashed var(--primary); background:transparent; display:block;">
+                                            Request Permission to Change Name
+                                        </button>
+                                        <button type="submit" id="save-profile-btn" class="primary-action-btn" style="width:100%; display:none;">
+                                            Confirm Name Change
+                                        </button>
+                                    </div>
+
+                                    <!-- Theme Settings -->
+                                    <div style="margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid rgba(255,255,255,0.05);">
+                                       <label>Interface Theme</label>
+                                       <div style="display: flex; gap: 1rem; margin-top: 0.5rem;">
+                                           <button type="button" class="action-btn" id="btn-dark" onclick="setTheme('dark')" style="flex:1;">
+                                               <i data-feather="moon" style="width:14px; margin-right:5px; vertical-align:middle;"></i> Dark
+                                           </button>
+                                           <button type="button" class="action-btn" id="btn-light" onclick="setTheme('light')" style="flex:1;">
+                                               <i data-feather="sun" style="width:14px; margin-right:5px; vertical-align:middle;"></i> Light
+                                           </button>
+                                       </div>
+                                    </div>
+                                </form>
                             </div>
-                            <div id="badges-container" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(140px, 1fr)); gap:1rem;">
-                                <div style="text-align:center; padding:2rem; color:#64748b; grid-column:1/-1;">
-                                    <i data-feather="award" style="width:40px; opacity:0.3; margin-bottom:0.5rem;"></i>
-                                    <div style="font-size:0.9rem;">Complete skill tests to earn badges!</div>
+
+                            <!-- Badges Column -->
+                            <div style="flex: 1; min-width: 320px; border-left: 1px solid rgba(255,255,255,0.05); padding-left: 3rem;">
+                                <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:1.5rem;">
+                                    <h3 style="margin:0; color: var(--text-main); font-size:1.2rem;">
+                                        <i data-feather="award" style="width:20px; vertical-align:middle; margin-right:8px; color:#fbbf24;"></i>
+                                        Earned Badges
+                                    </h3>
+                                    <span id="badge-count" style="background:rgba(251, 191, 36, 0.1); color:#fbbf24; padding:0.3rem 0.8rem; border-radius:20px; font-size:0.85rem; font-weight:600;">0</span>
+                                </div>
+                                <div id="badges-container" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(130px, 1fr)); gap:1rem;">
+                                    <div style="text-align:center; padding:2rem; color:#64748b; grid-column:1/-1;">
+                                        <i data-feather="award" style="width:40px; opacity:0.3; margin-bottom:0.5rem;"></i>
+                                        <div style="font-size:0.9rem;">Complete skill tests to earn badges!</div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -892,7 +1010,7 @@ if (empty($skillRow['skills'])) {
                         <!-- Assigned Events List -->
                         <div class="content-section" style="background:var(--card-bg); border-radius:16px; border:1px solid var(--border-color);">
                             <div style="padding:1.25rem 1.5rem; border-bottom:1px solid var(--border-color);">
-                                <h3 style="font-size:1.1rem; color:#fff;">Upcoming Activities</h3>
+                                <h3 style="font-size:1.1rem; color: var(--text-main);">Upcoming Activities</h3>
                             </div>
                             <div id="event-list" style="padding:1rem; display:flex; flex-direction:column; gap:1rem;">
                                 <div style="text-align:center; padding:2rem; color:#64748b;">Loading schedule...</div>
@@ -934,7 +1052,7 @@ if (empty($skillRow['skills'])) {
                         </button>
                         
                         <div class="doc-card" style="border:1px solid var(--primary); background: linear-gradient(145deg, rgba(30, 41, 59, 0.8), rgba(15, 23, 42, 0.9));">
-                            <h2 id="active-test-title" style="color:#fff; margin-bottom:0.5rem;">Test Title</h2>
+                            <h2 id="active-test-title" style="color: var(--text-main); margin-bottom:0.5rem;">Test Title</h2>
                             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
                                  <span style="color:#94a3b8; font-size:0.9rem;" id="active-test-stages-count">5 Stages</span>
                                  <span class="badgex" style="background:rgba(16,185,129,0.2); color:#10b981; padding:2px 8px; border-radius:4px; font-size:0.8rem;" id="active-test-status">In Progress</span>
@@ -1016,8 +1134,8 @@ if (empty($skillRow['skills'])) {
                                             <img src="laforteza_logo.jpg" style="width:100%; height:100%; object-fit: cover;" alt="Laforteza Logo">
                                         </div>
                                         <div style="line-height: 1.2;">
-                                            <div style="font-size: 0.6rem; font-weight: 700; color: #fff; opacity: 0.8; letter-spacing: 0.5px;">REPUBLIC OF THE PHILIPPINES</div>
-                                            <div style="font-size: 0.8rem; font-weight: 800; color: #fff; letter-spacing: -0.2px;">BRGY. 175 LAFORTEZA</div>
+                                            <div style="font-size: 0.6rem; font-weight: 700; color: var(--text-main); opacity: 0.8; letter-spacing: 0.5px;">REPUBLIC OF THE PHILIPPINES</div>
+                                            <div style="font-size: 0.8rem; font-weight: 800; color: var(--text-main); letter-spacing: -0.2px;">BRGY. 175 LAFORTEZA</div>
                                         </div>
                                     </div>
                                 </div>
@@ -1058,7 +1176,7 @@ if (empty($skillRow['skills'])) {
                                 <div style="height: 40px; background: #111; margin-bottom: 1.5rem;"></div>
                                 <div style="padding: 0 1.5rem;">
                                     <div class="label-tiny" style="color: #94a3b8; font-size: 0.6rem;">PERMANENT RESIDENT OF</div>
-                                    <div style="color: #fff; font-size: 0.9rem; margin-bottom: 1rem; font-weight: 600;">Laforteza Oldings, Barangay 175, Caloocan City, PH.</div>
+                                    <div style="color: var(--text-main); font-size: 0.9rem; margin-bottom: 1rem; font-weight: 600;">Laforteza Oldings, Barangay 175, Caloocan City, PH.</div>
                                     
                                     <div style="background: rgba(255,255,255,0.03); padding: 1rem; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
                                         <div style="font-size: 0.6rem; color: #64748b; margin-bottom: 0.5rem; line-height: 1.4;">
@@ -1100,7 +1218,7 @@ if (empty($skillRow['skills'])) {
                             overflow: hidden;
                             border: 1px solid rgba(255, 255, 255, 0.1);
                             box-shadow: 0 15px 35px rgba(0,0,0,0.5);
-                            color: white;
+                            color: var(--text-main);
                         }
                         .id-card-item.back-side { background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%); }
                         
@@ -1140,7 +1258,7 @@ if (empty($skillRow['skills'])) {
                         .val-name {
                             font-size: 0.9rem;
                             font-weight: 800;
-                            color: #fff;
+                            color: var(--text-main);
                             letter-spacing: 0.5px;
                         }
                         
@@ -1299,7 +1417,7 @@ if (empty($skillRow['skills'])) {
                         <div class="rec-card">
                             <span class="rec-tag">${p.category}</span>
                             ${scoreHtml}
-                            <h3 style="color:#fff; margin-bottom:0.5rem; font-size:1.1rem;">${p.title}</h3>
+                            <h3 style="color: var(--text-main); margin-bottom:0.5rem; font-size:1.1rem;">${p.title}</h3>
                             <p style="color:var(--text-muted); font-size:0.85rem; line-height:1.4;">${p.description || 'Program description unavailable.'}</p>
                             <button class="action-btn" onclick="applyFor(${p.id})" style="margin-top:1.25rem; width:100%; font-weight:600; background:rgba(99,102,241,0.1); border:1px solid rgba(99,102,241,0.2);">Enroll for Free</button>
                         </div>
@@ -1338,7 +1456,7 @@ if (empty($skillRow['skills'])) {
                 container.innerHTML = '';
                 
                 if(data.length === 0) {
-                    container.innerHTML = '<div style="color:#aaa; text-align:center; padding:3rem; background:rgba(30,41,59,0.3); border-radius:16px; border:1px dashed #475569;">You haven\'t applied to any programs yet. Start learning today!</div>';
+                    container.innerHTML = '<div style="color:var(--text-muted); text-align:center; padding:3rem; background:rgba(30,41,59,0.3); border-radius:16px; border:1px dashed #475569;">You haven\'t applied to any programs yet. Start learning today!</div>';
                     return;
                 }
                 
@@ -1405,7 +1523,7 @@ if (empty($skillRow['skills'])) {
                     tbody.innerHTML += `<tr>
                         <td>
                             <div style="font-weight:500;">${row.title}</div>
-                            <div style="font-size:0.85rem; color: #94a3b8; margin-top:4px;">${row.description.substring(0,50)}...</div>
+                            <div style="font-size:0.85rem; color:var(--text-muted); margin-top:4px;">${row.description.substring(0,50)}...</div>
                         </td>
                         <td>${row.created_at}</td>
                         <td><span class="badge ${badgeClass}">${row.status}</span></td>
@@ -1519,13 +1637,7 @@ if (empty($skillRow['skills'])) {
             }
         });
 
-        // Logout
-        document.querySelector('.logout-btn').addEventListener('click', (e) => {
-            e.preventDefault();
-            if(confirm('Are you sure you want to logout?')) {
-                window.location.href = 'logout.php';
-            }
-        });
+        // Logout handler is defined in the main init section below (uses modal)
 
         // Load badges on profile view
         fetchBadges();
@@ -1585,7 +1697,7 @@ if (empty($skillRow['skills'])) {
                 
                 if(completed.length === 0) {
                     container.innerHTML = `
-                        <div style="text-align:center; padding:2rem; color:#64748b; grid-column:1/-1;">
+                        <div style="text-align:center; padding:2rem; color:var(--text-muted); grid-column:1/-1;">
                             <i data-feather="award" style="width:40px; opacity:0.3; margin-bottom:0.5rem;"></i>
                             <div style="font-size:0.9rem;">Complete skill tests to earn badges!</div>
                         </div>
@@ -1601,7 +1713,7 @@ if (empty($skillRow['skills'])) {
                             <div style="width:60px; height:60px; background:rgba(251, 191, 36, 0.1); border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 0.8rem auto;">
                                 <i data-feather="award" style="width:30px; height:30px; color:#fbbf24;"></i>
                             </div>
-                            <div style="color:#fff; font-size:0.85rem; font-weight:600; margin-bottom:0.3rem;">${test.title}</div>
+                            <div style="color: var(--text-main); font-size:0.85rem; font-weight:600; margin-bottom:0.3rem;">${test.title}</div>
                             <div style="color:#fbbf24; font-size:0.7rem; text-transform:uppercase; letter-spacing:0.5px;">Certified</div>
                         </div>
                     `;
@@ -1641,7 +1753,7 @@ if (empty($skillRow['skills'])) {
                 container.innerHTML = '';
                 
                 if(data.length === 0) {
-                    container.innerHTML = '<p style="color:#aaa;">No resources available yet.</p>';
+                    container.innerHTML = '<p style="color:var(--text-muted);">No resources available yet.</p>';
                     return;
                 }
                 
@@ -1902,7 +2014,7 @@ if (empty($skillRow['skills'])) {
                             <span class="badge" style="font-size:0.7rem; background:rgba(99, 102, 241, 0.2); color:var(--primary); ">${ev.type.toUpperCase()}</span>
                             <span style="font-size:0.8rem; color:#64748b;"><i data-feather="clock" style="width:12px; vertical-align:middle; margin-right:4px;"></i>${ev.event_date} @ ${timeStr}</span>
                         </div>
-                        <h4 style="margin:0 0 5px 0; font-size:1rem; color:#fff;">${ev.title}</h4>
+                        <h4 style="margin:0 0 5px 0; font-size:1rem; color: var(--text-main);">${ev.title}</h4>
                         <p style="margin:0; font-size:0.85rem; color:#94a3b8;">${ev.description || 'No description'}</p>
                         ${actionsHtml}
                     </div>
@@ -2063,7 +2175,7 @@ if (empty($skillRow['skills'])) {
                             <div style="display:flex; align-items:center;">
                                 <div class="stage-check">${icon}</div>
                                 <div>
-                                    <div style="color:#fff; font-weight:500;">${stage.title}</div>
+                                    <div style="color: var(--text-main); font-weight:500;">${stage.title}</div>
                                     <div style="color:#94a3b8; font-size:0.85rem;">${stage.content.substring(0, 50)}...</div>
                                 </div>
                             </div>
@@ -2180,9 +2292,9 @@ if (empty($skillRow['skills'])) {
                     <div style="width:100px; height:100px; background:rgba(251, 191, 36, 0.1); border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 1.5rem auto; animation: badgePulse 2s infinite;">
                         <i data-feather="award" style="width:50px; height:50px; color:#fbbf24;"></i>
                     </div>
-                    <h2 style="color:#fff; margin-bottom:0.5rem; font-family:'Inter', sans-serif; font-size:1.8rem;">Congratulations!</h2>
+                    <h2 style="color: var(--text-main); margin-bottom:0.5rem; font-family:'Inter', sans-serif; font-size:1.8rem;">Congratulations!</h2>
                     <p style="color:#94a3b8; margin-bottom:2rem; line-height:1.5;">You have successfully completed this skill assessment. Your progress has been recorded!</p>
-                    <div style="background:rgba(255,255,255,0.03); padding:1rem; border-radius:12px; margin-bottom:2rem; border:1px solid rgba(255,255,255,0.05);">
+                    <div style="background:rgba(255,255,255,0.03); padding:1rem; border-radius:12px; margin-bottom:2rem; border: 1px solid var(--border-color);">
                         <div style="color:#fbbf24; font-weight:700; text-transform:uppercase; font-size:0.75rem; letter-spacing:1px; margin-bottom:0.2rem;">Achievement Unlocked</div>
                         <div style="color:white; font-size:1.1rem; font-weight:600;">Skill Verified</div>
                     </div>
@@ -2244,11 +2356,11 @@ if (empty($skillRow['skills'])) {
             <div style="width:80px; height:80px; background:rgba(239, 68, 68, 0.1); border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 1.5rem;">
                 <i data-feather="log-out" style="color:#ef4444; width:36px; height:36px;"></i>
             </div>
-            <h3 style="color:#fff; margin-bottom:0.75rem; font-size:1.5rem; font-weight:700;">Signing Out?</h3>
+            <h3 style="color: var(--text-main); margin-bottom:0.75rem; font-size:1.5rem; font-weight:700;">Signing Out?</h3>
             <p style="color:#94a3b8; font-size:1rem; margin-bottom:2.5rem; line-height:1.5;">Are you sure you want to end your session?</p>
             <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
-                <button onclick="document.getElementById('logout-modal').style.display='none'" style="padding:1rem; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); color:#fff; border-radius:14px; cursor:pointer; font-weight:600; font-size:1rem; transition:0.2s;">Cancel</button>
-                <button onclick="window.location.href='logout.php'" style="padding:1rem; background:#ef4444; border:none; color:#fff; border-radius:14px; cursor:pointer; font-weight:600; font-size:1rem; box-shadow:0 10px 20px -5px rgba(239, 68, 68, 0.4); transition:0.2s;">Yes, Logout</button>
+                <button onclick="document.getElementById('logout-modal').style.display='none'" style="padding:1rem; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); color: var(--text-main); border-radius:14px; cursor:pointer; font-weight:600; font-size:1rem; transition:0.2s;">Cancel</button>
+                <button onclick="window.location.href='logout.php'" style="padding:1rem; background:#ef4444; border:none; color: var(--text-main); border-radius:14px; cursor:pointer; font-weight:600; font-size:1rem; box-shadow:0 10px 20px -5px rgba(239, 68, 68, 0.4); transition:0.2s;">Yes, Logout</button>
             </div>
         </div>
     </div>
@@ -2259,9 +2371,9 @@ if (empty($skillRow['skills'])) {
             <div style="width:80px; height:80px; background:rgba(16, 185, 129, 0.1); border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 1.5rem;">
                 <i data-feather="check-circle" style="color:#10b981; width:36px; height:36px;"></i>
             </div>
-            <h3 style="color:#fff; margin-bottom:0.75rem; font-size:1.5rem; font-weight:700;">Success!</h3>
+            <h3 style="color: var(--text-main); margin-bottom:0.75rem; font-size:1.5rem; font-weight:700;">Success!</h3>
             <p id="success-modal-msg" style="color:#94a3b8; font-size:1.1rem; margin-bottom:2.5rem; line-height:1.5;"></p>
-            <button onclick="location.reload()" style="padding:1rem 2rem; background:#10b981; border:none; color:#fff; border-radius:14px; cursor:pointer; font-weight:600; font-size:1rem; box-shadow:0 10px 20px -5px rgba(16, 185, 129, 0.4); transition:0.2s; width:100%;">Awesome!</button>
+            <button onclick="location.reload()" style="padding:1rem 2rem; background:#10b981; border:none; color: var(--text-main); border-radius:14px; cursor:pointer; font-weight:600; font-size:1rem; box-shadow:0 10px 20px -5px rgba(16, 185, 129, 0.4); transition:0.2s; width:100%;">Awesome!</button>
         </div>
     </div>
 </body>

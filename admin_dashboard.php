@@ -32,11 +32,14 @@ if ($checkCol && $checkCol->num_rows > 0) {
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
     <script src="https://unpkg.com/feather-icons"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         /* Extra styles for SPA feel */
         .section-view { display: none; animation: fadeIn 0.3s ease; }
         .section-view.active { display: block; }
         @keyframes fadeIn { from { opacity:0; transform: translateY(5px); } to { opacity:1; transform: translateY(0); } }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        .spin { animation: spin 0.8s linear infinite; }
         
         /* Settings Form */
         .settings-form { max-width: 600px; margin: 0 auto; }
@@ -102,6 +105,85 @@ if ($checkCol && $checkCol->num_rows > 0) {
             }
             .sidebar-overlay.active { display: block; }
         }
+
+        /* LIGHT MODE OPTIMIZATION FOR ADMIN DASHBOARD */
+        body.light-theme {
+            --bg-color: #f8fafc;
+            --sidebar-bg: #ffffff;
+            --card-bg: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border-color: #e2e8f0;
+            --input-bg: #f1f5f9;
+            --glass-card: rgba(255, 255, 255, 0.8);
+            -webkit-font-smoothing: antialiased;
+        }
+
+        body.light-theme .top-bar { background: rgba(255, 255, 255, 0.9); border-bottom-color: #e2e8f0; }
+        body.light-theme .search-bar { background: #f1f5f9; border-color: #cbd5e1; }
+        body.light-theme .search-bar input { color: #1e293b; }
+        body.light-theme .search-bar i { color: #64748b; }
+        body.light-theme .user-name { color: #1e293b; }
+        body.light-theme h2, body.light-theme h3, body.light-theme h4, body.light-theme h5 { color: #0f172a !important; }
+        body.light-theme .stat-value { color: #1e293b; }
+        body.light-theme .form-control { background: #ffffff; border-color: #cbd5e1; color: #1e293b; }
+        body.light-theme .sidebar-toggle { background: #f1f5f9; border-color: #cbd5e1; color: #64748b; }
+        body.light-theme .nav-item:not(.active) { color: #64748b; }
+        body.light-theme .nav-item:hover { background: rgba(99, 102, 241, 0.08); color: var(--primary); }
+        body.light-theme .sidebar-nav::-webkit-scrollbar-thumb { background: #cbd5e1; }
+        body.light-theme .sidebar-nav { scrollbar-color: #cbd5e1 transparent; }
+        body.light-theme #sent-score, body.light-theme #pred-val { color: #0f172a !important; }
+        body.light-theme .notif-dropdown { background: #ffffff !important; border-color: #e2e8f0 !important; box-shadow: 0 10px 25px rgba(0,0,0,0.1) !important; }
+        body.light-theme .notif-header { color: #0f172a; border-bottom-color: #e2e8f0; }
+        body.light-theme .success-modal { background: #ffffff !important; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.2) !important; }
+        body.light-theme .success-modal h3 { color: #0f172a; }
+        body.light-theme .success-modal p { color: #64748b; }
+        body.light-theme #calendar-month-year { color: #0f172a; }
+        body.light-theme .event-item h4 { color: #0f172a !important; }
+        body.light-theme .event-item p { color: #64748b !important; }
+        body.light-theme tr td { color: #1e293b; border-bottom-color: #f1f5f9; }
+        body.light-theme tr th { background: #f8fafc; color: #64748b; border-bottom-color: #e2e8f0; }
+        body.light-theme .avatar-sm { background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; }
+        body.light-theme .user-cell span { color: #1e293b !important; }
+        body.light-theme .content-section { box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+        body.light-theme .motivation-title { color: var(--primary) !important; }
+        body.light-theme .motivation-quote { color: #334155 !important; }
+        body.light-theme #fix-ref-id { background: #f8fafc; border-color: #cbd5e1; color: #0f172a; }
+        body.light-theme .checkbox-wrapper label { color: #475569 !important; }
+        body.light-theme .icon-box { background: #f1f5f9 !important; }
+        body.light-theme .notif-dropdown h5 { color: #0f172a !important; }
+        body.light-theme .notif-dropdown p { color: #64748b !important; }
+        body.light-theme .notif-dropdown small { color: #94a3b8 !important; }
+
+        /* Badge High Contrast for Light Mode */
+        body.light-theme .badge.active { background: #dcfce7 !important; color: #166534 !important; border: 1px solid #bbf7d0 !important; font-weight: 700; }
+        body.light-theme .badge.pending { background: #fef9c3 !important; color: #854d0e !important; border: 1px solid #fef08a !important; font-weight: 700; }
+        body.light-theme .badge.warning { background: #ffedd5 !important; color: #9a3412 !important; border: 1px solid #fed7aa !important; font-weight: 700; }
+        body.light-theme .badge { box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+
+        /* Skill Cards & Table Visibility */
+        body.light-theme .skill-mgmt-card { box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
+        body.light-theme .skill-mgmt-card p { color: #475569 !important; }
+        body.light-theme .skill-mgmt-card button[onclick*="openSkillModal"] { border-color: #cbd5e1 !important; color: #1e293b !important; }
+        body.light-theme .skill-mgmt-card h3 { text-shadow: none !important; color: #ffffff !important; }
+        
+        .light-theme [style*="background:rgba(0,0,0,0.2)"] { background: #f8fafc !important; }
+        .light-theme [style*="background:rgba(255,255,255,0.02)"] { background: #f1f5f9 !important; }
+        .light-theme [style*="border-bottom:1px solid rgba(255,255,255,0.05)"] { border-bottom-color: #e2e8f0 !important; }
+        
+        /* Specific Fixes for Blurry Text */
+        .light-theme .motivation-quote { color: #334155 !important; font-weight: 500; }
+        .light-theme .motivation-title { font-weight: 800; letter-spacing: -0.025em; }
+
+        /* Global Dynamic Element Contrast Fix */
+        body.light-theme [style*="background: rgba(16, 185, 129, 0.1)"],
+        body.light-theme [style*="background:rgba(16, 185, 129, 0.1)"] { color: #166534 !important; }
+        body.light-theme [style*="background: rgba(251, 191, 36, 0.1)"],
+        body.light-theme [style*="background:rgba(251, 191, 36, 0.1)"] { color: #854d0e !important; }
+        body.light-theme [style*="background: rgba(59, 130, 246, 0.1)"],
+        body.light-theme [style*="background:rgba(59, 130, 246, 0.1)"] { color: #1e40af !important; }
+        body.light-theme [style*="background: rgba(239, 68, 68, 0.1)"],
+        body.light-theme [style*="background:rgba(239, 68, 68, 0.1)"] { color: #991b1b !important; }
     </style>
 </head>
 <body class="dashboard-body">
@@ -159,6 +241,18 @@ if ($checkCol && $checkCol->num_rows > 0) {
                 <a href="#" class="nav-item" onclick="showSection('smart-insights', this)" title="Smart Insights">
                     <i data-feather="cpu"></i>
                     <span>Smart Insights (AI)</span>
+                </a>
+                <a href="#" class="nav-item" onclick="showSection('announcements', this)" title="Announcements">
+                    <i data-feather="bell"></i>
+                    <span>Announcements</span>
+                </a>
+                <a href="#" class="nav-item" onclick="showSection('maintenance', this)" title="Maintenance Integration">
+                    <i data-feather="tool"></i>
+                    <span>Maintenance</span>
+                </a>
+                <a href="#" class="nav-item" onclick="showSection('analytics', this)" title="Reports & Analytics">
+                    <i data-feather="pie-chart"></i>
+                    <span>Reports & Analytics</span>
                 </a>
                 <a href="#" class="nav-item" onclick="showSection('settings', this)" title="Settings">
                     <i data-feather="settings"></i>
@@ -250,35 +344,35 @@ if ($checkCol && $checkCol->num_rows > 0) {
                              <h3>Engagement & Participation</h3>
                         </div>
                         <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:1.5rem;">
-                            <div style="background:rgba(255,255,255,0.02); padding:1rem; border-radius:12px; border:1px solid var(--border-color);">
-                                <p style="color:#94a3b8; font-size:0.8rem; margin-bottom:0.5rem;">Citizen Join Rate</p>
+                            <div style="background:var(--input-bg); padding:1rem; border-radius:12px; border:1px solid var(--border-color);">
+                                <p style="color:var(--text-muted); font-size:0.8rem; margin-bottom:0.5rem;">Citizen Join Rate</p>
                                 <div style="display:flex; align-items:end; gap:0.5rem;">
                                     <h4 style="font-size:1.5rem; margin:0; color:#10b981;" id="ov-join-rate">0%</h4>
-                                    <span style="color:#64748b; font-size:0.75rem; margin-bottom:3px;" id="ov-join-count">0</span>
+                                    <span style="color:var(--text-muted); font-size:0.75rem; margin-bottom:3px;" id="ov-join-count">0</span>
                                 </div>
-                                <div style="width:100%; height:6px; background:rgba(255,255,255,0.05); border-radius:3px; margin-top:0.8rem; overflow:hidden;">
+                                <div style="width:100%; height:6px; background:rgba(0,0,0,0.05); border-radius:3px; margin-top:0.8rem; overflow:hidden;">
                                     <div id="ov-join-bar" style="width:0%; height:100%; background:#10b981; transition: width 1s ease;"></div>
                                 </div>
                             </div>
 
-                            <div style="background:rgba(255,255,255,0.02); padding:1rem; border-radius:12px; border:1px solid var(--border-color);">
-                                <p style="color:#94a3b8; font-size:0.8rem; margin-bottom:0.5rem;">Decline Rate</p>
+                            <div style="background:var(--input-bg); padding:1rem; border-radius:12px; border:1px solid var(--border-color);">
+                                <p style="color:var(--text-muted); font-size:0.8rem; margin-bottom:0.5rem;">Decline Rate</p>
                                 <div style="display:flex; align-items:end; gap:0.5rem;">
                                     <h4 style="font-size:1.5rem; margin:0; color:#ef4444;" id="ov-decline-rate">0%</h4>
-                                    <span style="color:#64748b; font-size:0.75rem; margin-bottom:3px;" id="ov-decline-count">0</span>
+                                    <span style="color:var(--text-muted); font-size:0.75rem; margin-bottom:3px;" id="ov-decline-count">0</span>
                                 </div>
-                                <div style="width:100%; height:6px; background:rgba(255,255,255,0.05); border-radius:3px; margin-top:0.8rem; overflow:hidden;">
+                                <div style="width:100%; height:6px; background:rgba(0,0,0,0.05); border-radius:3px; margin-top:0.8rem; overflow:hidden;">
                                     <div id="ov-decline-bar" style="width:0%; height:100%; background:#ef4444; transition: width 1s ease;"></div>
                                 </div>
                             </div>
 
-                            <div style="background:rgba(255,255,255,0.02); padding:1rem; border-radius:12px; border:1px solid var(--border-color);">
-                                <p style="color:#94a3b8; font-size:0.8rem; margin-bottom:0.5rem;">Target Engagement</p>
+                            <div style="background:var(--input-bg); padding:1rem; border-radius:12px; border:1px solid var(--border-color);">
+                                <p style="color:var(--text-muted); font-size:0.8rem; margin-bottom:0.5rem;">Target Engagement</p>
                                 <div style="display:flex; align-items:end; gap:0.5rem;">
                                     <h4 style="font-size:1.5rem; margin:0; color:var(--primary);" id="ov-pending-count">0</h4>
-                                    <span style="color:#64748b; font-size:0.75rem; margin-bottom:3px;">Pending</span>
+                                    <span style="color:var(--text-muted); font-size:0.75rem; margin-bottom:3px;">Pending</span>
                                 </div>
-                                <p style="font-size:0.7rem; color:#475569; margin-top:0.8rem;">Total events tagged: <span id="ov-total-tagged" style="color:#fff;">0</span></p>
+                                <p style="font-size:0.7rem; color:var(--text-muted); margin-top:0.8rem;">Total events tagged: <span id="ov-total-tagged" style="color:var(--text-main); font-weight:700;">0</span></p>
                             </div>
                         </div>
                     </div>
@@ -319,14 +413,16 @@ if ($checkCol && $checkCol->num_rows > 0) {
                                 <thead>
                                     <tr>
                                         <th>User</th>
-                                        <th>Email</th>
-                                        <th>Role</th>
-                                        <th>Joined At</th>
-                                        <th>Edit Auth</th>
+                                        <th>Contact</th>
+                                        <th>Street</th>
+                                        <th>House #</th>
+                                        <th>Joined</th>
+                                        <th>Valid ID</th>
+                                        <th>Action</th>
                                     </tr>
                                 </thead>
                                 <tbody id="all-users-table">
-                                    <tr><td colspan="5" style="text-align:center; padding:2rem; color:#64748b;">Loading citizens...</td></tr>
+                                    <tr><td colspan="8" style="text-align:center; padding:2rem; color:#64748b;">Loading citizens...</td></tr>
                                 </tbody>
                             </table>
                         </div>
@@ -738,7 +834,308 @@ if ($checkCol && $checkCol->num_rows > 0) {
                         }
                     }
                 </script>
-            <div id="settings" class="section-view">
+
+                <!-- SECTION: ANNOUNCEMENTS -->
+                <div id="announcements" class="section-view">
+                    <div class="page-header">
+                        <h2>Announcements & Bulletins</h2>
+                        <p>Post and manage city-wide announcements and instructional bulletins.</p>
+                    </div>
+                    
+                    <div class="content-section" style="padding:1.5rem; margin-bottom:1.5rem;">
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                             <h3 style="margin:0;">Recent Announcements</h3>
+                             <button class="primary-action-btn" onclick="openAnnouncementModal()">
+                                <i data-feather="plus" style="width:16px; margin-right:5px;"></i> New Announcement
+                             </button>
+                        </div>
+                    </div>
+
+                    <div class="content-section" style="padding:0;">
+                        <div class="table-container">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Image</th>
+                                        <th>Announcement</th>
+                                        <th>Category</th>
+                                        <th>Posted Date</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="announcements-table">
+                                    <!-- Populated via JS -->
+                                    <tr><td colspan="5" style="text-align:center; padding:2rem; color:var(--text-muted);">Loading announcements...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SECTION: MAINTENANCE INTEGRATION -->
+                <div id="maintenance" class="section-view">
+                    <div class="page-header">
+                        <h2>Maintenance Integration</h2>
+                        <p>View and manage maintenance schedules from Community Infrastructure Maintenance Management system.</p>
+                    </div>
+
+                    <!-- Integration Status -->
+                    <div class="content-section" style="padding:1.5rem; margin-bottom:1.5rem;">
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <div>
+                                <h4 style="margin:0 0 0.5rem 0; color:var(--text-main);">Integration Status</h4>
+                                <div style="display:flex; align-items:center; gap:0.5rem;">
+                                    <span class="badge active" style="display:inline-flex; align-items:center; gap:5px;">
+                                        <i data-feather="check-circle" style="width:12px;"></i> Connected
+                                    </span>
+                                    <span style="font-size:0.8rem; color:var(--text-muted);">Last sync: Feb 02, 2026 00:51</span>
+                                </div>
+                            </div>
+                            <button class="action-btn" style="background:var(--input-bg); border-color:var(--border-color); color:var(--text-main); font-size:0.8rem;" onclick="syncMaintenance()">
+                                <i data-feather="refresh-cw" style="width:14px; margin-right:5px;"></i> Sync Now
+                            </button>
+                        </div>
+                        <p style="margin:1rem 0 0 0; font-size:0.75rem; color:var(--text-muted); opacity:0.8;">Note: This integration connects to the Community Infrastructure Maintenance Management system. Maintenance schedules automatically update facility status and block booking dates.</p>
+                    </div>
+
+                    <div style="display:grid; grid-template-columns: 1fr 340px; gap:1.5rem; margin-bottom:1.5rem;">
+                        <!-- Left Column: Upcoming Schedules -->
+                        <div class="content-section" style="padding:0;">
+                            <div style="padding:1.25rem; border-bottom:1px solid var(--border-color); display:flex; justify-content:space-between; align-items:center;">
+                                <h3 style="margin:0;">Upcoming Maintenance Schedules</h3>
+                                <div style="display:flex; gap:0.5rem;">
+                                    <select class="form-control" style="font-size:0.75rem; padding:0.4rem; background:var(--input-bg); width:120px;">
+                                        <option>All Status</option>
+                                    </select>
+                                    <select class="form-control" style="font-size:0.75rem; padding:0.4rem; background:var(--input-bg); width:120px;">
+                                        <option>All Priorities</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="table-container">
+                                <table style="font-size:0.85rem;">
+                                    <thead>
+                                        <tr>
+                                            <th>Maintenance ID</th>
+                                            <th>Facility</th>
+                                            <th>Type</th>
+                                            <th>Related Citizen</th>
+                                            <th>Scheduled Date</th>
+                                            <th>Duration</th>
+                                            <th>Priority</th>
+                                            <th>Status</th>
+                                            <th>Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="maintenance-table">
+                                        <!-- Populated via JS -->
+                                        <tr><td colspan="9" style="text-align:center; padding:2rem; color:var(--text-muted);">Loading schedules...</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div style="padding:1rem; border-top:1px solid var(--border-color); display:flex; justify-content:space-between; align-items:center;">
+                                <span style="font-size:0.75rem; color:var(--text-muted);">Showing 1-10 of 27</span>
+                                <div style="display:flex; gap:0.5rem;">
+                                    <button class="icon-btn" disabled><i data-feather="chevron-left"></i></button>
+                                    <button class="icon-btn"><i data-feather="chevron-right"></i></button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Right Column: Calendar & Sidebar stuff -->
+                        <div style="display:flex; flex-direction:column; gap:1.5rem;">
+                            <div class="content-section" style="padding:1.5rem;">
+                                <h3 style="margin:0 0 1.25rem 0;">Maintenance Calendar</h3>
+                                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+                                    <button class="icon-btn primary-action-btn" style="padding:5px; border-radius:50%; width:28px; height:28px;"><i data-feather="chevron-left" style="width:14px;"></i></button>
+                                    <span style="font-size:0.9rem; font-weight:700; color:var(--text-main);">February 2026</span>
+                                    <button class="icon-btn primary-action-btn" style="padding:5px; border-radius:50%; width:28px; height:28px;"><i data-feather="chevron-right" style="width:14px;"></i></button>
+                                </div>
+                                <div style="display:grid; grid-template-columns: repeat(7, 1fr); gap:5px; margin-bottom:1.5rem;">
+                                    <div style="text-align:center; font-size:0.65rem; color:var(--text-muted); font-weight:700;">SUN</div>
+                                    <div style="text-align:center; font-size:0.65rem; color:var(--text-muted); font-weight:700;">MON</div>
+                                    <div style="text-align:center; font-size:0.65rem; color:var(--text-muted); font-weight:700;">TUE</div>
+                                    <div style="text-align:center; font-size:0.65rem; color:var(--text-muted); font-weight:700;">WED</div>
+                                    <div style="text-align:center; font-size:0.65rem; color:var(--text-muted); font-weight:700;">THU</div>
+                                    <div style="text-align:center; font-size:0.65rem; color:var(--text-muted); font-weight:700;">FRI</div>
+                                    <div style="text-align:center; font-size:0.65rem; color:var(--text-muted); font-weight:700;">SAT</div>
+                                </div>
+                                <div id="maint-calendar-grid" style="display:grid; grid-template-columns: repeat(7, 1fr); gap:5px; margin-bottom:1.5rem;">
+                                    <!-- Populated via JS -->
+                                </div>
+                                <div style="padding:1rem; background:var(--input-bg); border:1px solid var(--border-color); border-radius:12px; text-align:center;">
+                                    <p style="margin:0; font-size:0.8rem; color:var(--text-muted);">Select a date to view schedule.</p>
+                                    <i data-feather="chevron-down" style="width:14px; color:var(--text-muted); margin-top:5px;"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Bottom: History -->
+                    <div class="content-section" style="padding:0;">
+                        <div style="padding:1.25rem; border-bottom:1px solid var(--border-color);">
+                            <h3 style="margin:0;">Maintenance History</h3>
+                        </div>
+                        <div class="table-container">
+                            <table style="font-size:0.85rem;">
+                                <thead>
+                                    <tr>
+                                        <th>Maintenance ID</th>
+                                        <th>Facility</th>
+                                        <th>Type</th>
+                                        <th>Completed Date</th>
+                                        <th>Duration</th>
+                                        <th>Technician</th>
+                                        <th>Status</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="maint-history-table">
+                                    <tr><td colspan="8" style="text-align:center; padding:2rem; color:var(--text-muted);">Sync to load history...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="analytics" class="section-view">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
+                        <div>
+                            <h2 style="margin:0;">Citizen Reports & Analytics</h2>
+                            <p style="color:var(--text-muted); margin:0.2rem 0 0 0;">Review city-wide report statistics and resolution patterns.</p>
+                        </div>
+                        <div style="display:flex; gap:0.75rem; align-items:center;">
+                            <select class="form-control" style="width:140px; background:var(--card-bg);">
+                                <option>All Categories</option>
+                            </select>
+                            <select class="form-control" style="width:120px; background:var(--card-bg);">
+                                <option>February</option>
+                            </select>
+                            <select class="form-control" style="width:100px; background:var(--card-bg);">
+                                <option>2026</option>
+                            </select>
+                            <button class="primary-action-btn" onclick="fetchAnalytics()" style="padding:0.6rem 1rem;">Update</button>
+                            <button class="action-btn" style="background:var(--input-bg); color:var(--text-main); border:1px solid var(--border-color); padding:0.6rem 1rem;">
+                                <i data-feather="printer" style="width:14px; margin-right:5px;"></i> Print Summary
+                            </button>
+                        </div>
+                    </div>
+
+                    <div style="display:grid; grid-template-columns: 1fr 380px 380px; gap:1.5rem; margin-bottom:1.5rem;">
+                        <div class="content-section" style="padding:1.5rem;">
+                            <h4 style="margin:0 0 1rem 0;">Reporting Trends (Last 6 Months)</h4>
+                            <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:1.5rem;">Total citizen reports per month</p>
+                            <div style="height:300px;"><canvas id="trendChart"></canvas></div>
+                        </div>
+                        <div class="content-section" style="padding:1.5rem;">
+                            <h4 style="margin:0 0 1rem 0;">Status Breakdown</h4>
+                            <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:1.5rem;">Distribution of report statuses</p>
+                            <div style="height:300px; display:flex; justify-content:center;"><canvas id="statusChart"></canvas></div>
+                        </div>
+                        <div class="content-section" style="padding:1.5rem;">
+                            <h4 style="margin:0 0 1rem 0;">AI Sentiment Analysis</h4>
+                            <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:1.5rem;">Community mood detected by AI</p>
+                            <div style="height:300px; display:flex; justify-content:center;"><canvas id="sentimentChart"></canvas></div>
+                        </div>
+                    </div>
+
+                    <div class="content-section" style="padding:1.5rem; margin-bottom:1.5rem;">
+                        <h4 style="margin:0 0 1rem 0;">Top Reported Categories</h4>
+                        <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:1.5rem;">Most frequent issues highlighted by citizens</p>
+                        <div style="height:250px;"><canvas id="topFacilitiesChart"></canvas></div>
+                    </div>
+
+                    <!-- Volume Stats -->
+                    <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:1.5rem; margin-bottom:1.5rem;">
+                        <div class="content-section" style="padding:1.5rem; border-left:4px solid var(--primary);">
+                            <h5 style="margin:0; color:var(--text-muted); font-size:0.75rem; text-transform:uppercase;">Total Reports (This Month)</h5>
+                            <div style="font-size:1.8rem; font-weight:700; margin:0.5rem 0;" id="ana-this-month-total">0</div>
+                            <p style="font-size:0.75rem; color:var(--text-muted); margin:0;">Active feedback from our community</p>
+                        </div>
+                        <div class="content-section" style="padding:1.5rem; border-left:4px solid #10b981;">
+                            <h5 style="margin:0; color:var(--text-muted); font-size:0.75rem; text-transform:uppercase;">Approval Rate</h5>
+                            <div style="font-size:1.8rem; font-weight:700; margin:0.5rem 0;" id="ana-approval-rate">0%</div>
+                            <p style="font-size:0.75rem; color:var(--text-muted); margin:0;" id="ana-approved-count">0 of 0 approved</p>
+                        </div>
+                        <div class="content-section" style="padding:1.5rem; border-left:4px solid #6366f1;">
+                            <h5 style="margin:0; color:var(--text-muted); font-size:0.75rem; text-transform:uppercase;">Resolution Rate</h5>
+                            <div style="font-size:1.8rem; font-weight:700; margin:0.5rem 0;" id="ana-utilization">0%</div>
+                            <p style="font-size:0.75rem; color:var(--text-muted); margin:0;">Solved or addressed issues vs total</p>
+                        </div>
+                    </div>
+
+                    <!-- Global System Stats -->
+                    <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:1.5rem; margin-bottom:1.5rem;">
+                        <div class="content-section" style="padding:1.2rem;">
+                            <div style="color:var(--text-muted); font-size:0.7rem; font-weight:600; text-transform:uppercase;">Total Users</div>
+                            <div style="font-size:1.5rem; font-weight:700; color:var(--primary);" id="ana-total-users">0</div>
+                            <div style="font-size:0.7rem; color:var(--text-muted);">12 active this month</div>
+                        </div>
+                        <div class="content-section" style="padding:1.2rem;">
+                            <div style="color:var(--text-muted); font-size:0.7rem; font-weight:600; text-transform:uppercase;">Available Facilities</div>
+                            <div style="font-size:1.5rem; font-weight:700; color:var(--primary);" id="ana-available-facs">0</div>
+                            <div style="font-size:0.7rem; color:var(--text-muted);">facilities in system</div>
+                        </div>
+                        <div class="content-section" style="padding:1.2rem;">
+                            <div style="color:var(--text-muted); font-size:0.7rem; font-weight:600; text-transform:uppercase;">Total All-time</div>
+                            <div style="font-size:1.5rem; font-weight:700; color:var(--primary);" id="ana-all-time">0</div>
+                            <div style="font-size:0.7rem; color:var(--text-muted);">All reservations ever</div>
+                        </div>
+                        <div class="content-section" style="padding:1.2rem;">
+                            <div style="color:var(--text-muted); font-size:0.7rem; font-weight:600; text-transform:uppercase;">Avg per User</div>
+                            <div style="font-size:1.5rem; font-weight:700; color:var(--primary);" id="ana-avg-user">0</div>
+                            <div style="font-size:0.7rem; color:var(--text-muted);">This month</div>
+                        </div>
+                    </div>
+
+                    <!-- Status Breakdown Row -->
+                    <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:1.5rem; margin-bottom:1.5rem;">
+                        <div style="background:rgba(16, 185, 129, 0.1); padding:1rem; border-radius:12px; text-align:center;">
+                            <div style="font-size:1.5rem; font-weight:700; color:#10b981;" id="ana-status-approved">0</div>
+                            <div style="font-size:0.7rem; font-weight:600; color:#10b981; text-transform:uppercase;">Approved</div>
+                        </div>
+                        <div style="background:rgba(245, 158, 11, 0.1); padding:1rem; border-radius:12px; text-align:center;">
+                            <div style="font-size:1.5rem; font-weight:700; color:#f59e0b;" id="ana-status-pending">0</div>
+                            <div style="font-size:0.7rem; font-weight:600; color:#f59e0b; text-transform:uppercase;">Pending</div>
+                        </div>
+                        <div style="background:rgba(239, 68, 68, 0.1); padding:1rem; border-radius:12px; text-align:center;">
+                            <div style="font-size:1.5rem; font-weight:700; color:#ef4444;" id="ana-status-denied">0</div>
+                            <div style="font-size:0.7rem; font-weight:600; color:#ef4444; text-transform:uppercase;">Rejected</div>
+                        </div>
+                        <div style="background:rgba(100, 116, 139, 0.1); padding:1rem; border-radius:12px; text-align:center;">
+                            <div style="font-size:1.5rem; font-weight:700; color:#64748b;" id="ana-status-cancelled">0</div>
+                            <div style="font-size:0.7rem; font-weight:600; color:#64748b; text-transform:uppercase;">Cancelled</div>
+                        </div>
+                    </div>
+
+                    <!-- Report Categories -->
+                    <div class="content-section" style="padding:1.5rem; margin-bottom:1.5rem;">
+                        <h4 style="margin:0 0 1.5rem 0;">Issue Distribution by Category</h4>
+                        <div id="ana-utilization-list" style="display:flex; flex-direction:column; gap:1.2rem;">
+                            <!-- Progress bars here -->
+                        </div>
+                    </div>
+
+                    <!-- Table Outcomes -->
+                    <div class="content-section" style="padding:1.5rem;">
+                        <h4 style="margin:0 0 1.5rem 0;">Report Outcomes Summary</h4>
+                        <div class="table-container">
+                             <table style="width:100%;">
+                                 <thead>
+                                     <tr>
+                                         <th>Status</th>
+                                         <th>Count</th>
+                                         <th>Share</th>
+                                     </tr>
+                                 </thead>
+                                 <tbody id="ana-outcome-table">
+                                 </tbody>
+                             </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="settings" class="section-view">
 
                      <div class="page-header" style="text-align: center;">
                         <h2>Settings</h2>
@@ -1111,6 +1508,53 @@ if ($checkCol && $checkCol->num_rows > 0) {
             </div>
         </div>
     </div>
+
+    <!-- Announcement Modal -->
+    <div class="modal-overlay" id="announcementModal">
+        <div class="success-modal" style="text-align:left; max-width:500px; width:90%; padding:2rem;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
+                <h3 style="margin:0; color: var(--text-main);">Create Announcement</h3>
+                <button onclick="closeAnnouncementModal()" style="background:none; border:none; color:var(--text-muted); cursor:pointer;"><i data-feather="x"></i></button>
+            </div>
+            <form onsubmit="event.preventDefault(); saveAnnouncement(this);">
+                <div style="margin-bottom:1.2rem;">
+                    <label style="display:block; margin-bottom:5px; color:var(--text-muted); font-size:0.8rem;">Title *</label>
+                    <input type="text" name="title" required class="form-control" style="width:100%;">
+                </div>
+                <div style="margin-bottom:1.2rem;">
+                    <label style="display:block; margin-bottom:5px; color:var(--text-muted); font-size:0.8rem;">Category / Guide (e.g. ADVISORY, HEALTH) *</label>
+                    <input type="text" name="category" required class="form-control" style="width:100%;" placeholder="e.g. ADVISORY">
+                </div>
+                <div style="margin-bottom:1.2rem;">
+                    <label style="display:block; margin-bottom:5px; color:var(--text-muted); font-size:0.8rem;">Content / Meaning *</label>
+                    <textarea name="content" required class="form-control" style="width:100%; min-height:100px;"></textarea>
+                </div>
+                <div style="margin-bottom:1.5rem;">
+                    <label style="display:block; margin-bottom:5px; color:var(--text-muted); font-size:0.8rem;">Feature Image</label>
+                    <input type="file" name="image" accept="image/*" class="form-control" style="width:100%; padding:0.5rem;">
+                </div>
+                <div style="display:flex; gap:1rem;">
+                    <button type="button" onclick="closeAnnouncementModal()" style="flex:1; padding:0.8rem; background:transparent; border:1px solid var(--border-color); color:var(--text-main); border-radius:8px; cursor:pointer;">Cancel</button>
+                    <button type="submit" class="primary-action-btn" style="flex:1;">Post Update</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Logout Confirmation Modal -->
+    <div class="modal-overlay" id="logoutModal">
+        <div class="success-modal" style="text-align:center; max-width:400px; padding:2rem;">
+            <div style="width:60px; height:60px; background:rgba(239, 68, 68, 0.1); border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 1.5rem;">
+                <i data-feather="log-out" style="width:28px; height:28px; color:#ef4444;"></i>
+            </div>
+            <h3 style="margin:0 0 0.5rem 0; color:var(--text-main);">Confirm Logout</h3>
+            <p style="color:var(--text-muted); margin:0 0 2rem 0; font-size:0.9rem;">Are you sure you want to logout from your admin session?</p>
+            <div style="display:flex; gap:1rem;">
+                <button onclick="closeLogoutModal()" style="flex:1; padding:0.8rem; background:transparent; border:1px solid var(--border-color); color:var(--text-main); border-radius:8px; cursor:pointer; font-weight:500;">Cancel</button>
+                <button onclick="confirmLogout()" class="danger-btn" style="flex:1; padding:0.8rem; background:#ef4444; color:white; border:none; border-radius:8px; cursor:pointer; font-weight:500;">Yes, Logout</button>
+            </div>
+        </div>
+    </div>
     
     <script>
         feather.replace();
@@ -1146,8 +1590,11 @@ if ($checkCol && $checkCol->num_rows > 0) {
             else if(id === 'requests') fetchRequests();
             else if(id === 'calendar') fetchCalendar();
             else if(id === 'skill-analytics') fetchSkillAnalytics();
+            else if(id === 'announcements') fetchAnnouncements();
             else if(id === 'skill-mgmt') fetchSkillTests();
             else if(id === 'smart-insights') fetchSmartInsights();
+            else if(id === 'maintenance') fetchMaintenance();
+            else if(id === 'analytics') fetchAnalytics();
             
             feather.replace();
         }
@@ -1172,7 +1619,7 @@ if ($checkCol && $checkCol->num_rows > 0) {
                      
                      tbody.innerHTML += `
                          <tr>
-                             <td><span style="font-weight:600; color:#fff;">${app.full_name}</span></td>
+                             <td><span style="font-weight:600; color:var(--text-main);">${app.full_name}</span></td>
                              <td>${app.program_title}</td>
                              <td>${app.created_at.split(' ')[0]}</td>
                              <td><span class="badge ${statusColor}">${app.status}</span></td>
@@ -1187,6 +1634,104 @@ if ($checkCol && $checkCol->num_rows > 0) {
                  });
                  feather.replace();
              } catch(e) {}
+         }
+
+         async function fetchMaintenance() {
+             const tbody = document.getElementById('maintenance-table');
+             if(!tbody) return;
+             
+             try {
+                 const res = await fetch('api.php?action=get_maintenance');
+                 const data = await res.json();
+                 
+                 if(data.length === 0) {
+                      tbody.innerHTML = '<tr><td colspan="10" style="text-align:center; padding:2rem; color:var(--text-muted);">No maintenance schedules found.</td></tr>';
+                      return;
+                 }
+
+                 tbody.innerHTML = '';
+                 const scheduledDays = [];
+                 
+                 data.forEach(s => {
+                     let pColor = '#f59e0b'; // Medium
+                     if(s.priority === 'High' || s.priority === 'Critical') pColor = '#ef4444';
+                     else if(s.priority === 'Low') pColor = '#10b981';
+
+                     let sColor = '#6366f1'; // Scheduled
+                     if(s.status === 'In Progress') sColor = '#f59e0b';
+                     else if(s.status === 'Completed') sColor = '#10b981';
+                     else if(s.status === 'Delayed') sColor = '#ef4444';
+                     
+                     const dateObj = new Date(s.scheduled_date);
+                     const dateStr = dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                     const timeStr = dateObj.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+                     
+                     if(dateObj.getMonth() === 1 && dateObj.getFullYear() === 2026) {
+                         scheduledDays.push(dateObj.getDate());
+                     }
+
+                     const userHtml = s.full_name ? `
+                        <div style="font-weight:600; color:var(--text-main);">${s.full_name}</div>
+                        <div style="font-size:0.7rem; color:var(--primary); font-family:monospace;">${s.user_ref || '---'}</div>
+                     ` : '<span style="color:var(--text-muted);">Internal Task</span>';
+
+                     tbody.innerHTML += `
+                         <tr>
+                            <td><span style="font-weight:700; color:var(--text-main);">${s.maint_id}</span></td>
+                            <td>${s.facility}</td>
+                            <td>${s.maint_type}</td>
+                            <td>${userHtml}</td>
+                            <td style="font-size:0.75rem;">
+                                <div style="font-weight:600; color:var(--text-main);">${dateStr}</div>
+                                <div style="color:var(--text-muted);">${timeStr}</div>
+                            </td>
+                            <td>${s.duration}</td>
+                            <td><span class="badge" style="background:${pColor}15; color:${pColor}; border:1px solid ${pColor}30;">${s.priority}</span></td>
+                            <td><span class="badge" style="background:${sColor}15; color:${sColor}; border:1px solid ${sColor}30;">${s.status}</span></td>
+                            <td><button class="action-btn" style="padding:0.3rem 0.6rem; font-size:0.7rem;">View Details</button></td>
+                         </tr>
+                     `;
+                 });
+                 
+                 // Update Calendar Grid
+                 const calGrid = document.getElementById('maint-calendar-grid');
+                 if(calGrid) {
+                     calGrid.innerHTML = '';
+                     for(let i=1; i<=28; i++) {
+                         const hasMaint = scheduledDays.includes(i);
+                         calGrid.innerHTML += `
+                            <div style="aspect-ratio:1; display:flex; align-items:center; justify-content:center; border-radius:8px; font-size:0.75rem; color:var(--text-main); background:var(--input-bg); font-weight:600; cursor:pointer; border:1px solid ${hasMaint ? 'var(--primary)' : 'transparent'}; ${hasMaint ? 'background:rgba(99,102,241,0.1);' : ''}">${i}</div>
+                         `;
+                     }
+                 }
+                 
+                 feather.replace();
+             } catch(e) { console.error(e); }
+         }
+
+         async function syncMaintenance() {
+             const btn = event.currentTarget;
+             const originalHtml = btn.innerHTML;
+             btn.innerHTML = '<i data-feather="loader" class="spin" style="width:14px; margin-right:5px;"></i> Syncing...';
+             btn.disabled = true;
+             feather.replace();
+             
+             try {
+                 const res = await fetch('api.php?action=sync_maintenance');
+                 const data = await res.json();
+                 
+                 if(data.success) {
+                     showSuccessModal(`Synchronization complete! Detected ${data.synced_count} new maintenance tasks from reported issues.`);
+                     fetchMaintenance();
+                 } else {
+                     alert('Sync Error: ' + data.error);
+                 }
+             } catch(e) { alert('Connection Error'); }
+             finally {
+                 btn.innerHTML = originalHtml;
+                 btn.disabled = false;
+                 feather.replace();
+             }
          }
 
          async function sendMaterial(id) {
@@ -1222,9 +1767,9 @@ if ($checkCol && $checkCol->num_rows > 0) {
                 data.forEach(p => {
                     tbody.innerHTML += `
                         <tr>
-                            <td><span style="font-weight:600; color:#fff;">${p.title}</span></td>
+                            <td><span style="font-weight:600; color:var(--text-main);">${p.title}</span></td>
                             <td><span class="badge active">${p.category}</span></td>
-                            <td style="color:#aaa; font-size:0.9rem;">${p.description.substring(0,50)}...</td>
+                            <td style="color:var(--text-muted); font-size:0.9rem;">${p.description.substring(0,50)}...</td>
                             <td>
                                 <div style="display:flex; gap:0.5rem; align-items:center;">
                                     <button class="icon-btn" style="background:#334155; border:none; padding:0.4rem;" onclick="openViewModal(${JSON.stringify(p).replace(/"/g, '&quot;')})" title="View Details"><i data-feather="eye" style="width:14px; color:white;"></i></button>
@@ -1253,7 +1798,7 @@ if ($checkCol && $checkCol->num_rows > 0) {
                   data.forEach(d => {
                       tbody.innerHTML += `
                           <tr>
-                              <td><span style="font-weight:600; color:#fff;">${d.title}</span></td>
+                              <td><span style="font-weight:600; color:var(--text-main);">${d.title}</span></td>
                               <td><span class="badge active">${d.category}</span></td>
                               <td><a href="${d.file_path}" target="_blank" style="color:var(--primary); font-size:0.8rem;">View File</a></td>
                               <td>${d.created_at.split(' ')[0]}</td>
@@ -1476,17 +2021,18 @@ if ($checkCol && $checkCol->num_rows > 0) {
                 
                 users.forEach(user => {
                     const initials = user.full_name.substring(0,2).toUpperCase();
+                    const statusBadge = user.is_active == 1 ? '<span class="badge active">Active</span>' : '<span class="badge warning">Suspended</span>';
                     const tr = `
                         <tr>
                             <td>
                                 <div class="user-cell">
                                     <div class="avatar-sm">${initials}</div>
-                                    <span>${user.full_name}</span>
+                                    <span style="${user.is_active == 0 ? 'text-decoration: line-through; color: #64748b;' : ''}">${user.full_name}</span>
                                 </div>
                             </td>
                             <td>${user.email}</td>
                             <td><span class="badge ${user.role === 'admin' ? 'active' : 'pending'}">${user.role}</span></td>
-                            <td><span class="badge active">Active</span></td>
+                            <td>${statusBadge}</td>
                         </tr>
                     `;
                     tbody.innerHTML += tr;
@@ -1512,41 +2058,55 @@ if ($checkCol && $checkCol->num_rows > 0) {
 
                  tbody.innerHTML = '';
                  if (users.length === 0) {
-                     tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:2rem; color:#64748b;">No citizens found.</td></tr>';
+                     tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:2rem; color:#64748b;">No citizens found.</td></tr>';
                      return;
                  }
 
-                 users.forEach(user => {
-                     const date = user.created_at ? user.created_at.split(' ')[0] : '---';
-                     const activeIcon = user.is_active == 1 ? 'user-x' : 'user-check';
-                     const activeLabel = user.is_active == 1 ? 'Deactivate' : 'Activate';
-                     const btnClass = user.is_active == 1 ? 'danger-btn' : 'success-btn';
+                  users.forEach(user => {
+                      const date = user.created_at ? user.created_at.split(' ')[0] : '---';
+                      const activeIcon = user.is_active == 1 ? 'user-x' : 'user-check';
+                      const activeLabel = user.is_active == 1 ? 'Deactivate' : 'Activate';
+                      const btnClass = user.is_active == 1 ? 'danger-btn' : 'success-btn';
+                      const address = `${user.house_number || ''} ${user.street || ''}`.trim() || '---';
+                      const mobile = user.mobile_number || '---';
+                      
+                      let idBadge = '<span class="badge warning">No ID</span>';
+                      if(user.valid_id_path) {
+                          idBadge = `<a href="${user.valid_id_path}" target="_blank" class="badge active" style="text-decoration:none; display:inline-flex; align-items:center; gap:4px;">
+                            <i data-feather="image" style="width:10px;"></i> View ID
+                          </a>`;
+                      }
 
-                     tbody.innerHTML += `<tr>
-                        <td>
-                            <div class="user-cell">
-                                <div class="avatar-sm">${user.full_name.substring(0,2).toUpperCase()}</div>
-                                <span style="${user.is_active == 0 ? 'text-decoration: line-through; color: #64748b;' : ''}">${user.full_name}</span>
-                            </div>
-                        </td>
-                        <td>${user.email}</td>
-                        <td><span class="badge ${user.role === 'admin' ? 'active' : 'pending'}">${user.role}</span></td>
-                        <td>${date}</td>
-                        <td style="display:flex; gap:0.5rem;">
-                            <button class="primary-action-btn" style="padding:0.4rem 0.6rem; font-size:0.7rem;" onclick="approveEdit(${user.id})" title="Authorize Name Edit">
-                                <i data-feather="key" style="width:12px;"></i>
-                            </button>
-                            <button class="${btnClass}" style="padding:0.4rem 0.6rem; font-size:0.7rem; display:flex; align-items:center; gap:4px; border-radius:6px; border:none; cursor:pointer;" onclick="toggleUserStatus(${user.id}, ${user.is_active == 1 ? 0 : 1})">
-                                <i data-feather="${activeIcon}" style="width:12px;"></i> ${activeLabel}
-                            </button>
-                        </td>
-                     </tr>`;
-                 });
+                      tbody.innerHTML += `<tr>
+                         <td>
+                             <div class="user-cell">
+                                 <div class="avatar-sm">${user.full_name.substring(0,2).toUpperCase()}</div>
+                                 <div style="display:flex; flex-direction:column;">
+                                    <span style="${user.is_active == 0 ? 'text-decoration: line-through; color: #64748b;' : ''}; font-weight:600;">${user.full_name}</span>
+                                    <small style="color:#64748b; font-size:0.75rem;">${user.email}</small>
+                                 </div>
+                             </div>
+                         </td>
+                         <td>${mobile}</td>
+                         <td><span style="font-size:0.85rem; color:var(--text-main);">${user.street || '---'}</span></td>
+                         <td><span style="font-size:0.85rem; color:var(--text-main);">${user.house_number || '---'}</span></td>
+                         <td>${date}</td>
+                         <td>${idBadge}</td>
+                         <td style="display:flex; gap:0.5rem;">
+                             <button class="primary-action-btn" style="padding:0.4rem 0.6rem; font-size:0.7rem;" onclick="approveEdit(${user.id})" title="Authorize Name Edit">
+                                 <i data-feather="key" style="width:12px;"></i>
+                             </button>
+                             <button class="${btnClass}" style="padding:0.4rem 0.6rem; font-size:0.7rem; display:flex; align-items:center; gap:4px; border-radius:6px; border:none; cursor:pointer;" onclick="toggleUserStatus(${user.id}, ${user.is_active == 1 ? 0 : 1})">
+                                 <i data-feather="${activeIcon}" style="width:12px;"></i> ${activeLabel}
+                             </button>
+                         </td>
+                      </tr>`;
+                  });
                  feather.replace();
              } catch(e) {
                  console.error(e);
                  const tbody = document.getElementById('all-users-table');
-                 if(tbody) tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:var(--danger);">Connection Error</td></tr>';
+                 if(tbody) tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; color:var(--danger);">Connection Error</td></tr>';
              }
         }
 
@@ -1604,8 +2164,8 @@ if ($checkCol && $checkCol->num_rows > 0) {
 
                      tbody.innerHTML += `<tr>
                         <td>
-                            <div style="font-weight:600">${r.title}</div>
-                            <small style="color:#aaa">${r.description ? r.description.substring(0,30)+'...' : ''}</small>
+                            <div style="font-weight:600; color:var(--text-main);">${r.title}</div>
+                            <small style="color:var(--text-muted);">${r.description ? r.description.substring(0,30)+'...' : ''}</small>
                         </td>
                         <td>${r.full_name}</td>
                         <td><span class="badge ${badgeClass}">${r.status}</span></td>
@@ -1645,7 +2205,7 @@ if ($checkCol && $checkCol->num_rows > 0) {
                     requests.forEach(req => {
                         tableBody.innerHTML += `
                             <tr>
-                                <td>${req.full_name}</td>
+                                <td style="color:var(--text-main); font-weight:600;">${req.full_name}</td>
                                 <td><span class="badge warning">Name Change</span></td>
                                 <td>${req.created_at}</td>
                                 <td>
@@ -1674,13 +2234,13 @@ if ($checkCol && $checkCol->num_rows > 0) {
                 // Add Pending Name Requests to dropdown
                 requests.forEach(req => {
                     notifList.innerHTML += `
-                        <div style="padding:1rem; border-bottom:1px solid #334155; cursor:pointer; background:rgba(251, 191, 36, 0.05);" onclick="showSection('requests')">
+                        <div style="padding:1rem; border-bottom:1px solid var(--border-color); cursor:pointer; background:rgba(251, 191, 36, 0.05);" onclick="showSection('requests')">
                             <div style="display:flex; justify-content:space-between; align-items:start;">
-                                <h5 style="margin:0; font-size:0.85rem; color:#fff;">${req.full_name}</h5>
+                                <h5 style="margin:0; font-size:0.85rem; color:var(--text-main);">${req.full_name}</h5>
                                 <span style="font-size:0.6rem; color:#fbbf24; text-transform:uppercase; font-weight:700;">Request</span>
                             </div>
-                            <p style="margin:5px 0 0 0; font-size:0.75rem; color:#94a3b8;">Requested access to change account name.</p>
-                            <small style="font-size:0.65rem; color:#475569; display:block; margin-top:5px;">${req.created_at}</small>
+                            <p style="margin:5px 0 0 0; font-size:0.75rem; color:var(--text-muted);">Requested access to change account name.</p>
+                            <small style="font-size:0.65rem; color:var(--text-muted); display:block; margin-top:5px;">${req.created_at}</small>
                         </div>
                     `;
                 });
@@ -1766,10 +2326,23 @@ if ($checkCol && $checkCol->num_rows > 0) {
                 document.body.classList.add('light-theme');
                 document.getElementById('btn-light').classList.add('active');
                 document.getElementById('btn-dark').classList.remove('active');
+                
+                // Update specific dynamic elements if they exist
+                const dropdown = document.getElementById('notif-dropdown');
+                if(dropdown) {
+                    dropdown.style.background = '#ffffff';
+                    dropdown.style.borderColor = '#e2e8f0';
+                }
             } else {
                 document.body.classList.remove('light-theme');
                 document.getElementById('btn-dark').classList.add('active');
                 document.getElementById('btn-light').classList.remove('active');
+                
+                const dropdown = document.getElementById('notif-dropdown');
+                if(dropdown) {
+                    dropdown.style.background = '#1e293b';
+                    dropdown.style.borderColor = '#334155';
+                }
             }
             localStorage.setItem('theme', theme);
         }
@@ -1997,16 +2570,16 @@ if ($checkCol && $checkCol->num_rows > 0) {
                 const hasTags = ev.tagged_names ? true : false;
                 
                 list.innerHTML += `
-                    <div style="background:rgba(255,255,255,0.03); border-radius:12px; padding:1rem; border:1px solid var(--border-color); position:relative;">
+                    <div style="background:var(--input-bg); border-radius:12px; padding:1rem; border:1px solid var(--border-color); position:relative;">
                         <button class="icon-btn" onclick="deleteCalendarEvent(${ev.id})" style="position:absolute; top:10px; right:10px; color:var(--danger); opacity:0.6;"><i data-feather="trash-2" style="width:14px;"></i></button>
                         <div style="display:flex; align-items:center; gap:0.5rem; margin-bottom:0.5rem;">
                             <span class="badge" style="font-size:0.7rem; background:rgba(99, 102, 241, 0.2); color:var(--primary); ">${ev.type.toUpperCase()}</span>
-                            <span style="font-size:0.8rem; color:#64748b;"><i data-feather="clock" style="width:12px; vertical-align:middle; margin-right:4px;"></i>${ev.event_date} @ ${timeStr}</span>
+                            <span style="font-size:0.8rem; color:var(--text-muted);"><i data-feather="clock" style="width:12px; vertical-align:middle; margin-right:4px;"></i>${ev.event_date} @ ${timeStr}</span>
                         </div>
-                        <h4 style="margin:0 0 5px 0; font-size:1rem; color:#fff;">${ev.title}</h4>
-                        <p style="margin:0; font-size:0.85rem; color:#94a3b8;">${ev.description || 'No description'}</p>
-                        ${hasTags ? `<div style="margin-top:10px; font-size:0.75rem; color:var(--success); border-top:1px solid #334155; padding-top:8px; line-height: 1.4;">
-                            <i data-feather="users" style="width:10px;"></i> Tagged: <span style="color:#d1d5db;">${ev.tagged_names}</span>
+                        <h4 style="margin:0 0 5px 0; font-size:1rem; color:var(--text-main);">${ev.title}</h4>
+                        <p style="margin:0; font-size:0.85rem; color:var(--text-muted);">${ev.description || 'No description'}</p>
+                        ${hasTags ? `<div style="margin-top:10px; font-size:0.75rem; color:var(--success); border-top:1px solid var(--border-color); padding-top:8px; line-height: 1.4;">
+                            <i data-feather="users" style="width:10px;"></i> Tagged: <span style="color:var(--text-muted);">${ev.tagged_names}</span>
                         </div>` : ''}
                     </div>
                 `;
@@ -2075,9 +2648,9 @@ if ($checkCol && $checkCol->num_rows > 0) {
                                 '<span style="color:#fbbf24; font-size:0.75rem;">Stg ' + u.current_stage + '</span>';
                             
                             userRows += `
-                                <tr style="border-bottom:1px solid rgba(255,255,255,0.05);">
-                                    <td style="font-size:0.8rem; color:#e2e8f0; padding:0.5rem 1rem;">${u.full_name}</td>
-                                    <td style="font-size:0.75rem; color:#94a3b8; padding:0.5rem 1rem;">${u.started_at ? u.started_at.split(' ')[0] : '-'}</td>
+                                <tr style="border-bottom:1px solid var(--border-color);">
+                                    <td style="font-size:0.8rem; color:var(--text-main); padding:0.5rem 1rem; font-weight:600;">${u.full_name}</td>
+                                    <td style="font-size:0.75rem; color:var(--text-muted); padding:0.5rem 1rem;">${u.started_at ? u.started_at.split(' ')[0] : '-'}</td>
                                     <td style="padding:0.5rem 1rem;">${statusBadge}</td>
                                 </tr>
                             `;
@@ -2088,10 +2661,10 @@ if ($checkCol && $checkCol->num_rows > 0) {
                         <div style="background:var(--card-bg); border:1px solid var(--border-color); border-radius:12px; overflow:hidden; display:flex; flex-direction:column;">
                             <div style="padding:1rem 1.25rem; border-bottom:1px solid var(--border-color); display:flex; justify-content:space-between; align-items:center;">
                                 <div>
-                                    <h3 style="margin:0 0 2px 0; font-size:1rem; color:#fff;">${test.title}</h3>
-                                    <div style="font-size:0.75rem; color:#94a3b8;">
-                                        <span style="color:#fff;">${test.enrolled}</span> Enrolled &bull; 
-                                        <span style="color:#10b981;">${test.completed}</span> Done
+                                    <h3 style="margin:0 0 2px 0; font-size:1rem; color:var(--text-main); font-weight:700;">${test.title}</h3>
+                                    <div style="font-size:0.75rem; color:var(--text-muted);">
+                                        <span style="color:var(--text-main); font-weight:600;">${test.enrolled}</span> Enrolled &bull; 
+                                        <span style="color:#10b981; font-weight:600;">${test.completed}</span> Done
                                     </div>
                                 </div>
                                 <div style="text-align:right;">
@@ -2139,26 +2712,26 @@ if ($checkCol && $checkCol->num_rows > 0) {
                     container.innerHTML += `
                         <div class="skill-mgmt-card" style="background:var(--card-bg); border:1px solid var(--border-color); border-radius:12px; overflow:hidden; display:flex; flex-direction:column; box-shadow:0 4px 6px -1px rgba(0,0,0,0.1); transition:transform 0.2s, border-color 0.2s;">
                             <div style="height:110px; background:url('${t.thumbnail}') center/cover; position:relative;">
-                                <div style="position:absolute; inset:0; background:linear-gradient(to top, rgba(15,23,42,1), transparent);"></div>
+                                <div style="position:absolute; inset:0; background:linear-gradient(to top, rgba(0,0,0,0.8), transparent);"></div>
                                 <div style="position:absolute; bottom:0.8rem; left:1rem; right:1rem;">
-                                    <h3 style="color:#fff; margin:0; font-size:1rem; text-shadow:0 1px 2px rgba(0,0,0,0.8);">${t.title}</h3>
+                                    <h3 style="color:#fff; margin:0; font-size:1.1rem; font-weight:700;">${t.title}</h3>
                                 </div>
                             </div>
                             <div style="padding:1rem; flex:1; display:flex; flex-direction:column;">
-                                <p style="color:#94a3b8; font-size:0.8rem; margin-bottom:1rem; flex:1; line-height:1.4;">${t.description.substring(0,80)}...</p>
+                                <p style="color:var(--text-muted); font-size:0.85rem; margin-bottom:1rem; flex:1; line-height:1.4;">${t.description.substring(0,80)}...</p>
                                 
                                 <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.5rem; margin-bottom:0.75rem;">
                                     <button onclick="openSkillModal(${t.id}, '${safeTitle}', '${safeDesc}', '${t.thumbnail}')" 
-                                            style="padding:0.5rem; border-radius:6px; border:1px solid #475569; background:transparent; color:#e2e8f0; font-size:0.75rem; cursor:pointer; transition:all 0.2s; display:flex; align-items:center; justify-content:center; gap:0.3rem;">
+                                            style="padding:0.5rem; border-radius:6px; border:1px solid var(--border-color); background:transparent; color:var(--text-main); font-size:0.75rem; font-weight:600; cursor:pointer; transition:all 0.2s; display:flex; align-items:center; justify-content:center; gap:0.3rem;">
                                         <i data-feather="edit-2" style="width:12px;"></i> Edit
                                     </button>
                                     <button onclick="openStagesModal(${t.id}, '${safeTitle}')" 
-                                            style="padding:0.5rem; border-radius:6px; border:1px solid var(--primary); background:rgba(99,102,241,0.1); color:var(--primary); font-size:0.75rem; cursor:pointer; transition:all 0.2s; display:flex; align-items:center; justify-content:center; gap:0.3rem;">
+                                            style="padding:0.5rem; border-radius:6px; border:1px solid var(--primary); background:rgba(99,102,241,0.1); color:var(--primary); font-size:0.75rem; font-weight:600; cursor:pointer; transition:all 0.2s; display:flex; align-items:center; justify-content:center; gap:0.3rem;">
                                         <i data-feather="list" style="width:12px;"></i> Stages
                                     </button>
                                 </div>
                                 <button onclick="deleteSkillTest(${t.id})" 
-                                        style="width:100%; border:none; background:transparent; color:#ef4444; font-size:0.75rem; cursor:pointer; opacity:0.8; transition:opacity 0.2s; display:flex; align-items:center; justify-content:center; gap:0.3rem;">
+                                        style="width:100%; border:none; background:transparent; color:#ef4444; font-size:0.75rem; font-weight:600; cursor:pointer; opacity:0.8; transition:opacity 0.2s; display:flex; align-items:center; justify-content:center; gap:0.3rem;">
                                     Delete
                                 </button>
                             </div>
@@ -2336,8 +2909,8 @@ if ($checkCol && $checkCol->num_rows > 0) {
                             <div style="background:${bg}; border:1px solid ${bg.replace('0.1','0.2')}; padding:0.8rem; border-radius:8px; display:flex; gap:0.8rem; align-items:center;">
                                 <i data-feather="${icon}" style="color:${color}; width:16px;"></i>
                                 <div style="flex:1;">
-                                     <div style="color:#fff; font-size:0.8rem; font-weight:600;">${issue.title || 'Report'}</div>
-                                     <div style="font-size:0.75rem; color:${color}; opacity:0.8;">"${issue.text}"</div>
+                                     <div style="color:var(--text-main); font-size:0.8rem; font-weight:600;">${issue.title || 'Report'}</div>
+                                     <div style="font-size:0.75rem; color:var(--text-muted); opacity:0.8;">"${issue.text}"</div>
                                 </div>
                                 <div style="font-size:0.6rem; text-transform:uppercase; font-weight:700; color:${color};">${issue.sentiment}</div>
                             </div>
@@ -2416,10 +2989,21 @@ if ($checkCol && $checkCol->num_rows > 0) {
         // --- Init ---
         document.querySelector('.logout-btn').addEventListener('click', (e) => {
             e.preventDefault();
-            if(confirm('Are you sure you want to logout?')) {
-                window.location.href = 'logout.php';
-            }
+            openLogoutModal();
         });
+
+        function openLogoutModal() {
+            document.getElementById('logoutModal').classList.add('show');
+            feather.replace();
+        }
+
+        function closeLogoutModal() {
+            document.getElementById('logoutModal').classList.remove('show');
+        }
+
+        function confirmLogout() {
+            window.location.href = 'logout.php';
+        }
 
         updateStats(); 
         fetchRecentUsers();
@@ -2429,6 +3013,222 @@ if ($checkCol && $checkCol->num_rows > 0) {
         setInterval(fetchRecentUsers, 10000); 
         setInterval(fetchRequests, 5000); 
         setInterval(fetchApplications, 30000); 
+        // --- ANNOUNCEMENTS ---
+        function openAnnouncementModal() {
+            document.getElementById('announcementModal').classList.add('show');
+        }
+        function closeAnnouncementModal() {
+            document.getElementById('announcementModal').classList.remove('show');
+        }
+
+        async function fetchAnnouncements() {
+            try {
+                const res = await fetch('api.php?action=get_announcements');
+                const data = await res.json();
+                const tbody = document.getElementById('announcements-table');
+                tbody.innerHTML = '';
+                
+                if (data.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:2rem; color:#64748b;">No announcements yet.</td></tr>';
+                    return;
+                }
+
+                data.forEach(ann => {
+                    const img = ann.image_path ? `<img src="${ann.image_path}" style="width:50px; height:50px; object-fit:cover; border-radius:4px;">` : `<div style="width:50px; height:50px; background:var(--input-bg); border-radius:4px; display:flex; align-items:center; justify-content:center; border:1px solid var(--border-color); color:var(--text-muted);"><i data-feather="image" style="width:16px;"></i></div>`;
+                    const date = ann.created_at.split(' ')[0];
+                    tbody.innerHTML += `
+                        <tr>
+                            <td>${img}</td>
+                            <td>
+                                <div style="font-weight:600; color:var(--text-main);">${ann.title}</div>
+                                <div style="font-size:0.75rem; color:var(--text-muted); max-width:250px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${ann.content}</div>
+                            </td>
+                            <td><span class="badge active">${ann.category.toUpperCase()}</span></td>
+                            <td style="color:var(--text-muted); font-size:0.85rem;">${date}</td>
+                            <td>
+                                <button class="danger-btn" style="padding:0.4rem; border-radius:6px; cursor:pointer;" onclick="deleteAnnouncement(${ann.id})"><i data-feather="trash-2" style="width:14px;"></i></button>
+                            </td>
+                        </tr>
+                    `;
+                });
+                feather.replace();
+            } catch (e) { console.error(e); }
+        }
+
+        async function saveAnnouncement(form) {
+            const formData = new FormData(form);
+            try {
+                const res = await fetch('api.php?action=create_announcement', {
+                    method: 'POST',
+                    body: formData
+                });
+                const result = await res.json();
+                if (result.success) {
+                    closeAnnouncementModal();
+                    form.reset();
+                    showSuccessModal('Announcement posted successfully!');
+                    fetchAnnouncements();
+                } else {
+                    alert('Error: ' + result.error);
+                }
+            } catch (e) { alert('Connection Error'); }
+        }
+
+        async function deleteAnnouncement(id) {
+            if (!confirm('Are you sure you want to delete this announcement?')) return;
+            try {
+                const res = await fetch('api.php?action=delete_announcement', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id })
+                });
+                const result = await res.json();
+                if (result.success) {
+                    fetchAnnouncements();
+                } else {
+                    alert('Error: ' + result.error);
+                }
+            } catch (e) { alert('Connection Error'); }
+        }
+
+        let trendChart, statusChart, topFacChart;
+
+        async function fetchAnalytics() {
+            try {
+                const res = await fetch('api.php?action=get_analytics');
+                const data = await res.json();
+
+                // Summary
+                 // Summary
+                 document.getElementById('ana-this-month-total').innerText = data.summary.total_this_month;
+                 document.getElementById('ana-approval-rate').innerText = data.summary.approval_rate + '%';
+                 document.getElementById('ana-approved-count').innerText = `${data.status_breakdown.approved || 0} of ${data.summary.total_this_month} approved`;
+                 document.getElementById('ana-utilization').innerText = data.summary.utilization;
+                 
+                 document.getElementById('ana-total-users').innerText = data.summary.total_users;
+                 document.getElementById('ana-available-facs').innerText = data.facility_utilization ? data.facility_utilization.length : 0;
+                 document.getElementById('ana-all-time').innerText = data.summary.total_all_time;
+                 document.getElementById('ana-avg-user').innerText = data.summary.avg_per_user;
+
+                 // Status
+                 document.getElementById('ana-status-approved').innerText = data.status_breakdown.approved || 0;
+                 document.getElementById('ana-status-pending').innerText = data.status_breakdown.pending || 0;
+                 document.getElementById('ana-status-denied').innerText = data.status_breakdown.rejected || 0;
+                 document.getElementById('ana-status-cancelled').innerText = data.status_breakdown.cancelled || 0;
+
+                 // Charts - Trends
+                 const ctxTrend = document.getElementById('trendChart').getContext('2d');
+                 if(trendChart) trendChart.destroy();
+                 trendChart = new Chart(ctxTrend, {
+                     type: 'line',
+                     data: {
+                         labels: data.trends.labels,
+                         datasets: [{
+                             label: 'New Reports',
+                             data: data.trends.data,
+                             borderColor: '#6366f1',
+                             backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                             fill: true,
+                             tension: 0.4
+                         }]
+                     },
+                     options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+                 });
+
+                 // Status Chart
+                 const ctxStatus = document.getElementById('statusChart').getContext('2d');
+                 if(statusChart) statusChart.destroy();
+                 statusChart = new Chart(ctxStatus, {
+                     type: 'doughnut',
+                     data: {
+                         labels: ['Approved', 'Pending', 'Rejected'],
+                         datasets: [{
+                             data: [data.status_breakdown.approved || 0, data.status_breakdown.pending || 0, data.status_breakdown.rejected || 0],
+                             backgroundColor: ['#10b981', '#f59e0b', '#ef4444'],
+                             borderWidth: 0
+                         }]
+                     },
+                     options: { responsive: true, maintainAspectRatio: false, cutout: '70%', plugins: { legend: { position: 'bottom' } } }
+                 });
+
+                 // Top Categories Bar
+                 const ctxTop = document.getElementById('topFacilitiesChart').getContext('2d');
+                 if(topFacChart) topFacChart.destroy();
+                 topFacChart = new Chart(ctxTop, {
+                     type: 'bar',
+                     data: {
+                         labels: data.top_facilities.labels,
+                         datasets: [{
+                             label: 'Reports count',
+                             data: data.top_facilities.data,
+                             backgroundColor: '#3b82f6',
+                             borderRadius: 8
+                         }]
+                     },
+                     options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+                 });
+
+                 // Report Categories Progress Bars
+                 const utilList = document.getElementById('ana-utilization-list');
+                 utilList.innerHTML = '';
+                 if(data.facility_utilization && data.facility_utilization.length > 0) {
+                     data.facility_utilization.forEach(f => {
+                         utilList.innerHTML += `
+                            <div style="flex:1;">
+                                <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
+                                    <span style="font-size:0.85rem; font-weight:600; color:var(--text-main);">${f.name} <small style="color:var(--text-muted); font-weight:normal;">(${f.count} reports)</small></span>
+                                    <span style="font-size:0.8rem; font-weight:700; color:var(--primary);">${f.percentage}%</span>
+                                </div>
+                                <div style="width:100%; height:8px; background:var(--input-bg); border-radius:10px; overflow:hidden; border:1px solid var(--border-color);">
+                                    <div style="width:${f.percentage}%; height:100%; background:linear-gradient(to right, var(--primary), #3b82f6); border-radius:10px;"></div>
+                                </div>
+                            </div>
+                         `;
+                     });
+                 } else {
+                     utilList.innerHTML = '<div style="text-align:center; color:var(--text-muted); padding:1rem;">No reports categorized yet.</div>';
+                 }
+
+                 // Outcome Table
+                 const outcomeTable = document.getElementById('ana-outcome-table');
+                 outcomeTable.innerHTML = '';
+                 data.outcomes.forEach(o => {
+                     let color = '#10b981';
+                     if(o.status === 'Rejected') color = '#ef4444';
+                     else if(o.status === 'Cancelled') color = '#64748b';
+                     else if(o.status === 'Pending') color = '#f59e0b';
+                     
+                     outcomeTable.innerHTML += `
+                        <tr>
+                            <td><span class="badge" style="background:${color}15; color:${color}; border:1px solid ${color}30;">${o.status}</span></td>
+                            <td style="font-weight:700; color:var(--text-main);">${o.count}</td>
+                            <td style="color:var(--text-muted);">${o.share}%</td>
+                        </tr>
+                     `;
+                 });
+ 
+                 // AI Sentiment Chart
+                 const ctxSenti = document.getElementById('sentimentChart');
+                 if(ctxSenti) {
+                     const ctx = ctxSenti.getContext('2d');
+                     if(window.sentimentChartObj) window.sentimentChartObj.destroy();
+                     window.sentimentChartObj = new Chart(ctx, {
+                         type: 'doughnut',
+                         data: {
+                             labels: ['Positive', 'Neutral', 'Negative'],
+                             datasets: [{
+                                 data: [data.sentiments?.positive || 0, data.sentiments?.neutral || 0, data.sentiments?.negative || 0],
+                                 backgroundColor: ['#10b981', '#64748b', '#ef4444'],
+                                 borderWidth: 0
+                             }]
+                         },
+                         options: { responsive: true, maintainAspectRatio: false, cutout: '70%', plugins: { legend: { position: 'bottom' } } }
+                     });
+                 }
+
+                feather.replace();
+            } catch(e) { console.error("Analytics Error", e); }
+        }
     </script>
 </body>
 </html>
