@@ -3062,7 +3062,17 @@ if ($checkCol && $checkCol->num_rows > 0) {
                     method: 'POST',
                     body: formData
                 });
-                const result = await res.json();
+                
+                const text = await res.text();
+                let result;
+                try {
+                    result = JSON.parse(text);
+                } catch(e) {
+                    console.error('Server Error:', text);
+                    alert('Server Error: ' + text.substring(0, 100));
+                    return;
+                }
+
                 if (result.success) {
                     closeAnnouncementModal();
                     form.reset();
@@ -3071,7 +3081,10 @@ if ($checkCol && $checkCol->num_rows > 0) {
                 } else {
                     alert('Error: ' + result.error);
                 }
-            } catch (e) { alert('Connection Error'); }
+            } catch (e) { 
+                console.error(e);
+                alert('Connection Error: ' + e.message); 
+            }
         }
 
         async function deleteAnnouncement(id) {

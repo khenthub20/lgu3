@@ -1662,13 +1662,28 @@ if ($action === 'create_announcement') {
 
     if (isset($_FILES['image']) && $_FILES['image']['error'] == 0) {
         $target_dir = "uploads/announcements/";
-        if (!file_exists($target_dir)) mkdir($target_dir, 0777, true);
+        if (!file_exists($target_dir)) {
+            if (!mkdir($target_dir, 0755, true)) {
+                echo json_encode(['error' => 'Failed to create upload directory']);
+                exit;
+            }
+        }
         
-        $fileName = time() . "_" . basename($_FILES["image"]["name"]);
+        $fileExt = strtolower(pathinfo($_FILES["image"]["name"], PATHINFO_EXTENSION));
+        $allowed = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+        if(!in_array($fileExt, $allowed)) {
+             echo json_encode(['error' => 'Invalid file type']);
+             exit;
+        }
+
+        $fileName = time() . "_" . uniqid() . "." . $fileExt;
         $target_file = $target_dir . $fileName;
         
         if (move_uploaded_file($_FILES["image"]["tmp_name"], $target_file)) {
             $imagePath = $target_file;
+        } else {
+            echo json_encode(['error' => 'Failed to move uploaded file']);
+            exit;
         }
     }
 
