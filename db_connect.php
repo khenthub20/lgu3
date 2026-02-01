@@ -20,7 +20,12 @@ $conn = new mysqli($servername, $username, $password, $dbname);
 
 // Check connection
 if ($conn->connect_error) {
-    die("Connection failed: " . $conn->connect_error);
+    if (defined('API_MODE')) {
+        // Return null/error but don't die text output
+        // The API script will handle the error response
+    } else {
+        die("Connection failed: " . $conn->connect_error);
+    }
 }
 
 // --- SCHEMA AUTO-HEAL: Reference ID ---
