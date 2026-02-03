@@ -1033,23 +1033,23 @@ if (empty($skillRow['skills'])) {
 
                     <div class="schedule-grid">
                         <!-- Calendar Graphic -->
-                        <div class="content-section" style="padding:1.5rem; background:var(--card-bg); border-radius:16px; border:1px solid var(--border-color);">
+                        <div class="content-section" style="padding:1.5rem; background:#0f172a; border-radius:16px; border:1px solid #334155; color: white;">
                             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
-                                <h3 id="calendar-month-year" style="margin:0;">Month Year</h3>
+                                <h3 id="calendar-month-year" style="margin:0; color:white;">Month Year</h3>
                                 <div style="display:flex; gap:0.5rem;">
                                     <button class="icon-btn" onclick="prevMonth()" style="background:none; border:none; color:white; cursor:pointer;"><i data-feather="chevron-left"></i></button>
                                     <button class="icon-btn" onclick="nextMonth()" style="background:none; border:none; color:white; cursor:pointer;"><i data-feather="chevron-right"></i></button>
                                 </div>
                             </div>
-                            <div id="calendar-grid" style="display:grid; grid-template-columns: repeat(7, 1fr); gap:2px; background:var(--border-color); border:1px solid var(--border-color); border-radius:8px; overflow:hidden;">
+                            <div id="calendar-grid" style="display:grid; grid-template-columns: repeat(7, 1fr); gap:2px; background:#334155; border:1px solid #334155; border-radius:8px; overflow:hidden;">
                                 <!-- Header -->
-                                <div style="background:var(--input-bg); padding:0.75rem; text-align:center; font-size:0.8rem; color:var(--text-muted); font-weight:600;">SUN</div>
-                                <div style="background:var(--input-bg); padding:0.75rem; text-align:center; font-size:0.8rem; color:var(--text-muted); font-weight:600;">MON</div>
-                                <div style="background:var(--input-bg); padding:0.75rem; text-align:center; font-size:0.8rem; color:var(--text-muted); font-weight:600;">TUE</div>
-                                <div style="background:var(--input-bg); padding:0.75rem; text-align:center; font-size:0.8rem; color:var(--text-muted); font-weight:600;">WED</div>
-                                <div style="background:var(--input-bg); padding:0.75rem; text-align:center; font-size:0.8rem; color:var(--text-muted); font-weight:600;">THU</div>
-                                <div style="background:var(--input-bg); padding:0.75rem; text-align:center; font-size:0.8rem; color:var(--text-muted); font-weight:600;">FRI</div>
-                                <div style="background:var(--input-bg); padding:0.75rem; text-align:center; font-size:0.8rem; color:var(--text-muted); font-weight:600;">SAT</div>
+                                <div style="background:#1e293b; padding:0.75rem; text-align:center; font-size:0.8rem; color:#94a3b8; font-weight:600;">SUN</div>
+                                <div style="background:#1e293b; padding:0.75rem; text-align:center; font-size:0.8rem; color:#94a3b8; font-weight:600;">MON</div>
+                                <div style="background:#1e293b; padding:0.75rem; text-align:center; font-size:0.8rem; color:#94a3b8; font-weight:600;">TUE</div>
+                                <div style="background:#1e293b; padding:0.75rem; text-align:center; font-size:0.8rem; color:#94a3b8; font-weight:600;">WED</div>
+                                <div style="background:#1e293b; padding:0.75rem; text-align:center; font-size:0.8rem; color:#94a3b8; font-weight:600;">THU</div>
+                                <div style="background:#1e293b; padding:0.75rem; text-align:center; font-size:0.8rem; color:#94a3b8; font-weight:600;">FRI</div>
+                                <div style="background:#1e293b; padding:0.75rem; text-align:center; font-size:0.8rem; color:#94a3b8; font-weight:600;">SAT</div>
                                 <!-- Days populated by JS -->
                             </div>
                         </div>
@@ -2083,17 +2083,20 @@ if (empty($skillRow['skills'])) {
 
             for(let i=0; i<firstDay; i++) {
                 const dev = document.createElement('div');
-                dev.style.cssText = "background:var(--input-bg); height:100px; padding:10px; opacity:0.3;";
+                // Force dark look matching Image 0
+                dev.style.cssText = "background:#0f172a; height:100px; padding:10px; opacity:0.3;";
                 grid.appendChild(dev);
             }
 
             for(let d=1; d<=daysInMonth; d++) {
                 const dayBox = document.createElement('div');
-                dayBox.style.cssText = "background:var(--card-bg); height:100px; padding:10px; font-size:0.9rem; border:1px solid var(--border-color); display:flex; flex-direction:column; gap:5px; overflow:hidden;";
+                // Force dark look matching Image 0
+                dayBox.style.cssText = "background:#1e293b; height:100px; padding:10px; font-size:0.9rem; border:1px solid #334155; display:flex; flex-direction:column; gap:5px; overflow:hidden;";
                 
                 const dayNum = document.createElement('span');
                 dayNum.innerText = d;
                 dayNum.style.fontWeight = "600";
+                dayNum.style.color = "#fff"; // Force white text
                 dayBox.appendChild(dayNum);
 
                 const dateStr = `${currentYear}-${String(currentMonth + 1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
@@ -2101,7 +2104,7 @@ if (empty($skillRow['skills'])) {
                 const dayEvents = calendarEvents.filter(e => e.event_date === dateStr);
                 dayEvents.forEach(ev => {
                     const dot = document.createElement('div');
-                    let color = "var(--primary)";
+                    let color = "#6366f1"; // Default primary
                     if(ev.type === 'training') color = "#10b981";
                     if(ev.type === 'work') color = "#f59e0b";
                     
