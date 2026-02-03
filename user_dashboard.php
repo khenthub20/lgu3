@@ -100,6 +100,12 @@ if (empty($skillRow['skills'])) {
             margin-bottom: 0.5rem;
         }
         .rec-score { float: right; color: #10b981; font-size: 0.8rem; font-weight: 600; }
+
+        /* Schedule Grid Expansion */
+        .schedule-grid { display: flex; flex-direction: column; gap: 1.5rem; }
+        @media (min-width: 992px) {
+            .schedule-grid { display: grid; grid-template-columns: 2fr 1fr; }
+        }
         
         /* Profile Image Styles */
         .profile-upload-container { display: flex; flex-direction: column; align-items: center; gap: 1rem; margin-bottom: 2rem; }
@@ -1094,22 +1100,23 @@ if (empty($skillRow['skills'])) {
 
                     <!-- Active Test View (Hidden by default) -->
                     <div id="skill-detail-view" style="display: none;">
-                        <button onclick="showSkillCatalog()" class="action-btn" style="background:transparent; border:1px solid #64748b; margin-bottom:1rem;">
+                        <button onclick="showSkillCatalog()" class="action-btn" style="background:transparent; border:1px solid #64748b; margin-bottom:1rem; color:var(--text-main);">
                             <i data-feather="arrow-left" style="width:16px; margin-right:5px; vertical-align:middle;"></i> Back to Catalog
                         </button>
                         
-                        <div class="doc-card" style="border:1px solid var(--primary); background: linear-gradient(145deg, rgba(30, 41, 59, 0.8), rgba(15, 23, 42, 0.9));">
-                            <h2 id="active-test-title" style="color: var(--text-main); margin-bottom:0.5rem;">Test Title</h2>
+                        <!-- Force Dark Premium Look -->
+                        <div class="doc-card" style="border:1px solid var(--primary) !important; background: linear-gradient(145deg, #1e293b, #0f172a) !important; color: white !important;">
+                            <h2 id="active-test-title" style="color: white !important; margin-bottom:0.5rem;">Test Title</h2>
                             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
-                                 <span style="color:#94a3b8; font-size:0.9rem;" id="active-test-stages-count">5 Stages</span>
+                                 <span style="color:#94a3b8 !important; font-size:0.9rem;" id="active-test-stages-count">5 Stages</span>
                                  <span class="badgex" style="background:rgba(16,185,129,0.2); color:#10b981; padding:2px 8px; border-radius:4px; font-size:0.8rem;" id="active-test-status">In Progress</span>
                             </div>
                             
-                            <div style="display:flex; justify-content:space-between; color:#cbd5e1; font-size:0.85rem; margin-bottom:5px;">
+                            <div style="display:flex; justify-content:space-between; color:#cbd5e1 !important; font-size:0.85rem; margin-bottom:5px;">
                                 <span>Progress</span>
                                 <span id="active-progress-text">0%</span>
                             </div>
-                            <div class="progress-container">
+                            <div class="progress-container" style="background:rgba(255,255,255,0.1);">
                                 <div class="progress-bar" id="active-progress-bar"></div>
                             </div>
                             
