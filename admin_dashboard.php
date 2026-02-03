@@ -3298,23 +3298,29 @@ if ($checkCol && $checkCol->num_rows > 0) {
                     }
                 } catch(e) { console.error("Status Chart Error", e); }
 
-                // Top Categories Bar
+                // Top Categories Doughnut (User Requested)
                 try {
                     const ctxTop = document.getElementById('topFacilitiesChart')?.getContext('2d');
                     if(ctxTop) {
                         if(topFacChart) topFacChart.destroy();
                         topFacChart = new Chart(ctxTop, {
-                            type: 'bar',
+                            type: 'doughnut',
                             data: {
                                 labels: data.top_facilities?.labels ?? [],
                                 datasets: [{
-                                    label: 'Reports count',
                                     data: data.top_facilities?.data ?? [],
-                                    backgroundColor: '#3b82f6',
-                                    borderRadius: 8
+                                    backgroundColor: ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#64748b'],
+                                    borderWidth: 0
                                 }]
                             },
-                            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+                            options: { 
+                                responsive: true, 
+                                maintainAspectRatio: false, 
+                                cutout: '70%',
+                                plugins: { 
+                                    legend: { position: 'bottom' } 
+                                } 
+                            }
                         });
                     }
                 } catch(e) { console.error("Top Categories Chart Error", e); }

@@ -76,6 +76,7 @@ if (empty($skillRow['skills'])) {
     <title>User Dashboard | LGU3 Livelihood</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="sidebar-modern.css">
     <script src="https://unpkg.com/feather-icons"></script>
     <style>
         .section-view { display: none; animation: fadeIn 0.3s ease; }
@@ -690,58 +691,81 @@ if (empty($skillRow['skills'])) {
         <?php endif; ?>
         <!-- Sidebar -->
         <aside class="sidebar <?php echo ($is_active === 0) ? 'account-suspended' : ''; ?>" id="sidebar">
-            <div class="sidebar-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
-                <div class="logo" style="display: flex; align-items: center; gap: 10px;">
-                    <img src="laforteza_logo.jpg" style="width: 30px; height: 30px; border-radius: 6px; object-fit: cover;">
-                    <div style="font-size: 1.1rem; line-height: 1;">LGU3<span style="display: block; font-size: 0.65rem; font-weight: 500; opacity: 0.7;">BARANGAY 175</span></div>
+            <div class="sidebar-header">
+                <div class="logo">
+                    <i data-feather="zap" class="logo-icon" style="width:28px; height:28px; color:var(--primary);"></i>
+                    <span class="logo-text">LGU<span style="color:var(--primary);">3</span></span>
                 </div>
                 <button class="sidebar-toggle" onclick="toggleSidebar()" id="sidebar-btn" title="Toggle Sidebar">
-                    <i data-feather="chevron-left"></i>
+                    <i data-feather="chevrons-left" id="toggle-icon"></i>
                 </button>
             </div>
-            <nav class="sidebar-nav">
-                <a href="#" class="nav-item active" onclick="showSection('home', this)">
+            
+            <nav class="sidebar-nav" id="sidebar-nav">
+                <a href="#" class="nav-item active" onclick="showSection('home', this)" title="Home">
                     <i data-feather="home"></i>
                     <span>Home</span>
                 </a>
-                <a href="#" class="nav-item" onclick="showSection('profile', this)">
+                <a href="#" class="nav-item" onclick="showSection('profile', this)" title="My Profile">
                     <i data-feather="user"></i>
                     <span>My Profile</span>
                 </a>
-                <a href="#" class="nav-item" onclick="showSection('create-report', this)">
+                <a href="#" class="nav-item" onclick="showSection('create-report', this)" title="Create Report">
                     <i data-feather="file-plus"></i>
                     <span>Create Report</span>
                 </a>
-                <a href="#" class="nav-item" onclick="showSection('history', this)">
+                <a href="#" class="nav-item" onclick="showSection('history', this)" title="History">
                     <i data-feather="clock"></i>
                     <span>History</span>
                 </a>
-                <a href="#" class="nav-item" onclick="showSection('schedule', this)">
+                <a href="#" class="nav-item" onclick="showSection('schedule', this)" title="My Schedule">
                     <i data-feather="calendar"></i>
                     <span>My Schedule</span>
                 </a>
-                <a href="#" class="nav-item" onclick="showSection('learning-docs', this)">
+                <a href="#" class="nav-item" onclick="showSection('learning-docs', this)" title="Learning Center">
                     <i data-feather="book-open"></i>
                     <span>Learning Center</span>
                 </a>
-                <a href="#" class="nav-item" onclick="showSection('skill-test', this)">
+                <a href="#" class="nav-item" onclick="showSection('skill-test', this)" title="Skill Test">
                     <i data-feather="award"></i>
                     <span>Skill Test</span>
                 </a>
-                <a href="#" class="nav-item" onclick="showSection('ai-chat', this)">
+                <a href="#" class="nav-item" onclick="showSection('ai-chat', this)" title="AI Assistant">
                     <i data-feather="message-circle"></i>
                     <span>AI Assistant</span>
                 </a>
-                <a href="#" class="nav-item" onclick="showSection('generate-id', this)">
+                <a href="#" class="nav-item" onclick="showSection('generate-id', this)" title="Generate ID">
                     <i data-feather="credit-card"></i>
                     <span>Generate ID</span>
                 </a>
             </nav>
+
             <div class="sidebar-footer">
-                <a href="#" class="nav-item logout-btn">
-                    <i data-feather="log-out"></i>
-                    <span>Logout</span>
-                </a>
+                <div class="profile-container">
+                    <div class="profile-dropdown" id="profile-dropdown">
+                        <a href="#" class="dropdown-item" onclick="showSection('profile', null); toggleProfileMenu(event);">
+                            <i data-feather="user"></i>
+                            <span>My Profile</span>
+                        </a>
+                        <a href="#" class="dropdown-item" onclick="showSection('generate-id', null); toggleProfileMenu(event);">
+                            <i data-feather="credit-card"></i>
+                            <span>Generate ID</span>
+                        </a>
+                        <div class="dropdown-divider"></div>
+                        <a href="logout.php" class="dropdown-item logout-item">
+                            <i data-feather="log-out"></i>
+                            <span>Logout</span>
+                        </a>
+                    </div>
+                    <div class="user-profile-mini" onclick="toggleProfileMenu(event)">
+                        <div class="user-avatar"><?php echo strtoupper(substr($user_name, 0, 1)); ?></div>
+                        <div class="user-info">
+                            <span class="user-name-footer"><?php echo htmlspecialchars($user_name); ?></span>
+                            <span class="user-role-footer">Citizen</span>
+                        </div>
+                        <i data-feather="more-vertical" class="more-icon"></i>
+                    </div>
+                </div>
             </div>
         </aside>
 
@@ -955,9 +979,15 @@ if (empty($skillRow['skills'])) {
 
                 <!-- HISTORY SECTION -->
                 <div id="history" class="section-view">
-                    <div class="page-header">
-                        <h2>My History</h2>
-                        <p>Track the status of your submitted reports.</p>
+                    <div class="page-header" style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <h2>My History</h2>
+                            <p>Track the status of your submitted reports.</p>
+                        </div>
+                        <button onclick="clearHistory()" class="action-btn" style="background: #ef4444; border: none; padding: 0.7rem 1.5rem; display: flex; align-items: center; gap: 0.5rem;">
+                            <i data-feather="trash-2" style="width: 16px;"></i>
+                            <span>Clear History</span>
+                        </button>
                     </div>
                     <div class="content-section">
                         <div class="table-container">
@@ -973,6 +1003,23 @@ if (empty($skillRow['skills'])) {
                                     <tr><td colspan="3">Loading...</td></tr>
                                 </tbody>
                             </table>
+                        </div>
+                        
+                        <!-- Pagination Controls -->
+                        <div id="history-pagination" style="display: none; margin-top: 1.5rem; display: flex; justify-content: space-between; align-items: center;">
+                            <button onclick="prevHistoryPage()" id="prev-history-btn" class="action-btn" style="background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); padding: 0.6rem 1.2rem; display: flex; align-items: center; gap: 0.5rem;">
+                                <i data-feather="chevron-left" style="width: 16px;"></i>
+                                <span>Previous</span>
+                            </button>
+                            
+                            <span id="history-page-info" style="color: var(--text-muted); font-size: 0.9rem;">
+                                Page <span id="current-history-page">1</span> of <span id="total-history-pages">1</span>
+                            </span>
+                            
+                            <button onclick="nextHistoryPage()" id="next-history-btn" class="action-btn" style="background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); padding: 0.6rem 1.2rem; display: flex; align-items: center; gap: 0.5rem;">
+                                <span>Next</span>
+                                <i data-feather="chevron-right" style="width: 16px;"></i>
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -1330,16 +1377,17 @@ if (empty($skillRow['skills'])) {
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebar');
             const mainContent = document.getElementById('main-content');
-            const toggleBtn = document.getElementById('sidebar-btn');
+            const toggleIcon = document.getElementById('toggle-icon');
             
             sidebar.classList.toggle('minimized');
             mainContent.classList.toggle('sidebar-collapsed');
             
-            if(sidebar.classList.contains('minimized')) {
-                toggleBtn.innerHTML = '<i data-feather="chevron-right"></i>';
+            if (sidebar.classList.contains('minimized')) {
+                toggleIcon.style.transform = 'rotate(180deg)';
             } else {
-                toggleBtn.innerHTML = '<i data-feather="chevron-left"></i>';
+                toggleIcon.style.transform = 'rotate(0deg)';
             }
+            
             feather.replace();
             localStorage.setItem('sidebarMinimized', sidebar.classList.contains('minimized'));
         }
@@ -1363,9 +1411,23 @@ if (empty($skillRow['skills'])) {
             if(isMinimized) {
                 document.getElementById('sidebar').classList.add('minimized');
                 document.getElementById('main-content').classList.add('sidebar-collapsed');
-                if(document.getElementById('sidebar-btn')) document.getElementById('sidebar-btn').innerHTML = '<i data-feather="chevron-right"></i>';
-                feather.replace();
             }
+            
+            feather.replace();
+        });
+
+        // --- Profile Dropdown ---
+        function toggleProfileMenu(e) {
+            if(e) e.stopPropagation();
+            const dropdown = document.getElementById('profile-dropdown');
+            dropdown.classList.toggle('show');
+            feather.replace();
+        }
+
+        // Close dropdowns when clicking outside
+        document.addEventListener('click', (e) => {
+            const pd = document.getElementById('profile-dropdown');
+            if(pd && !e.target.closest('.profile-container')) pd.classList.remove('show');
         });
 
         // --- Navigation ---
@@ -1374,7 +1436,9 @@ if (empty($skillRow['skills'])) {
             document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
             
             document.getElementById(id).classList.add('active');
-            if(element) element.classList.add('active');
+            if(element) {
+                element.classList.add('active');
+            }
             
             // Refresh data
             if(id === 'home') fetchStats();
@@ -1386,6 +1450,8 @@ if (empty($skillRow['skills'])) {
                 const cb = document.getElementById('chat-messages');
                 cb.scrollTop = cb.scrollHeight;
             }
+            
+            feather.replace();
         }
 
         // --- API Calls ---
@@ -1503,33 +1569,101 @@ if (empty($skillRow['skills'])) {
             } catch(e) {}
         }
 
+        // --- History & Pagination ---
+        let historyData = [];
+        let currentHistoryPage = 1;
+        const historyPerPage = 7;
+
         async function fetchHistory() {
             try {
                 const res = await fetch('api.php?action=my_reports');
                 const data = await res.json();
-                const tbody = document.getElementById('history-table');
-                
-                if(data.length === 0){
-                    tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;">No reports found.</td></tr>';
-                    return;
-                }
-                
-                tbody.innerHTML = '';
-                data.forEach(row => {
-                    let badgeClass = 'pending';
-                    if(row.status === 'approved') badgeClass = 'active';
-                    else if(row.status === 'rejected') badgeClass = 'warning';
+                historyData = data;
+                renderHistoryPage(1);
+            } catch(e) { console.error("History fetch error:", e); }
+        }
 
-                    tbody.innerHTML += `<tr>
-                        <td>
-                            <div style="font-weight:500;">${row.title}</div>
-                            <div style="font-size:0.85rem; color:var(--text-muted); margin-top:4px;">${row.description.substring(0,50)}...</div>
-                        </td>
-                        <td>${row.created_at}</td>
-                        <td><span class="badge ${badgeClass}">${row.status}</span></td>
-                    </tr>`;
-                });
-            } catch(e) {}
+        function renderHistoryPage(page) {
+            const tbody = document.getElementById('history-table');
+            const pagination = document.getElementById('history-pagination');
+            
+            if(!historyData || historyData.length === 0){
+                tbody.innerHTML = '<tr><td colspan="3" style="text-align:center; padding: 2rem; color: var(--text-muted);">No reports found.</td></tr>';
+                if(pagination) pagination.style.display = 'none';
+                return;
+            }
+
+            if(pagination) pagination.style.display = 'flex';
+            
+            const totalPages = Math.ceil(historyData.length / historyPerPage);
+            if(page < 1) page = 1;
+            if(page > totalPages) page = totalPages;
+            currentHistoryPage = page;
+            
+            const start = (page - 1) * historyPerPage;
+            const end = start + historyPerPage;
+            const pageData = historyData.slice(start, end);
+            
+            tbody.innerHTML = '';
+            pageData.forEach(row => {
+                let badgeClass = 'pending';
+                if(row.status === 'approved') badgeClass = 'active';
+                else if(row.status === 'rejected') badgeClass = 'warning';
+
+                tbody.innerHTML += `<tr>
+                    <td>
+                        <div style="font-weight:500; color: var(--text-main);">${row.title}</div>
+                        <div style="font-size:0.85rem; color:var(--text-muted); margin-top:4px;">${row.description.substring(0,50)}${row.description.length > 50 ? '...' : ''}</div>
+                    </td>
+                    <td>${row.created_at}</td>
+                    <td><span class="badge ${badgeClass}">${row.status}</span></td>
+                </tr>`;
+            });
+
+            // Update controls
+            document.getElementById('current-history-page').innerText = page;
+            document.getElementById('total-history-pages').innerText = totalPages;
+            
+            const prevBtn = document.getElementById('prev-history-btn');
+            const nextBtn = document.getElementById('next-history-btn');
+            
+            if(prevBtn) {
+                prevBtn.style.opacity = page === 1 ? '0.5' : '1';
+                prevBtn.style.pointerEvents = page === 1 ? 'none' : 'auto';
+            }
+            
+            if(nextBtn) {
+                nextBtn.style.opacity = page === totalPages ? '0.5' : '1';
+                nextBtn.style.pointerEvents = page === totalPages ? 'none' : 'auto';
+            }
+        }
+
+        function nextHistoryPage() {
+            const totalPages = Math.ceil(historyData.length / historyPerPage);
+            if(currentHistoryPage < totalPages) renderHistoryPage(currentHistoryPage + 1);
+        }
+
+        function prevHistoryPage() {
+            if(currentHistoryPage > 1) renderHistoryPage(currentHistoryPage - 1);
+        }
+
+        async function clearHistory() {
+            if(!confirm("Are you sure you want to clear your report history? This action cannot be undone.")) return;
+            
+            try {
+                const res = await fetch('api.php?action=clear_history', { method: 'POST' });
+                const data = await res.json();
+                if(data.success) {
+                    historyData = [];
+                    renderHistoryPage(1);
+                    fetchStats(); 
+                    showSuccessModal("History cleared successfully.");
+                } else {
+                    alert(data.error || 'Failed to clear history');
+                }
+            } catch(e) {
+                alert('Connection error');
+            }
         }
 
         // --- Forms ---
@@ -2358,6 +2492,7 @@ if (empty($skillRow['skills'])) {
             }
 
             fetchRecommended();
+            fetchUserDocs(); // Load learning resources
             // Other inits if needed:
             if(typeof fetchMyApplications === 'function') fetchMyApplications();
             

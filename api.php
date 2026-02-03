@@ -113,6 +113,17 @@ if ($action === 'my_reports') {
 }
 
 
+if ($action === 'clear_history') {
+    $stmt = $conn->prepare("DELETE FROM reports WHERE user_id = ?");
+    $stmt->bind_param("i", $uid);
+    if($stmt->execute()) {
+        echo json_encode(['success' => true]);
+    } else {
+        echo json_encode(['error' => 'Failed to clear history']);
+    }
+    exit;
+}
+
 if ($action === 'create_report') {
     $input = json_decode(file_get_contents('php://input'), true);
     $title = $input['title'] ?? '';
@@ -2031,10 +2042,12 @@ if ($action === 'get_analytics') {
         $data['summary']['utilization'] = $resolutionRate . '%';
     }
 
-    // 3. Status Breakdown (This Month)
-    $resStatus = $conn->query("SELECT status, COUNT(*) as c FROM reports WHERE $tsCol LIKE '$thisMonth%' GROUP BY status");
-    while($row = $resStatus->fetch_assoc()) {
-        $data['status_breakdown'][strtolower($row['status'])] = (int)$row['c'];
+    // 3. Status Breakdown (Global to ensure charts aren't empty)
+    $resStatusGlobal = $conn->query("SELECT status, COUNT(*) as c FROM reports GROUP BY status");
+    while($row = $resStatusGlobal->fetch_assoc()) {
+        $s = strtolower($row['status']);
+        if($s === 'denied' || $s === 'rejected') $s = 'rejected';
+        $data['status_breakdown'][$s] = (int)$row['c'];
     }
 
     // 4. Trends (Last 6 Months)
@@ -2056,9 +2069,10 @@ if ($action === 'get_analytics') {
     
     $catCounts = ['Infrastructure' => 0, 'Security' => 0, 'Health & Sanitation' => 0, 'Public Service' => 0, 'General' => 0];
     
-    $resCats = $conn->query("SELECT title FROM reports");
+    // Get all reports to build accurate historical categories
+    $resCats = $conn->query("SELECT title, description FROM reports");
     while($row = $resCats->fetch_assoc()) {
-        $t = strtolower($row['title']);
+        $t = strtolower(($row['title'] ?? '') . ' ' . ($row['description'] ?? ''));
         $matched = false;
         foreach($categories as $cat => $keywords) {
             foreach($keywords as $k) {
@@ -2111,6 +2125,28 @@ if ($action === 'get_analytics') {
     }
 
     echo json_encode($data);
+    exit;
+}
+
+// --- LEARNING DOCUMENTS ---
+if ($action === 'get_docs') {
+    // Auto-heal: Create table if missing
+    $conn->query("CREATE TABLE IF NOT EXISTS learning_docs (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        title VARCHAR(255) NOT NULL,
+        category VARCHAR(100) NOT NULL,
+        file_path VARCHAR(255) NOT NULL,
+        uploaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )");
+    
+    $docs = [];
+    $res = $conn->query("SELECT * FROM learning_docs ORDER BY uploaded_at DESC");
+    if($res) {
+        while($row = $res->fetch_assoc()) {
+            $docs[] = $row;
+        }
+    }
+    echo json_encode($docs);
     exit;
 }
 
