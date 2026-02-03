@@ -1043,13 +1043,13 @@ if (empty($skillRow['skills'])) {
                             </div>
                             <div id="calendar-grid" style="display:grid; grid-template-columns: repeat(7, 1fr); gap:2px; background:var(--border-color); border:1px solid var(--border-color); border-radius:8px; overflow:hidden;">
                                 <!-- Header -->
-                                <div style="background:rgba(15, 17, 21, 0.5); padding:0.75rem; text-align:center; font-size:0.8rem; color:var(--text-muted); font-weight:600;">SUN</div>
-                                <div style="background:rgba(15, 17, 21, 0.5); padding:0.75rem; text-align:center; font-size:0.8rem; color:var(--text-muted); font-weight:600;">MON</div>
-                                <div style="background:rgba(15, 17, 21, 0.5); padding:0.75rem; text-align:center; font-size:0.8rem; color:var(--text-muted); font-weight:600;">TUE</div>
-                                <div style="background:rgba(15, 17, 21, 0.5); padding:0.75rem; text-align:center; font-size:0.8rem; color:var(--text-muted); font-weight:600;">WED</div>
-                                <div style="background:rgba(15, 17, 21, 0.5); padding:0.75rem; text-align:center; font-size:0.8rem; color:var(--text-muted); font-weight:600;">THU</div>
-                                <div style="background:rgba(15, 17, 21, 0.5); padding:0.75rem; text-align:center; font-size:0.8rem; color:var(--text-muted); font-weight:600;">FRI</div>
-                                <div style="background:rgba(15, 17, 21, 0.5); padding:0.75rem; text-align:center; font-size:0.8rem; color:var(--text-muted); font-weight:600;">SAT</div>
+                                <div style="background:var(--input-bg); padding:0.75rem; text-align:center; font-size:0.8rem; color:var(--text-muted); font-weight:600;">SUN</div>
+                                <div style="background:var(--input-bg); padding:0.75rem; text-align:center; font-size:0.8rem; color:var(--text-muted); font-weight:600;">MON</div>
+                                <div style="background:var(--input-bg); padding:0.75rem; text-align:center; font-size:0.8rem; color:var(--text-muted); font-weight:600;">TUE</div>
+                                <div style="background:var(--input-bg); padding:0.75rem; text-align:center; font-size:0.8rem; color:var(--text-muted); font-weight:600;">WED</div>
+                                <div style="background:var(--input-bg); padding:0.75rem; text-align:center; font-size:0.8rem; color:var(--text-muted); font-weight:600;">THU</div>
+                                <div style="background:var(--input-bg); padding:0.75rem; text-align:center; font-size:0.8rem; color:var(--text-muted); font-weight:600;">FRI</div>
+                                <div style="background:var(--input-bg); padding:0.75rem; text-align:center; font-size:0.8rem; color:var(--text-muted); font-weight:600;">SAT</div>
                                 <!-- Days populated by JS -->
                             </div>
                         </div>
@@ -2083,13 +2083,13 @@ if (empty($skillRow['skills'])) {
 
             for(let i=0; i<firstDay; i++) {
                 const dev = document.createElement('div');
-                dev.style.cssText = "background:rgba(15,17,21,0.2); height:100px; padding:10px; opacity:0.3;";
+                dev.style.cssText = "background:var(--input-bg); height:100px; padding:10px; opacity:0.3;";
                 grid.appendChild(dev);
             }
 
             for(let d=1; d<=daysInMonth; d++) {
                 const dayBox = document.createElement('div');
-                dayBox.style.cssText = "background:rgba(30,41,59,0.3); height:100px; padding:10px; font-size:0.9rem; border:1px solid rgba(255,255,255,0.02); display:flex; flex-direction:column; gap:5px; overflow:hidden;";
+                dayBox.style.cssText = "background:var(--card-bg); height:100px; padding:10px; font-size:0.9rem; border:1px solid var(--border-color); display:flex; flex-direction:column; gap:5px; overflow:hidden;";
                 
                 const dayNum = document.createElement('span');
                 dayNum.innerText = d;
@@ -2105,7 +2105,7 @@ if (empty($skillRow['skills'])) {
                     if(ev.type === 'training') color = "#10b981";
                     if(ev.type === 'work') color = "#f59e0b";
                     
-                    dot.style.cssText = `background:${color}; padding:2px 6px; border-radius:4px; font-size:10px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:white;`;
+                    dot.style.cssText = `background:${color}; padding:2px 6px; border-radius:4px; font-size:10px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:white; margin-bottom: 2px;`;
                     dot.innerText = ev.title;
                     dayBox.appendChild(dot);
                 });
