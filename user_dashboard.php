@@ -1552,10 +1552,10 @@ if (empty($skillRow['skills'])) {
                     }
                     
                     container.innerHTML += `
-                        <div class="app-card">
+                        <div class="app-card" style="background:rgba(30, 41, 59, 0.5) !important; border:1px solid #334155 !important; color:white !important;">
                             <div class="app-info">
-                                <h4>${app.title}</h4>
-                                <p>${app.category} • Applied on ${app.created_at.split(' ')[0]}</p>
+                                <h4 style="color:white !important;">${app.title}</h4>
+                                <p style="color:#94a3b8 !important;">${app.category} • Applied on ${app.created_at.split(' ')[0]}</p>
                             </div>
                             <div class="app-actions">
                                 ${actionHtml}
@@ -1900,19 +1900,19 @@ if (empty($skillRow['skills'])) {
                 
                 data.forEach(d => {
                     container.innerHTML += `
-                        <div class="doc-card">
+                        <div class="doc-card" style="border:1px solid #334155 !important; background: linear-gradient(145deg, #1e293b, #0f172a) !important; color: white !important;">
                             <div style="display:flex; justify-content:space-between; align-items:flex-start;">
-                                <div class="doc-icon-wrapper">
+                                <div class="doc-icon-wrapper" style="background:rgba(99, 102, 241, 0.1); color:#6366f1;">
                                     <i data-feather="file-text" style="width:24px; height:24px;"></i>
                                 </div>
                                 <span class="doc-cat-badge">${d.category}</span>
                             </div>
                             <div>
-                                <h4 class="doc-title">${d.title}</h4>
-                                <p style="color:#94a3b8; font-size:0.85rem; margin-top:0.5rem; line-height:1.5;">Official livelihood resource for professional distribution and learning.</p>
+                                <h4 class="doc-title" style="color:white !important;">${d.title}</h4>
+                                <p style="color:#94a3b8 !important; font-size:0.85rem; margin-top:0.5rem; line-height:1.5;">Official livelihood resource for professional distribution and learning.</p>
                             </div>
-                            <div class="doc-footer">
-                                <a href="${d.file_path}" target="_blank" class="download-btn-premium">
+                            <div class="doc-footer" style="border-top:1px solid rgba(255,255,255,0.1) !important;">
+                                <a href="${d.file_path}" target="_blank" class="download-btn-premium" style="color:white !important;">
                                     <i data-feather="download" style="width:18px;"></i>
                                     Access Material
                                 </a>
