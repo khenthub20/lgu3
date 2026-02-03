@@ -205,7 +205,6 @@ if ($checkCol && $checkCol->num_rows > 0) {
             </div>
             
             <nav class="sidebar-nav" id="sidebar-nav">
-                <div class="nav-indicator" id="nav-indicator"></div>
                 <a href="#" class="nav-item active" onclick="showSection('overview', this)" title="Overview">
                     <i data-feather="grid"></i>
                     <span>Overview</span>
@@ -2431,10 +2430,11 @@ if ($checkCol && $checkCol->num_rows > 0) {
             setTheme(savedTheme);
 
             // Init Indicator
+            // Indicator removed for cleaner design
             const activeItem = document.querySelector('.nav-item.active');
-            if(activeItem) {
-                setTimeout(() => moveIndicator(activeItem), 500);
-            }
+            // if(activeItem) {
+            //     setTimeout(() => moveIndicator(activeItem), 500);
+            // }
         });
 
         function setTheme(theme) {
