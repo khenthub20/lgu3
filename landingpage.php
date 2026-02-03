@@ -62,7 +62,7 @@ if ($dbConnected) {
 
         /* Announcement Specific Styles */
         #announcements {
-            padding: 80px 10%;
+            padding: 80px 4%;
             background: #ffffff;
         }
         .announcement-card {
@@ -166,7 +166,7 @@ if ($dbConnected) {
         /* Navigation */
         nav {
             height: 65px; width: 100%; display: flex; align-items: center; justify-content: space-between;
-            padding: 0 8%; position: fixed; top: 0; z-index: 1000;
+            padding: 0 4%; position: fixed; top: 0; z-index: 1000;
             background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(15px); border-bottom: 1px solid var(--lp-border);
         }
         .logo { font-size: 1.1rem; font-weight: 800; color: #111827; letter-spacing: -0.5px; }
@@ -195,7 +195,7 @@ if ($dbConnected) {
 
         /* Hero Section */
         .hero {
-            padding: 160px 10% 100px; display: grid; grid-template-columns: 1fr 1fr; align-items: center; gap: 4rem;
+            padding: 160px 4% 100px; display: grid; grid-template-columns: 1fr 1fr; align-items: center; gap: 4rem;
             background: radial-gradient(circle at 80% 20%, rgba(99, 102, 241, 0.05), transparent 40%);
         }
         .hero-content h1 { font-size: 4rem; font-weight: 800; line-height: 1.1; margin-bottom: 1.5rem; letter-spacing: -2px; }
@@ -211,14 +211,14 @@ if ($dbConnected) {
         @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-15px); } }
 
         /* Stats */
-        .stats-bar { padding: 4rem 10%; display: flex; justify-content: space-around; background: #f9fafb; border-top: 1px solid #e5e7eb; border-bottom: 1px solid #e5e7eb; }
+        .stats-bar { padding: 4rem 4%; display: flex; justify-content: space-around; background: #f9fafb; border-top: 1px solid #e5e7eb; border-bottom: 1px solid #e5e7eb; }
         .stat-item { text-align: center; }
         .stat-item h2 { font-size: 2.5rem; color: #111827; margin-bottom: 0.5rem; }
         .stat-item p { color: var(--lp-text-muted); text-transform: uppercase; font-size: 0.8rem; letter-spacing: 1px; }
 
         /* Features */
         .section-label { color: var(--lp-primary); font-weight: 700; text-transform: uppercase; letter-spacing: 2px; font-size: 0.8rem; margin-bottom: 1rem; display: block; }
-        .features { padding: 100px 10%; background: #ffffff; }
+        .features { padding: 100px 4%; background: #ffffff; }
         .section-header { margin-bottom: 4rem; max-width: 700px; }
         .section-header h2 { font-size: 2.5rem; margin-bottom: 1rem; }
         .feature-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2rem; }
@@ -232,7 +232,7 @@ if ($dbConnected) {
         .feature-card p { color: var(--lp-text-muted); font-size: 0.95rem; }
 
         /* Success Stories */
-        .success-stories { padding: 100px 10%; }
+        .success-stories { padding: 100px 4%; }
         .story-flex { display: flex; gap: 4rem; align-items: center; margin-bottom: 6rem; }
         .story-flex:nth-child(even) { flex-direction: row-reverse; }
         .story-img { flex: 1; position: relative; }
@@ -243,7 +243,7 @@ if ($dbConnected) {
         .story-content p { color: var(--lp-text-muted); font-size: 1.1rem; margin-bottom: 2rem; }
 
         /* Testimonials */
-        .testimonials { padding: 100px 10%; background: radial-gradient(circle at 10% 80%, rgba(236, 72, 153, 0.05), transparent 30%); }
+        .testimonials { padding: 100px 4%; background: radial-gradient(circle at 10% 80%, rgba(236, 72, 153, 0.05), transparent 30%); }
         .test-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2rem; }
         .test-card { padding: 2rem; background: #ffffff; border-radius: 20px; border: 1px solid var(--lp-border); position: relative; box-shadow: 0 10px 20px rgba(0,0,0,0.02); }
         .test-card i { color: var(--lp-primary); opacity: 0.1; margin-bottom: 1rem; }
@@ -253,7 +253,7 @@ if ($dbConnected) {
         .test-user-info p { font-size: 0.8rem; color: var(--lp-text-muted); margin: 0; }
 
         /* Footer */
-        footer { padding: 80px 10% 40px; background: #f9fafb; border-top: 1px solid var(--lp-border); }
+        footer { padding: 80px 4% 40px; background: #f9fafb; border-top: 1px solid var(--lp-border); }
         .footer-grid { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 4rem; margin-bottom: 4rem; }
         .footer-col h4 { margin-bottom: 1.5rem; font-size: 1.1rem; color: #111827; }
         .footer-col ul { list-style: none; }
@@ -292,7 +292,7 @@ if ($dbConnected) {
         }
 
         /* Programs Grid Specific */
-        .programs-section { padding: 100px 10%; background: #ffffff; }
+        .programs-section { padding: 100px 4%; background: #ffffff; }
         .program-cat-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 2rem; margin-top: 3rem; }
         .program-cat-card { background: #f9fafb; border: 1px solid var(--lp-border); border-radius: 20px; padding: 2rem; }
         .program-cat-card h3 { color: var(--lp-primary); margin-bottom: 1.5rem; display: flex; align-items: center; gap: 10px; }
@@ -301,7 +301,7 @@ if ($dbConnected) {
         .program-list-items li::before { content: 'ΓåÆ'; color: var(--lp-primary); font-weight: bold; }
 
         /* Team Section */
-        .team-section { padding: 100px 10%; background: #f9fafb; border-top: 1px solid var(--lp-border); }
+        .team-section { padding: 100px 4%; background: #f9fafb; border-top: 1px solid var(--lp-border); }
         .team-grid { 
             display: grid; 
             grid-template-columns: repeat(4, 1fr); 
@@ -417,7 +417,7 @@ if ($dbConnected) {
 
         /* FAQ Section Styles */
         .faq-section {
-            padding: 100px 10%;
+            padding: 100px 4%;
             background: #ffffff;
             border-top: 1px solid var(--lp-border);
         }

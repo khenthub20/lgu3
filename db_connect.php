@@ -30,7 +30,8 @@ if ($conn->connect_error) {
 
 // --- SCHEMA AUTO-HEAL: Reference ID ---
 $check = $conn->query("SHOW COLUMNS FROM users LIKE 'reference_id'");
-if ($check->num_rows == 0) {
+// Check if query succeeded AND if column is missing
+if ($check && $check->num_rows == 0) {
     $conn->query("ALTER TABLE users ADD COLUMN reference_id VARCHAR(20) UNIQUE AFTER id");
 }
 

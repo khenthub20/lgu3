@@ -1324,10 +1324,26 @@ if ($action === 'get_skill_analytics') {
 
 if ($action === 'create_skill_test') {
     if($role !== 'admin') exit;
-    $input = json_decode(file_get_contents('php://input'), true);
-    $title = $input['title'];
-    $desc = $input['description'];
-    $thumb = $input['thumbnail'] ?? 'https://via.placeholder.com/600x400';
+    
+    $title = $_POST['title'] ?? '';
+    $desc = $_POST['description'] ?? '';
+    $thumb = 'https://via.placeholder.com/600x400?text=Skill+Test'; // Default
+
+    // Handle Image Upload
+    if (isset($_FILES['image']) && $_FILES['image']['error'] == 0) {
+        $target_dir = "uploads/skill_tests/";
+        if (!file_exists($target_dir)) mkdir($target_dir, 0755, true);
+        
+        $fileExt = strtolower(pathinfo($_FILES["image"]["name"], PATHINFO_EXTENSION));
+        $allowed = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+        if(in_array($fileExt, $allowed)) {
+            $fileName = time() . "_" . uniqid() . "." . $fileExt;
+            $target_file = $target_dir . $fileName;
+            if (move_uploaded_file($_FILES["image"]["tmp_name"], $target_file)) {
+                $thumb = $target_file;
+            }
+        }
+    }
     
     $stmt = $conn->prepare("INSERT INTO skill_tests (title, description, thumbnail) VALUES (?, ?, ?)");
     $stmt->bind_param("sss", $title, $desc, $thumb);
@@ -1338,11 +1354,27 @@ if ($action === 'create_skill_test') {
 
 if ($action === 'update_skill_test') {
     if($role !== 'admin') exit;
-    $input = json_decode(file_get_contents('php://input'), true);
-    $id = $input['id'];
-    $title = $input['title'];
-    $desc = $input['description'];
-    $thumb = $input['thumbnail'];
+    
+    $id = $_POST['id'];
+    $title = $_POST['title'];
+    $desc = $_POST['description'];
+    $thumb = $_POST['existing_thumbnail'] ?? ''; // Keep existing by default
+
+    // Handle New Image Upload
+    if (isset($_FILES['image']) && $_FILES['image']['error'] == 0) {
+        $target_dir = "uploads/skill_tests/";
+        if (!file_exists($target_dir)) mkdir($target_dir, 0755, true);
+        
+        $fileExt = strtolower(pathinfo($_FILES["image"]["name"], PATHINFO_EXTENSION));
+        $allowed = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+        if(in_array($fileExt, $allowed)) {
+            $fileName = time() . "_" . uniqid() . "." . $fileExt;
+            $target_file = $target_dir . $fileName;
+            if (move_uploaded_file($_FILES["image"]["tmp_name"], $target_file)) {
+                $thumb = $target_file;
+            }
+        }
+    }
     
     $stmt = $conn->prepare("UPDATE skill_tests SET title = ?, description = ?, thumbnail = ? WHERE id = ?");
     $stmt->bind_param("sssi", $title, $desc, $thumb, $id);

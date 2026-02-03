@@ -31,6 +31,7 @@ if ($checkCol && $checkCol->num_rows > 0) {
     <title>Admin Dashboard | Minimalist</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="sidebar-modern.css">
     <script src="https://unpkg.com/feather-icons"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
@@ -89,6 +90,9 @@ if ($checkCol && $checkCol->num_rows > 0) {
             border-radius: 10px;
         }
         .sidebar-toggle:hover { background: var(--primary); color: #fff; transform: scale(1.05); }
+        .sidebar.minimized .sidebar-toggle { margin-top: 1rem; }
+        .sidebar.minimized .sidebar-header { flex-direction: column; gap: 1rem; }
+
         
         /* Mobile Menu Toggle */
         .mobile-toggle { display: none; background: none; border: none; color: var(--text-muted); cursor: pointer; padding: 8px; margin-right: 1rem; }
@@ -190,10 +194,18 @@ if ($checkCol && $checkCol->num_rows > 0) {
     <div class="app-container">
         <!-- Sidebar -->
         <aside class="sidebar" id="sidebar">
-            <div class="sidebar-header" style="margin-bottom: 2rem;">
-                <div class="logo">LGU3<span>Admin</span></div>
+            <div class="sidebar-header">
+                <div class="logo">
+                     <i data-feather="cpu" class="logo-icon" style="color:var(--primary); width: 32px; height: 32px;"></i>
+                     <span class="logo-text">LGU3<span>Admin</span></span>
+                </div>
+                <button class="sidebar-toggle" onclick="toggleSidebar()" title="Toggle Sidebar">
+                    <i data-feather="chevron-left" id="toggle-icon"></i>
+                </button>
             </div>
-            <nav class="sidebar-nav">
+            
+            <nav class="sidebar-nav" id="sidebar-nav">
+                <div class="nav-indicator" id="nav-indicator"></div>
                 <a href="#" class="nav-item active" onclick="showSection('overview', this)" title="Overview">
                     <i data-feather="grid"></i>
                     <span>Overview</span>
@@ -219,7 +231,7 @@ if ($checkCol && $checkCol->num_rows > 0) {
                     <span>Learning Docs</span>
                 </a>
                 <a href="#" class="nav-item" onclick="showSection('requests', this)" title="Pending Requests">
-                    <i data-feather="bell"></i>
+                    <i data-feather="bell-off"></i>
                     <span>Pending Requests</span>
                 </a>
                 <a href="#" class="nav-item" onclick="showSection('calendar', this)" title="My Calendar">
@@ -243,11 +255,11 @@ if ($checkCol && $checkCol->num_rows > 0) {
                     <span>Smart Insights (AI)</span>
                 </a>
                 <a href="#" class="nav-item" onclick="showSection('announcements', this)" title="Announcements">
-                    <i data-feather="bell"></i>
+                    <i data-feather="megaphone"></i>
                     <span>Announcements</span>
                 </a>
                 <a href="#" class="nav-item" onclick="showSection('maintenance', this)" title="Maintenance Integration">
-                    <i data-feather="tool"></i>
+                    <i data-feather="settings"></i>
                     <span>Maintenance</span>
                 </a>
                 <a href="#" class="nav-item" onclick="showSection('analytics', this)" title="Reports & Analytics">
@@ -255,15 +267,37 @@ if ($checkCol && $checkCol->num_rows > 0) {
                     <span>Reports & Analytics</span>
                 </a>
                 <a href="#" class="nav-item" onclick="showSection('settings', this)" title="Settings">
-                    <i data-feather="settings"></i>
+                    <i data-feather="sliders"></i>
                     <span>Settings</span>
                 </a>
             </nav>
+
             <div class="sidebar-footer">
-                <a href="#" class="nav-item logout-btn" style="color: #ef4444;" title="Logout">
-                    <i data-feather="log-out"></i>
-                    <span>Logout</span>
-                </a>
+                <div class="profile-container">
+                    <div class="profile-dropdown" id="profile-dropdown">
+                        <a href="#" class="dropdown-item" onclick="showSection('overview', null); toggleProfileMenu(event);">
+                            <i data-feather="user"></i>
+                            <span>My Profile</span>
+                        </a>
+                        <a href="#" class="dropdown-item" onclick="showSection('settings', null); toggleProfileMenu(event);">
+                            <i data-feather="settings"></i>
+                            <span>Settings</span>
+                        </a>
+                        <div class="dropdown-divider"></div>
+                        <a href="#" class="dropdown-item logout-item" onclick="openLogoutModal(); toggleProfileMenu(event);">
+                            <i data-feather="log-out"></i>
+                            <span>Logout</span>
+                        </a>
+                    </div>
+                    <div class="user-profile-mini" onclick="toggleProfileMenu(event)">
+                        <div class="user-avatar"><?php echo strtoupper(substr($admin_name, 0, 1)); ?></div>
+                        <div class="user-info">
+                            <span class="user-name-footer"><?php echo htmlspecialchars($admin_name); ?></span>
+                            <span class="user-role-footer">System Admin</span>
+                        </div>
+                        <i data-feather="more-vertical" class="more-icon"></i>
+                    </div>
+                </div>
             </div>
         </aside>
 
@@ -1021,28 +1055,28 @@ if ($checkCol && $checkCol->num_rows > 0) {
                         </div>
                     </div>
 
-                    <div style="display:grid; grid-template-columns: 1fr 380px 380px; gap:1.5rem; margin-bottom:1.5rem;">
+                    <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:1.5rem; margin-bottom:1.5rem;">
                         <div class="content-section" style="padding:1.5rem;">
                             <h4 style="margin:0 0 1rem 0;">Reporting Trends (Last 6 Months)</h4>
                             <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:1.5rem;">Total citizen reports per month</p>
-                            <div style="height:300px;"><canvas id="trendChart"></canvas></div>
+                            <div style="height:300px; position:relative;"><canvas id="trendChart"></canvas></div>
                         </div>
                         <div class="content-section" style="padding:1.5rem;">
                             <h4 style="margin:0 0 1rem 0;">Status Breakdown</h4>
                             <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:1.5rem;">Distribution of report statuses</p>
-                            <div style="height:300px; display:flex; justify-content:center;"><canvas id="statusChart"></canvas></div>
+                            <div style="height:300px; position:relative;"><canvas id="statusChart"></canvas></div>
                         </div>
                         <div class="content-section" style="padding:1.5rem;">
                             <h4 style="margin:0 0 1rem 0;">AI Sentiment Analysis</h4>
                             <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:1.5rem;">Community mood detected by AI</p>
-                            <div style="height:300px; display:flex; justify-content:center;"><canvas id="sentimentChart"></canvas></div>
+                            <div style="height:300px; position:relative;"><canvas id="sentimentChart"></canvas></div>
                         </div>
                     </div>
 
                     <div class="content-section" style="padding:1.5rem; margin-bottom:1.5rem;">
                         <h4 style="margin:0 0 1rem 0;">Top Reported Categories</h4>
                         <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:1.5rem;">Most frequent issues highlighted by citizens</p>
-                        <div style="height:250px;"><canvas id="topFacilitiesChart"></canvas></div>
+                        <div style="height:250px; position:relative;"><canvas id="topFacilitiesChart"></canvas></div>
                     </div>
 
                     <!-- Volume Stats -->
@@ -1471,8 +1505,10 @@ if ($checkCol && $checkCol->num_rows > 0) {
                     <textarea name="description" id="stm-desc" class="form-control" required style="width:100%; padding:0.8rem; background:#1e293b; border:1px solid #475569; color:white; border-radius:8px; min-height:80px;"></textarea>
                 </div>
                 <div style="margin-bottom:1.5rem;">
-                     <label style="display:block; color:#aaa; font-size:0.9rem; margin-bottom:0.5rem;">Thumbnail URL</label>
-                     <input type="url" name="thumbnail" id="stm-thumb" class="form-control" required placeholder="https://..." style="width:100%; padding:0.8rem; background:#1e293b; border:1px solid #475569; color:white; border-radius:8px;">
+                     <label style="display:block; color:#aaa; font-size:0.9rem; margin-bottom:0.5rem;">Feature Image</label>
+                     <input type="file" name="image" id="stm-thumb" class="form-control" accept="image/*" style="width:100%; padding:0.5rem; background:#1e293b; border:1px solid #475569; color:white; border-radius:8px;">
+                     <input type="hidden" name="existing_thumbnail" id="stm-existing-thumb">
+                     <small style="color:#64748b; font-style:italic;">Leave empty to keep existing image on edit.</small>
                 </div>
                 <div style="display:flex; gap:1rem;">
                     <button type="button" onclick="closeSkillModal()" style="flex:1; padding:0.8rem; background:transparent; border:1px solid #475569; color:white; border-radius:8px; cursor:pointer;">Cancel</button>
@@ -1559,7 +1595,62 @@ if ($checkCol && $checkCol->num_rows > 0) {
     <script>
         feather.replace();
 
+        // --- Sidebar Toggle Logic ---
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const mainContent = document.getElementById('main-content');
+            const toggleIcon = document.getElementById('toggle-icon');
+            
+            sidebar.classList.toggle('minimized');
+            mainContent.classList.toggle('sidebar-collapsed');
+            
+            if (sidebar.classList.contains('minimized')) {
+                toggleIcon.style.transform = 'rotate(180deg)';
+            } else {
+                toggleIcon.style.transform = 'rotate(0deg)';
+            }
+            
+            // Re-center indicator after transition
+            const activeItem = document.querySelector('.nav-item.active');
+            if(activeItem) {
+                setTimeout(() => moveIndicator(activeItem), 400);
+            }
+            
+            // Re-trigger feather icons to ensure they look right
+            setTimeout(() => feather.replace(), 400);
+        }
+
+        function toggleProfileMenu(e) {
+            if(e) e.stopPropagation();
+            const dropdown = document.getElementById('profile-dropdown');
+            dropdown.classList.toggle('show');
+            feather.replace();
+        }
+
+        function toggleMobileMenu() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebar-overlay');
+            sidebar.classList.toggle('mobile-open');
+            overlay.classList.toggle('active');
+            feather.replace();
+        }
+
         // --- Navigation Logic ---
+        function moveIndicator(element) {
+            const indicator = document.getElementById('nav-indicator');
+            if (!indicator || !element) return;
+            
+            const nav = document.getElementById('sidebar-nav');
+            const navRect = nav.getBoundingClientRect();
+            const elRect = element.getBoundingClientRect();
+            
+            const top = elRect.top - navRect.top + nav.scrollTop;
+            const height = elRect.height;
+            
+            indicator.style.top = `${top + (height / 2) - 18}px`; // Center it (height 36px/2 = 18)
+            indicator.style.opacity = '1';
+        }
+
         function showSection(id, element) {
             // Hide all
             document.querySelectorAll('.section-view').forEach(el => el.classList.remove('active'));
@@ -1567,8 +1658,16 @@ if ($checkCol && $checkCol->num_rows > 0) {
             
             // Show target
             const targetSection = document.getElementById(id);
-            if(targetSection) targetSection.classList.add('active');
-            if(element) element.classList.add('active');
+            if(targetSection) {
+                targetSection.classList.add('active');
+                // Force a reflow to ensure display:block is applied before complex logic
+                void targetSection.offsetWidth;
+            }
+            
+            if(element) {
+                element.classList.add('active');
+                moveIndicator(element);
+            }
 
             // Mobile specific: Close menu automatically
             if(window.innerWidth <= 768) {
@@ -1594,7 +1693,7 @@ if ($checkCol && $checkCol->num_rows > 0) {
             else if(id === 'skill-mgmt') fetchSkillTests();
             else if(id === 'smart-insights') fetchSmartInsights();
             else if(id === 'maintenance') fetchMaintenance();
-            else if(id === 'analytics') fetchAnalytics();
+            else if(id === 'analytics') setTimeout(fetchAnalytics, 500);
             
             feather.replace();
         }
@@ -2330,6 +2429,12 @@ if ($checkCol && $checkCol->num_rows > 0) {
             // Theme initialization
             const savedTheme = localStorage.getItem('theme') || 'dark';
             setTheme(savedTheme);
+
+            // Init Indicator
+            const activeItem = document.querySelector('.nav-item.active');
+            if(activeItem) {
+                setTimeout(() => moveIndicator(activeItem), 500);
+            }
         });
 
         function setTheme(theme) {
@@ -2364,9 +2469,12 @@ if ($checkCol && $checkCol->num_rows > 0) {
             dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
         }
 
-        document.addEventListener('click', () => {
+        document.addEventListener('click', (e) => {
             const d = document.getElementById('notif-dropdown');
-            if(d) d.style.display = 'none';
+            if(d && !e.target.closest('.notif-btn')) d.style.display = 'none';
+
+            const pd = document.getElementById('profile-dropdown');
+            if(pd && !e.target.closest('.profile-container')) pd.classList.remove('show');
         });
 
         async function updateStatus(id, status) {
@@ -2758,7 +2866,8 @@ if ($checkCol && $checkCol->num_rows > 0) {
             document.getElementById('stm-id').value = id || '';
             document.getElementById('stm-name').value = title;
             document.getElementById('stm-desc').value = desc;
-            document.getElementById('stm-thumb').value = thumb;
+            document.getElementById('stm-thumb').value = ''; // clear file input
+            document.getElementById('stm-existing-thumb').value = thumb; // set hidden existing val
             document.getElementById('skillTestModal').classList.add('show');
         }
 
@@ -2771,16 +2880,9 @@ if ($checkCol && $checkCol->num_rows > 0) {
             const id = formData.get('id');
             const action = id ? 'update_skill_test' : 'create_skill_test';
             
-            const payload = {
-                id: id,
-                title: formData.get('title'),
-                description: formData.get('description'),
-                thumbnail: formData.get('thumbnail')
-            };
-
             try {
                 const res = await fetch('api.php?action=' + action, {
-                    method:'POST', body: JSON.stringify(payload)
+                    method:'POST', body: formData
                 });
                 const data = await res.json();
                 if(data.success) {
@@ -3118,140 +3220,171 @@ if ($checkCol && $checkCol->num_rows > 0) {
         let trendChart, statusChart, topFacChart;
 
         async function fetchAnalytics() {
+            if (typeof Chart === 'undefined') {
+                console.error("Chart.js not loaded yet");
+                return;
+            }
+            
             try {
                 const res = await fetch('api.php?action=get_analytics');
                 const data = await res.json();
+                
+                if (data.error) {
+                    console.error("API Error:", data.error);
+                    return;
+                }
 
-                // Summary
-                 // Summary
-                 document.getElementById('ana-this-month-total').innerText = data.summary.total_this_month;
-                 document.getElementById('ana-approval-rate').innerText = data.summary.approval_rate + '%';
-                 document.getElementById('ana-approved-count').innerText = `${data.status_breakdown.approved || 0} of ${data.summary.total_this_month} approved`;
-                 document.getElementById('ana-utilization').innerText = data.summary.utilization;
-                 
-                 document.getElementById('ana-total-users').innerText = data.summary.total_users;
-                 document.getElementById('ana-available-facs').innerText = data.facility_utilization ? data.facility_utilization.length : 0;
-                 document.getElementById('ana-all-time').innerText = data.summary.total_all_time;
-                 document.getElementById('ana-avg-user').innerText = data.summary.avg_per_user;
+                // Summary Stats
+                const updateEl = (id, val) => {
+                    const el = document.getElementById(id);
+                    if (el) el.innerText = val;
+                };
 
-                 // Status
-                 document.getElementById('ana-status-approved').innerText = data.status_breakdown.approved || 0;
-                 document.getElementById('ana-status-pending').innerText = data.status_breakdown.pending || 0;
-                 document.getElementById('ana-status-denied').innerText = data.status_breakdown.rejected || 0;
-                 document.getElementById('ana-status-cancelled').innerText = data.status_breakdown.cancelled || 0;
+                updateEl('ana-this-month-total', data.summary?.total_this_month ?? 0);
+                updateEl('ana-approval-rate', (data.summary?.approval_rate ?? 0) + '%');
+                updateEl('ana-approved-count', `${data.status_breakdown?.approved ?? 0} of ${data.summary?.total_this_month ?? 0} approved`);
+                updateEl('ana-utilization', data.summary?.utilization ?? '0%');
+                
+                updateEl('ana-total-users', data.summary?.total_users ?? 0);
+                updateEl('ana-available-facs', data.facility_utilization?.length ?? 0);
+                updateEl('ana-all-time', data.summary?.total_all_time ?? 0);
+                updateEl('ana-avg-user', data.summary?.avg_per_user ?? 0);
 
-                 // Charts - Trends
-                 const ctxTrend = document.getElementById('trendChart').getContext('2d');
-                 if(trendChart) trendChart.destroy();
-                 trendChart = new Chart(ctxTrend, {
-                     type: 'line',
-                     data: {
-                         labels: data.trends.labels,
-                         datasets: [{
-                             label: 'New Reports',
-                             data: data.trends.data,
-                             borderColor: '#6366f1',
-                             backgroundColor: 'rgba(99, 102, 241, 0.1)',
-                             fill: true,
-                             tension: 0.4
-                         }]
-                     },
-                     options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
-                 });
+                updateEl('ana-status-approved', data.status_breakdown?.approved ?? 0);
+                updateEl('ana-status-pending', data.status_breakdown?.pending ?? 0);
+                updateEl('ana-status-denied', data.status_breakdown?.rejected ?? 0);
+                updateEl('ana-status-cancelled', data.status_breakdown?.cancelled ?? 0);
 
-                 // Status Chart
-                 const ctxStatus = document.getElementById('statusChart').getContext('2d');
-                 if(statusChart) statusChart.destroy();
-                 statusChart = new Chart(ctxStatus, {
-                     type: 'doughnut',
-                     data: {
-                         labels: ['Approved', 'Pending', 'Rejected'],
-                         datasets: [{
-                             data: [data.status_breakdown.approved || 0, data.status_breakdown.pending || 0, data.status_breakdown.rejected || 0],
-                             backgroundColor: ['#10b981', '#f59e0b', '#ef4444'],
-                             borderWidth: 0
-                         }]
-                     },
-                     options: { responsive: true, maintainAspectRatio: false, cutout: '70%', plugins: { legend: { position: 'bottom' } } }
-                 });
+                // Charts - Trends
+                try {
+                    const ctxTrend = document.getElementById('trendChart')?.getContext('2d');
+                    if(ctxTrend) {
+                        if(trendChart) trendChart.destroy();
+                        trendChart = new Chart(ctxTrend, {
+                            type: 'line',
+                            data: {
+                                labels: data.trends?.labels ?? [],
+                                datasets: [{
+                                    label: 'New Reports',
+                                    data: data.trends?.data ?? [],
+                                    borderColor: '#6366f1',
+                                    backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                                    fill: true,
+                                    tension: 0.4
+                                }]
+                            },
+                            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+                        });
+                    }
+                } catch(e) { console.error("Trend Chart Error", e); }
 
-                 // Top Categories Bar
-                 const ctxTop = document.getElementById('topFacilitiesChart').getContext('2d');
-                 if(topFacChart) topFacChart.destroy();
-                 topFacChart = new Chart(ctxTop, {
-                     type: 'bar',
-                     data: {
-                         labels: data.top_facilities.labels,
-                         datasets: [{
-                             label: 'Reports count',
-                             data: data.top_facilities.data,
-                             backgroundColor: '#3b82f6',
-                             borderRadius: 8
-                         }]
-                     },
-                     options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
-                 });
+                // Status Chart
+                try {
+                    const ctxStatus = document.getElementById('statusChart')?.getContext('2d');
+                    if(ctxStatus) {
+                        if(statusChart) statusChart.destroy();
+                        statusChart = new Chart(ctxStatus, {
+                            type: 'doughnut',
+                            data: {
+                                labels: ['Approved', 'Pending', 'Rejected'],
+                                datasets: [{
+                                    data: [data.status_breakdown?.approved ?? 0, data.status_breakdown?.pending ?? 0, data.status_breakdown?.rejected ?? 0],
+                                    backgroundColor: ['#10b981', '#f59e0b', '#ef4444'],
+                                    borderWidth: 0
+                                }]
+                            },
+                            options: { responsive: true, maintainAspectRatio: false, cutout: '70%', plugins: { legend: { position: 'bottom' } } }
+                        });
+                    }
+                } catch(e) { console.error("Status Chart Error", e); }
 
-                 // Report Categories Progress Bars
-                 const utilList = document.getElementById('ana-utilization-list');
-                 utilList.innerHTML = '';
-                 if(data.facility_utilization && data.facility_utilization.length > 0) {
-                     data.facility_utilization.forEach(f => {
-                         utilList.innerHTML += `
-                            <div style="flex:1;">
-                                <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
-                                    <span style="font-size:0.85rem; font-weight:600; color:var(--text-main);">${f.name} <small style="color:var(--text-muted); font-weight:normal;">(${f.count} reports)</small></span>
-                                    <span style="font-size:0.8rem; font-weight:700; color:var(--primary);">${f.percentage}%</span>
+                // Top Categories Bar
+                try {
+                    const ctxTop = document.getElementById('topFacilitiesChart')?.getContext('2d');
+                    if(ctxTop) {
+                        if(topFacChart) topFacChart.destroy();
+                        topFacChart = new Chart(ctxTop, {
+                            type: 'bar',
+                            data: {
+                                labels: data.top_facilities?.labels ?? [],
+                                datasets: [{
+                                    label: 'Reports count',
+                                    data: data.top_facilities?.data ?? [],
+                                    backgroundColor: '#3b82f6',
+                                    borderRadius: 8
+                                }]
+                            },
+                            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+                        });
+                    }
+                } catch(e) { console.error("Top Categories Chart Error", e); }
+
+                // Report Categories Progress Bars
+                const utilList = document.getElementById('ana-utilization-list');
+                if(utilList) {
+                    utilList.innerHTML = '';
+                    if(data.facility_utilization && data.facility_utilization.length > 0) {
+                        data.facility_utilization.forEach(f => {
+                            utilList.innerHTML += `
+                                <div style="flex:1;">
+                                    <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
+                                        <span style="font-size:0.85rem; font-weight:600; color:var(--text-main);">${f.name} <small style="color:var(--text-muted); font-weight:normal;">(${f.count} reports)</small></span>
+                                        <span style="font-size:0.8rem; font-weight:700; color:var(--primary);">${f.percentage}%</span>
+                                    </div>
+                                    <div style="width:100%; height:8px; background:var(--input-bg); border-radius:10px; overflow:hidden; border:1px solid var(--border-color);">
+                                        <div style="width:${f.percentage}%; height:100%; background:linear-gradient(to right, var(--primary), #3b82f6); border-radius:10px;"></div>
+                                    </div>
                                 </div>
-                                <div style="width:100%; height:8px; background:var(--input-bg); border-radius:10px; overflow:hidden; border:1px solid var(--border-color);">
-                                    <div style="width:${f.percentage}%; height:100%; background:linear-gradient(to right, var(--primary), #3b82f6); border-radius:10px;"></div>
-                                </div>
-                            </div>
-                         `;
-                     });
-                 } else {
-                     utilList.innerHTML = '<div style="text-align:center; color:var(--text-muted); padding:1rem;">No reports categorized yet.</div>';
-                 }
+                            `;
+                        });
+                    } else {
+                        utilList.innerHTML = '<div style="text-align:center; color:var(--text-muted); padding:1rem;">No reports categorized yet.</div>';
+                    }
+                }
 
-                 // Outcome Table
-                 const outcomeTable = document.getElementById('ana-outcome-table');
-                 outcomeTable.innerHTML = '';
-                 data.outcomes.forEach(o => {
-                     let color = '#10b981';
-                     if(o.status === 'Rejected') color = '#ef4444';
-                     else if(o.status === 'Cancelled') color = '#64748b';
-                     else if(o.status === 'Pending') color = '#f59e0b';
-                     
-                     outcomeTable.innerHTML += `
-                        <tr>
-                            <td><span class="badge" style="background:${color}15; color:${color}; border:1px solid ${color}30;">${o.status}</span></td>
-                            <td style="font-weight:700; color:var(--text-main);">${o.count}</td>
-                            <td style="color:var(--text-muted);">${o.share}%</td>
-                        </tr>
-                     `;
-                 });
+                // Outcome Table
+                const outcomeTable = document.getElementById('ana-outcome-table');
+                if(outcomeTable) {
+                    outcomeTable.innerHTML = '';
+                    (data.outcomes || []).forEach(o => {
+                        let color = '#10b981';
+                        if(o.status === 'Rejected') color = '#ef4444';
+                        else if(o.status === 'Cancelled') color = '#64748b';
+                        else if(o.status === 'Pending') color = '#f59e0b';
+                        
+                        outcomeTable.innerHTML += `
+                            <tr>
+                                <td><span class="badge" style="background:${color}15; color:${color}; border:1px solid ${color}30;">${o.status}</span></td>
+                                <td style="font-weight:700; color:var(--text-main);">${o.count}</td>
+                                <td style="color:var(--text-muted);">${o.share}%</td>
+                            </tr>
+                        `;
+                    });
+                }
  
-                 // AI Sentiment Chart
-                 const ctxSenti = document.getElementById('sentimentChart');
-                 if(ctxSenti) {
-                     const ctx = ctxSenti.getContext('2d');
-                     if(window.sentimentChartObj) window.sentimentChartObj.destroy();
-                     window.sentimentChartObj = new Chart(ctx, {
-                         type: 'doughnut',
-                         data: {
-                             labels: ['Positive', 'Neutral', 'Negative'],
-                             datasets: [{
-                                 data: [data.sentiments?.positive || 0, data.sentiments?.neutral || 0, data.sentiments?.negative || 0],
-                                 backgroundColor: ['#10b981', '#64748b', '#ef4444'],
-                                 borderWidth: 0
-                             }]
-                         },
-                         options: { responsive: true, maintainAspectRatio: false, cutout: '70%', plugins: { legend: { position: 'bottom' } } }
-                     });
-                 }
+                // AI Sentiment Chart
+                try {
+                    const ctxSenti = document.getElementById('sentimentChart');
+                    if(ctxSenti) {
+                        const ctx = ctxSenti.getContext('2d');
+                        if(window.sentimentChartObj) window.sentimentChartObj.destroy();
+                        window.sentimentChartObj = new Chart(ctx, {
+                            type: 'doughnut',
+                            data: {
+                                labels: ['Positive', 'Neutral', 'Negative'],
+                                datasets: [{
+                                    data: [data.sentiments?.positive || 0, data.sentiments?.neutral || 0, data.sentiments?.negative || 0],
+                                    backgroundColor: ['#10b981', '#64748b', '#ef4444'],
+                                    borderWidth: 0
+                                }]
+                            },
+                            options: { responsive: true, maintainAspectRatio: false, cutout: '70%', plugins: { legend: { position: 'bottom' } } }
+                        });
+                    }
+                } catch(e) { console.error("Sentiment Chart Error", e); }
 
                 feather.replace();
-            } catch(e) { console.error("Analytics Error", e); }
+            } catch(e) { console.error("Analytics Global Error", e); }
         }
     </script>
 </body>

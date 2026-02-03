@@ -23,7 +23,7 @@ include 'db_connect.php';
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Outfit', sans-serif; }
         body { background: var(--bg); color: var(--text-main); line-height: 1.6; }
 
-        .container { max-width: 1200px; margin: 0 auto; padding: 2rem 5%; }
+        .container { max-width: 1500px; margin: 0 auto; padding: 2rem 4%; }
 
         header {
             padding: 4rem 0 2rem;
@@ -87,7 +87,7 @@ include 'db_connect.php';
         /* Announcement Grid */
         .announcement-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
             gap: 2.5rem;
         }
 

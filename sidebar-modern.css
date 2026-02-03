@@ -1,0 +1,428 @@
+/* Modern Sidebar - Code Adventure Style */
+:root {
+    --sidebar-width: 260px;
+    --sidebar-minimized-width: 88px;
+    --sidebar-transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    --sidebar-item-padding: 0.8rem 1rem;
+    --sidebar-item-margin: 0.25rem 0.75rem;
+    --sidebar-radius: 12px;
+}
+
+/* Sidebar Styling */
+.sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: var(--sidebar-width);
+    height: 100vh;
+    background: var(--sidebar-bg);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-right: 1px solid var(--border-color);
+    transition: var(--sidebar-transition);
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    padding: 1.5rem 0;
+    overflow: visible;
+}
+
+.sidebar.minimized {
+    width: var(--sidebar-minimized-width);
+}
+
+/* Sidebar Header */
+.sidebar-header {
+    padding: 0 1.5rem;
+    margin-bottom: 2.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    transition: var(--sidebar-transition);
+}
+
+.sidebar.minimized .sidebar-header {
+    padding: 0;
+    justify-content: center;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 1.4rem;
+    font-weight: 800;
+    color: var(--text-main);
+    letter-spacing: -1px;
+    transition: var(--sidebar-transition);
+}
+
+.logo-icon {
+    animation: rotateSlow 20s linear infinite;
+}
+
+@keyframes rotateSlow {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.sidebar.minimized .logo {
+    font-size: 1rem;
+}
+
+.logo span {
+    color: var(--primary);
+}
+
+.sidebar.minimized .logo-text {
+    display: none;
+}
+
+/* Toggle Button */
+.sidebar-toggle {
+    background: var(--input-bg);
+    border: 1px solid var(--border-color);
+    color: var(--text-muted);
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sidebar-toggle:hover {
+    background: var(--primary);
+    color: #fff;
+    transform: scale(1.1) rotate(180deg);
+    border-color: var(--primary);
+}
+
+.sidebar.minimized .sidebar-toggle {
+    margin-bottom: 0.5rem;
+}
+
+/* Navigation Items */
+.sidebar-nav {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 0 0.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    scrollbar-width: none;
+}
+
+.sidebar-nav::-webkit-scrollbar {
+    display: none;
+}
+
+.nav-item {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: var(--sidebar-item-padding);
+    margin: var(--sidebar-item-margin);
+    color: var(--text-muted);
+    text-decoration: none;
+    border-radius: var(--sidebar-radius);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    font-weight: 500;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.nav-item i {
+    width: 22px;
+    height: 22px;
+    flex-shrink: 0;
+    transition: transform 0.3s;
+}
+
+.nav-item span {
+    opacity: 1;
+    transition: var(--sidebar-transition);
+}
+
+.sidebar.minimized .nav-item span {
+    opacity: 0;
+    width: 0;
+    overflow: hidden;
+    margin-left: -20px;
+}
+
+.sidebar.minimized .nav-item {
+    justify-content: center;
+    padding: 1rem;
+    margin: 0.25rem 0.8rem;
+}
+
+/* Active and Hover States */
+.nav-item:hover {
+    background: rgba(99, 102, 241, 0.08);
+    color: var(--primary);
+    transform: translateX(8px);
+}
+
+.sidebar.minimized .nav-item:hover {
+    transform: scale(1.1);
+}
+
+.nav-item.active {
+    background: var(--primary);
+    color: #ffffff !important;
+    box-shadow: 0 10px 20px -5px rgba(99, 102, 241, 0.4);
+    transform: translateX(5px);
+}
+
+.nav-item.active i {
+    transform: scale(1.1);
+}
+
+/* Floating Indicator (Code Adventure Signature) */
+.nav-indicator {
+    position: absolute;
+    left: 4px;
+    width: 4px;
+    height: 36px;
+    background: #fff;
+    border-radius: 10px;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    pointer-events: none;
+    z-index: 5;
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+}
+
+.sidebar.minimized .nav-indicator {
+    left: 8px;
+    height: 40px;
+}
+
+/* Profile Footer Section */
+.sidebar-footer {
+    padding: 1rem 0.75rem;
+    border-top: 1px solid var(--border-color);
+    margin-top: auto;
+    position: relative;
+    transition: var(--sidebar-transition);
+}
+
+.sidebar.minimized .sidebar-footer {
+    padding: 1rem 0;
+}
+
+.profile-container {
+    position: relative;
+    width: 100%;
+}
+
+.user-profile-mini {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem;
+    background: var(--input-bg);
+    border-radius: 16px;
+    border: 1px solid var(--border-color);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+    user-select: none;
+}
+
+.user-profile-mini:hover {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: var(--primary);
+    transform: translateY(-2px);
+}
+
+.sidebar.minimized .user-profile-mini {
+    padding: 0.5rem;
+    border: none;
+    background: transparent;
+    justify-content: center;
+}
+
+.user-avatar {
+    width: 40px;
+    height: 40px;
+    background: linear-gradient(135deg, var(--primary), #818cf8);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-weight: 700;
+    flex-shrink: 0;
+    box-shadow: 0 4px 10px rgba(99, 102, 241, 0.3);
+}
+
+.user-info {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    flex: 1;
+    transition: var(--sidebar-transition);
+}
+
+.sidebar.minimized .user-info,
+.sidebar.minimized .more-icon {
+    display: none;
+}
+
+.user-name-footer {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-main);
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+}
+
+.user-role-footer {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+}
+
+.more-icon {
+    color: var(--text-muted);
+    width: 16px;
+    height: 16px;
+}
+
+/* Profile Dropdown Menu */
+.profile-dropdown {
+    position: absolute;
+    bottom: calc(100% + 10px);
+    left: 0;
+    width: 100%;
+    background: var(--sidebar-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 0.5rem;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(10px);
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(10px);
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    z-index: 1100;
+}
+
+.profile-dropdown.show {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.sidebar.minimized .profile-dropdown {
+    width: 180px;
+    left: 10px;
+}
+
+.dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    color: var(--text-muted);
+    text-decoration: none;
+    border-radius: 10px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+
+.dropdown-item:hover {
+    background: rgba(99, 102, 241, 0.1);
+    color: var(--primary);
+}
+
+.dropdown-item i {
+    width: 16px;
+    height: 16px;
+}
+
+.dropdown-divider {
+    height: 1px;
+    background: var(--border-color);
+    margin: 0.4rem 0.5rem;
+}
+
+.logout-item {
+    color: var(--danger);
+}
+
+.logout-item:hover {
+    background: rgba(239, 68, 68, 0.1);
+    color: var(--danger);
+}
+
+/* Tooltips for Minimized Sidebar */
+.nav-item::after {
+    content: attr(title);
+    position: absolute;
+    left: 100%;
+    margin-left: 20px;
+    background: var(--sidebar-bg);
+    color: var(--text-main);
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    font-size: 0.8rem;
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.3s;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2);
+    border: 1px solid var(--border-color);
+    z-index: 1001;
+}
+
+.sidebar.minimized .nav-item:hover::after {
+    opacity: 1;
+    margin-left: 10px;
+}
+
+/* Light Mode Adjustments */
+body.light-theme .sidebar {
+    background: rgba(255, 255, 255, 0.9);
+}
+
+body.light-theme .nav-item:hover {
+    background: rgba(99, 102, 241, 0.05);
+}
+
+/* Section Switching Animations */
+.main-content {
+    margin-left: var(--sidebar-width);
+    transition: var(--sidebar-transition);
+}
+
+.main-content.sidebar-collapsed {
+    margin-left: var(--sidebar-minimized-width);
+}
+
+@media (max-width: 768px) {
+    .sidebar {
+        transform: translateX(-100%);
+    }
+
+    .main-content {
+        margin-left: 0 !important;
+    }
+
+    .sidebar.mobile-open {
+        transform: translateX(0);
+        width: 280px;
+    }
+}
