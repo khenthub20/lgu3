@@ -2123,8 +2123,8 @@ if ($action === 'toggle_user_status') {
                     $mail->SMTPAuth = true;
                     $mail->Username = 'khentcorpuz71@gmail.com'; 
                     $mail->Password = 'edqj nqsx pvgb ffph';
-                    $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;
-                    $mail->Port = 465;
+                    $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+                    $mail->Port = 587;
                     $mail->Timeout = 30; 
                     $mail->SMTPOptions = [
                         'ssl' => [
@@ -2201,8 +2201,8 @@ if ($action === 'fix_account') {
             $mail->SMTPAuth = true;
             $mail->Username = 'khentcorpuz71@gmail.com'; 
             $mail->Password = 'edqj nqsx pvgb ffph';
-            $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;
-            $mail->Port = 465;
+            $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+            $mail->Port = 587;
             $mail->Timeout = 30;
             $mail->SMTPOptions = [
                 'ssl' => [

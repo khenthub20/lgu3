@@ -57,10 +57,10 @@ function sendOTPEmail($to, $fullname, $otp) {
         $mail->Username   = trim(SMTP_USER);
         $mail->Password   = trim(SMTP_PASS);
         
-        // Use Port 465 (SSL) as priority, or 587 (TLS) if 465 is blocked
-        $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS; 
-        $mail->Port       = 465; 
-        $mail->Timeout    = 30; // Increased for live server latency
+        // Switched to Port 587 (STARTTLS) for better domain compatibility
+        $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS; 
+        $mail->Port       = 587; 
+        $mail->Timeout    = 30; 
         
         // Robust SSL options for live servers
         $mail->SMTPOptions = array(

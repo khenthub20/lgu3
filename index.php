@@ -22,8 +22,8 @@ function sendRefEmail($to, $name, $refId) {
         $mail->SMTPAuth = true;
         $mail->Username = trim(SMTP_USER);
         $mail->Password = trim(SMTP_PASS);
-        $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;
-        $mail->Port = 465;
+        $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+        $mail->Port = 587;
         $mail->Timeout = 30; // Better for live servers
         $mail->SMTPOptions = [
             'ssl' => [
