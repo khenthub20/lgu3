@@ -1540,9 +1540,9 @@ if (empty($skillRow['skills'])) {
                     let actionHtml = '';
                     if(app.status === 'approved') {
                         actionHtml = `
-                            <a href="${app.material_link}" target="_blank" class="download-btn">
+                            <a href="${app.material_link}" download class="download-btn">
                                 <i data-feather="download"></i>
-                                Get Study Module
+                                Download Module
                             </a>
                         `;
                     } else {
@@ -1903,9 +1903,9 @@ if (empty($skillRow['skills'])) {
                 
                 data.forEach(d => {
                     const downloadBtn = d.exists 
-                        ? `<a href="${encodeURI(d.file_path)}" target="_blank" class="download-btn-premium">
+                        ? `<a href="${encodeURI(d.file_path)}" download class="download-btn-premium">
                                 <i data-feather="download" style="width:18px;"></i>
-                                Access Material
+                                Download Material
                            </a>`
                         : `<p style="color:#ef4444; font-size:0.8rem; margin-top:0.5rem;"><i data-feather="alert-circle" style="width:14px; vertical-align:middle;"></i> File temporarily unavailable</p>`;
 

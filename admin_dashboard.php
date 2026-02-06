@@ -1948,7 +1948,7 @@ if ($checkCol && $checkCol->num_rows > 0) {
                               <td><span style="font-weight:600; color:var(--text-main);">${d.title}</span></td>
                               <td><span class="badge active">${d.category}</span></td>
                               <td>
-                                  <a href="${encodeURI(d.file_path)}" target="_blank" style="color:var(--primary); font-size:0.8rem;">View File</a>
+                                  <a href="${encodeURI(d.file_path)}" download style="color:var(--primary); font-size:0.8rem;">View & Download</a>
                                   ${fileStatus}
                               </td>
                               <td>${d.created_at.split(' ')[0]}</td>
