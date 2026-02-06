@@ -35,7 +35,7 @@ if (!$uid && !in_array($action, $allowed_public_actions)) {
 }
 
 // Admin-only actions
-$admin_actions = ['stats', 'recent_users', 'reports', 'admin_programs', 'create_program', 'admin_applications', 'send_material', 'all_citizens', 'manual_enroll', 'delete_program', 'delete_application', 'update_program', 'upload_doc', 'delete_doc', 'approve_edit', 'get_edit_requests', 'toggle_user_status', 'add_calendar_event', 'delete_calendar_event', 'get_calendar_stats', 'fix_account', 'create_announcement', 'delete_announcement', 'get_maintenance', 'sync_maintenance', 'get_analytics'];
+$admin_actions = ['stats', 'recent_users', 'reports', 'admin_programs', 'create_program', 'admin_applications', 'send_material', 'all_citizens', 'manual_enroll', 'delete_program', 'delete_application', 'update_program', 'upload_doc', 'delete_doc', 'approve_edit', 'get_edit_requests', 'toggle_user_status', 'add_calendar_event', 'delete_calendar_event', 'get_calendar_stats', 'fix_account', 'create_announcement', 'delete_announcement', 'get_maintenance', 'sync_maintenance', 'get_analytics', 'delete_user', 'delete_application'];
 if (in_array($action, $admin_actions) && $role !== 'admin') {
      echo json_encode(['error' => 'Unauthorized Access']);
      exit;
@@ -925,30 +925,6 @@ if ($action === 'get_edit_requests') {
     exit;
 }
 
-if ($action === 'toggle_user_status') {
-    if($role !== 'admin') exit;
-    $input = json_decode(file_get_contents('php://input'), true);
-    $targetUid = $input['user_id'];
-    $newStatus = $input['is_active']; // 1 or 0
-    
-    $stmt = $conn->prepare("UPDATE users SET is_active = ? WHERE id = ?");
-    $stmt->bind_param("ii", $newStatus, $targetUid);
-    
-    if($stmt->execute()) {
-        $statusText = $newStatus ? "Activated" : "Deactivated";
-        
-        // Notify user if possible (they can see it next time or if session allowed)
-        $msg = "Your account has been $statusText by an Administrator.";
-        $stmtNotif = $conn->prepare("INSERT INTO notifications (user_id, title, message, type) VALUES (?, 'Account Update', ?, 'info')");
-        $stmtNotif->bind_param("is", $targetUid, $msg);
-        $stmtNotif->execute();
-        
-        echo json_encode(['success' => true]);
-    } else {
-        echo json_encode(['error' => $conn->error]);
-    }
-    exit;
-}
 
 if ($action === 'request_reactivation') {
     $input = json_decode(file_get_contents('php://input'), true);
@@ -971,37 +947,6 @@ if ($action === 'request_reactivation') {
     exit;
 }
 
-if ($action === 'fix_account') {
-    if($role !== 'admin') exit;
-    $input = json_decode(file_get_contents('php://input'), true);
-    $refId = trim($input['reference_id'] ?? '');
-    
-    if(!$refId) {
-        echo json_encode(['error' => 'Reference ID is required']);
-        exit;
-    }
-
-    $stmt = $conn->prepare("UPDATE users SET is_active = 1 WHERE reference_id = ?");
-    $stmt->bind_param("s", $refId);
-    
-    if($stmt->execute()) {
-        if($stmt->affected_rows > 0) {
-            // Find user id to notify them
-            $res = $conn->query("SELECT id FROM users WHERE reference_id = '$refId'");
-            if($u = $res->fetch_assoc()) {
-                $targetUid = $u['id'];
-                $msg = "Your account has been reactivated via Reference ID check. Welcome back!";
-                $conn->query("INSERT INTO notifications (user_id, title, message, type) VALUES ($targetUid, 'Account Reactivated', '$msg', 'success')");
-            }
-            echo json_encode(['success' => true, 'message' => 'Account successfully reactivated.']);
-        } else {
-            echo json_encode(['error' => 'Reference ID not found or already active.']);
-        }
-    } else {
-        echo json_encode(['error' => $conn->error]);
-    }
-    exit;
-}
 
 if ($action === 'get_calendar') {
     $events = [];
@@ -2147,6 +2092,183 @@ if ($action === 'get_docs') {
         }
     }
     echo json_encode($docs);
+    exit;
+}
+
+
+
+if ($action === 'toggle_user_status') {
+    require_once 'PHPMailer/Exception.php';
+    require_once 'PHPMailer/PHPMailer.php';
+    require_once 'PHPMailer/SMTP.php';
+
+    $input = json_decode(file_get_contents('php://input'), true);
+    $targetId = $input['user_id'];
+    $newStatus = $input['is_active']; // 1 = Active, 0 = Deactivated
+    
+    // Update DB
+    $stmt = $conn->prepare("UPDATE users SET is_active = ? WHERE id = ?");
+    $stmt->bind_param("ii", $newStatus, $targetId);
+    
+    if ($stmt->execute()) {
+        // If Deactivating (0), Send Warning Email
+        if ($newStatus == 0) {
+            // Get User Email
+            $resU = $conn->query("SELECT email, full_name FROM users WHERE id = $targetId");
+            if ($u = $resU->fetch_assoc()) {
+                $mail = new PHPMailer(true);
+                try {
+                    $mail->isSMTP();
+                    $mail->Host = 'smtp.gmail.com';
+                    $mail->SMTPAuth = true;
+                    $mail->Username = 'khentcorpuz71@gmail.com'; 
+                    $mail->Password = 'edqj nqsx pvgb ffph';
+                    $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;
+                    $mail->Port = 465;
+                    $mail->SMTPOptions = [
+                        'ssl' => [
+                            'verify_peer' => false, 
+                            'verify_peer_name' => false, 
+                            'allow_self_signed' => true,
+                            'crypto_method' => STREAM_CRYPTO_METHOD_TLSv1_2_CLIENT
+                        ]
+                    ];
+
+                    $mail->setFrom('khentcorpuz71@gmail.com', 'LGU3 Admin');
+                    $mail->addAddress($u['email'], $u['full_name']);
+                    $mail->addReplyTo('khentcorpuz71@gmail.com', 'LGU3 Admin');
+
+                    $mail->isHTML(true);
+                    $mail->Subject = 'Account Status Warning';
+                    $mail->Body = "
+                    <div style='font-family:Arial,sans-serif; padding:20px; color:#333;'>
+                        <h2 style='color:#ef4444;'>Account Warning</h2>
+                        <p>Hello <strong>{$u['full_name']}</strong>,</p>
+                        <p>Your account has been temporarily flagged/suspended.</p>
+                        <p style='background:#fee2e2; padding:15px; border-left:4px solid #ef4444; color:#991b1b; font-weight:bold;'>
+                            Warning: If you dont response im going to deactivate you accout
+                        </p>
+                        <p>Please reply to this email immediately to resolve this issue.</p>
+                    </div>";
+                    
+                    $mail->send();
+                } catch (Exception $e) { }
+            }
+        }
+        
+        echo json_encode(['success' => true]);
+    } else {
+        echo json_encode(['error' => $conn->error]);
+    }
+    exit;
+}
+
+// Ensure PHPMailer is loaded for this action
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\Exception;
+
+if ($action === 'fix_account') {
+    require_once 'PHPMailer/Exception.php';
+    require_once 'PHPMailer/PHPMailer.php';
+    require_once 'PHPMailer/SMTP.php';
+
+    $input = json_decode(file_get_contents('php://input'), true);
+    $refId = $input['reference_id'];
+    $reason = $input['reason'] ?? 'Standard Reactivation';
+
+    $stmt = $conn->prepare("SELECT id, full_name, email FROM users WHERE reference_id = ?");
+    $stmt->bind_param("s", $refId);
+    $stmt->execute();
+    $res = $stmt->get_result();
+    
+    if ($row = $res->fetch_assoc()) {
+        $userId = $row['id'];
+        $email = $row['email'];
+        $name = $row['full_name'];
+        
+        // Reactivate
+        $conn->query("UPDATE users SET is_active = 1 WHERE id = $userId");
+        
+        // Return JSON immediately for UI, but try to send email
+        // Note: For 25s delay simulating, the UI waits. The server is fast.
+        
+        // Send Email
+        $mail = new PHPMailer(true);
+        try {
+            // Config
+            $mail->isSMTP();
+            $mail->Host = 'smtp.gmail.com';
+            $mail->SMTPAuth = true;
+            $mail->Username = 'khentcorpuz71@gmail.com'; 
+            $mail->Password = 'edqj nqsx pvgb ffph';
+            $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;
+            $mail->Port = 465;
+            $mail->SMTPOptions = [
+                'ssl' => [
+                    'verify_peer' => false, 
+                    'verify_peer_name' => false, 
+                    'allow_self_signed' => true,
+                    'crypto_method' => STREAM_CRYPTO_METHOD_TLSv1_2_CLIENT
+                ]
+            ];
+
+            $mail->setFrom('khentcorpuz71@gmail.com', 'LGU3 Admin Support');
+            $mail->addAddress($email, $name);
+            $mail->addReplyTo('khentcorpuz71@gmail.com', 'Admin Response'); // Reply goes to admin
+
+            $mail->isHTML(true);
+            $mail->Subject = 'Account Reactivated - LGU3 Portal';
+            $mail->Body = "
+            <div style='font-family:Arial, sans-serif; padding:20px; background:#f4f4f4;'>
+                 <div style='background:white; padding:20px; border-radius:8px; border-left: 4px solid #10b981;'>
+                     <h2 style='color:#10b981;'>Account Reactivated</h2>
+                     <p>Dear <strong>$name</strong>,</p>
+                     <p>Your account has been successfully reactivated by the administration.</p>
+                     <p><strong>Reason/Note:</strong><br>".nl2br(htmlspecialchars($reason))."</p>
+                     <p>You may now login to the portal. If you have any questions, please reply to this email.</p>
+                 </div>
+            </div>";
+            
+            $mail->send();
+        } catch (Exception $e) { 
+            // Email failure shouldn't stop the success response
+        }
+
+        echo json_encode([
+            'success' => true, 
+            'name' => $name, 
+            'time' => date('F j, Y, h:i A')
+        ]);
+    } else {
+        echo json_encode(['error' => 'Reference ID not found.']);
+    }
+    exit;
+}
+
+if ($action === 'delete_user') {
+    $input = json_decode(file_get_contents('php://input'), true);
+    $targetId = $input['id'];
+    
+    if($targetId == $uid) {
+         echo json_encode(['error' => 'Cannot delete your own account']);
+         exit;
+    }
+
+    // Cleanup related tables
+    $conn->query("DELETE FROM reports WHERE user_id = $targetId");
+    $conn->query("DELETE FROM notifications WHERE user_id = $targetId");
+    $conn->query("DELETE FROM program_applications WHERE user_id = $targetId");
+    $conn->query("DELETE FROM skills_progress WHERE user_id = $targetId");
+    // Delete events created BY the user OR targeted TO the user
+    $conn->query("DELETE FROM calendar_events WHERE user_id = $targetId OR target_user_id = $targetId");
+    
+    // Also delete maintenance tasks assigned to them? Maybe reset to NULL
+    $conn->query("UPDATE maintenance_schedules SET user_id = NULL WHERE user_id = $targetId");
+
+    $stmt = $conn->prepare("DELETE FROM users WHERE id = ?");
+    $stmt->bind_param("i", $targetId);
+    if($stmt->execute()) echo json_encode(['success' => true]);
+    else echo json_encode(['error' => $conn->error]);
     exit;
 }
 

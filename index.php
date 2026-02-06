@@ -2,14 +2,73 @@
 session_start();
 include 'db_connect.php';
 
+// Email Configuration (Same as signup)
+define('SMTP_HOST', 'smtp.gmail.com');
+define('SMTP_PORT', 465);
+define('SMTP_USER', 'khentcorpuz71@gmail.com');
+define('SMTP_PASS', 'edqj nqsx pvgb ffph');
+
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\Exception;
+require 'PHPMailer/Exception.php';
+require 'PHPMailer/PHPMailer.php';
+require 'PHPMailer/SMTP.php';
+
+function sendRefEmail($to, $name, $refId) {
+    $mail = new PHPMailer(true);
+    try {
+        $mail->isSMTP();
+        $mail->Host = 'smtp.gmail.com';
+        $mail->SMTPAuth = true;
+        $mail->Username = trim(SMTP_USER);
+        $mail->Password = trim(SMTP_PASS);
+        $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;
+        $mail->Port = 465;
+        $mail->SMTPOptions = [
+            'ssl' => [
+                'verify_peer' => false,
+                'verify_peer_name' => false,
+                'allow_self_signed' => true,
+                'crypto_method' => STREAM_CRYPTO_METHOD_TLSv1_2_CLIENT
+            ]
+        ];
+
+        $mail->setFrom(SMTP_USER, 'LGU3 Support');
+        $mail->addAddress($to, $name);
+        $mail->isHTML(true);
+        $mail->Subject = 'Welcome to LGU3 - Your Reference ID';
+        $mail->Body = "
+        <div style='font-family:Arial,sans-serif; padding:20px; background:#f4f4f4;'>
+            <div style='background:white; padding:30px; border-radius:10px; max-width:500px; margin:0 auto;'>
+                <h2 style='color:#6366f1; text-align:center;'>Welcome to LGU3 Portal!</h2>
+                <p>Hello <strong>$name</strong>,</p>
+                <p>Congratulations on your first login! You are now a verified member of our digital livelihood system.</p>
+                <p>Please keep your Permanent Reference ID safe:</p>
+                <div style='background:#f8fafc; padding:15px; text-align:center; font-size:24px; font-weight:bold; color:#0f172a; border:1px dashed #6366f1; border-radius:8px; margin:20px 0;'>
+                    $refId
+                </div>
+                <p>You will use this ID for official transactions and program applications.</p>
+                <p style='color:#64748b; font-size:12px; text-align:center; margin-top:20px;'>Baranggay Laforteza Holdings 264</p>
+            </div>
+        </div>";
+        $mail->send();
+        return true;
+    } catch (Exception $e) { return false; }
+}
+
 $error = '';
+$success_msg = '';
+
+if(isset($_GET['verified'])) {
+    $success_msg = "Account Verified! Please login to receive your Reference ID.";
+}
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $email = $_POST['email'];
     $password = $_POST['password'];
 
-    // Secure query
-    $stmt = $conn->prepare("SELECT id, full_name, password, role, is_active FROM users WHERE email = ?");
+    // Secure query including is_first_login and reference_id
+    $stmt = $conn->prepare("SELECT id, full_name, password, role, is_active, is_first_login, reference_id FROM users WHERE email = ?");
     $stmt->bind_param("s", $email);
     $stmt->execute();
     $result = $stmt->get_result();
@@ -17,15 +76,23 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if ($result->num_rows > 0) {
         $user = $result->fetch_assoc();
         
-        // Check if account is deactivated
         if ($user['is_active'] == 0) {
             $error = "Your account has been deactivated. Please contact administration.";
         } 
-        // In a real app, use password_verify($password, $user['password'])
         else if (password_verify($password, $user['password'])) {
             $_SESSION['user_id'] = $user['id'];
             $_SESSION['role'] = $user['role'];
             $_SESSION['full_name'] = $user['full_name'];
+
+            // First Login Logic
+            if ($user['role'] === 'user' && isset($user['is_first_login']) && $user['is_first_login'] == 1) {
+                // Send Email
+                sendRefEmail($email, $user['full_name'], $user['reference_id']);
+                // Update DB
+                $conn->query("UPDATE users SET is_first_login = 0 WHERE id = " . $user['id']);
+                // Optional: Store flag in session to show 'Welcome' modal in dashboard
+                $_SESSION['show_welcome_ref'] = $user['reference_id'];
+            }
 
             if ($user['role'] === 'admin') {
                 header("Location: admin_dashboard.php");
@@ -297,6 +364,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             border: 1px solid rgba(239, 68, 68, 0.2);
             font-size: 0.9rem;
         }
+        .success-banner {
+            background: rgba(16, 185, 129, 0.1);
+            color: #10b981;
+            padding: 1rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            text-align: center;
+            border: 1px solid rgba(16, 185, 129, 0.2);
+            font-size: 0.9rem;
+        }
     </style>
 </head>
 <body>
@@ -336,6 +413,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 <h2 style="font-size:2rem; font-weight:700; margin-bottom:0.5rem; color:var(--text-main);">Welcome Back</h2>
                 <p style="color:var(--text-muted);">Access your professional livelihood portal</p>
             </div>
+
+            <?php if (!empty($success_msg)): ?>
+                <div class="success-banner">
+                    <i data-feather="check-circle" style="width:16px; vertical-align:middle; margin-right:5px;"></i>
+                    <?php echo $success_msg; ?>
+                </div>
+            <?php endif; ?>
 
             <?php if($error): ?>
                 <div class="error-banner">

@@ -462,7 +462,55 @@ if ($checkCol && $checkCol->num_rows > 0) {
                     </div>
                 </div>
 
-                <!-- SECTION: REPORTS -->
+                <!-- SECTION: FIX ACCOUNT -->
+                <div id="fix-account" class="section-view">
+                    <div class="page-header">
+                        <h2>Fix Citizen Account</h2>
+                        <p>Instantly reactivate a suspended account using the Reference ID.</p>
+                    </div>
+                    <div class="content-section" style="max-width: 600px; margin: 0 auto;">
+                        <div id="fix-form-container" style="padding: 2rem;">
+                            <div class="form-group">
+                                <label>Reference ID (e.g., REF-12345678)</label>
+                                <input type="text" id="fix_ref_id" class="form-control" placeholder="REF-XXXXXXXX">
+                            </div>
+                            <div class="form-group">
+                                 <label>Reason for Reactivation</label>
+                                 <textarea id="fix_reason" class="form-control" placeholder="e.g. Identity verified, Appeal granted..." style="min-height:100px;"></textarea>
+                            </div>
+                            <button class="primary-action-btn" onclick="reactivateAccount()" style="width:100%; padding:1rem; font-size:1rem; justify-content:center;">Reactivate Account</button>
+                        </div>
+                        
+                        <!-- Loading Overlay for 25s simulation -->
+                        <div id="reactivation-loader" style="display:none; text-align:center; padding:3rem 2rem;">
+                             <div class="spin" style="margin:0 auto 1.5rem; width:50px; height:50px; border:4px solid rgba(99, 102, 241, 0.1); border-top-color:var(--primary); border-radius:50%;"></div>
+                             <h4 style="color:var(--text-main); margin-bottom:0.5rem;">Reactivating Account...</h4>
+                             <p style="color:var(--text-muted); font-size:0.9rem;">Verifying Reference ID and removing suspension...</p>
+                             <div style="background:rgba(0,0,0,0.1); width:100%; height:10px; border-radius:5px; margin-top:2rem; overflow:hidden;">
+                                 <div id="react-progress" style="width:0%; height:100%; background:var(--primary); transition:width 0.5s linear;"></div>
+                             </div>
+                             <p id="react-timer" style="margin-top:0.5rem; font-size:0.8rem; color:var(--text-muted);">25s remaining</p>
+                        </div>
+
+                        <!-- Success Result -->
+                        <div id="reactivation-result" style="display:none; text-align:center; padding:2rem;">
+                             <div style="width:70px; height:70px; background:rgba(16, 185, 129, 0.1); color:#10b981; border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 1.5rem;">
+                                 <i data-feather="check" style="width:36px; height:36px;"></i>
+                             </div>
+                             <h3 style="color:var(--text-main); margin-bottom:0.5rem;">Account Successfully Reactivated</h3>
+                             <p style="color:var(--text-muted);">The Citizen account is now active.</p>
+                             
+                             <div style="background:var(--input-bg); padding:1.5rem; border-radius:12px; margin-top:2rem; text-align:left; border:1px solid var(--border-color);">
+                                 <p style="margin-bottom:0.5rem; color:var(--text-main);"><strong>Name:</strong> <span id="react-name" style="color:var(--primary);">--</span></p>
+                                 <p style="margin-bottom:0.5rem; color:var(--text-main);"><strong>Time Reactivated:</strong> <span id="react-time">--</span></p>
+                                 <p style="margin:0; color:var(--text-main);"><strong>Action:</strong> <span class="badge active" style="margin-left:5px;">Reactivation Email Sent</span></p>
+                             </div>
+                             <p style="font-size:0.8rem; color:var(--text-muted); margin-top:1rem;">A reply from the user will be directed to your email.</p>
+                             
+                             <button class="action-btn" onclick="resetFixForm()" style="margin-top:2rem; width:100%;">Fix Another Account</button>
+                        </div>
+                    </div>
+                </div>
                 <div id="reports" class="section-view">
                      <div class="page-header">
                         <h2>Citizen Reports</h2>
@@ -2208,6 +2256,9 @@ if ($checkCol && $checkCol->num_rows > 0) {
                              <button class="${btnClass}" style="padding:0.4rem 0.6rem; font-size:0.7rem; display:flex; align-items:center; gap:4px; border-radius:6px; border:none; cursor:pointer;" onclick="toggleUserStatus(${user.id}, ${user.is_active == 1 ? 0 : 1})">
                                  <i data-feather="${activeIcon}" style="width:12px;"></i> ${activeLabel}
                              </button>
+                             <button class="icon-btn warning" style="background:#ef4444; border:none; padding:0.4rem 0.6rem; font-size:0.7rem; display:flex; align-items:center; gap:4px; border-radius:6px; cursor:pointer;" onclick="deleteUser(${user.id})" title="Delete User">
+                                 <i data-feather="trash-2" style="width:12px; color:white;"></i>
+                             </button>
                          </td>
                       </tr>`;
                   });
@@ -2235,6 +2286,26 @@ if ($checkCol && $checkCol->num_rows > 0) {
                     fetchUsers();
                 } else alert(data.error);
             } catch(e) { alert('Operation failed'); }
+        }
+
+        async function deleteUser(userId) {
+            if(!confirm("Are you sure you want to PERMANENTLY delete this user? This cannot be undone and will remove all their reports and data.")) return;
+            
+            try {
+                const res = await fetch('api.php?action=delete_user', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({id: userId})
+                });
+                const data = await res.json();
+                if(data.success) {
+                    showSuccessModal("User account deleted permanently.");
+                    fetchUsers();
+                    updateStats();
+                } else {
+                    alert('Error: ' + data.error);
+                }
+            } catch(e) { alert('Connection error'); }
         }
 
         async function approveEdit(userId) {
@@ -3391,6 +3462,71 @@ if ($checkCol && $checkCol->num_rows > 0) {
 
                 feather.replace();
             } catch(e) { console.error("Analytics Global Error", e); }
+        }
+
+        /* FIX ACCOUNT REACTIVATION LOGIC */
+        function reactivateAccount() {
+            const refId = document.getElementById('fix_ref_id').value.trim();
+            const reason = document.getElementById('fix_reason').value.trim();
+            
+            if(!refId) { alert("Please enter a Reference ID."); return; }
+            
+            // Switch to Loader
+            document.getElementById('fix-form-container').style.display = 'none';
+            const loader = document.getElementById('reactivation-loader');
+            loader.style.display = 'block';
+            
+            // Start Progress
+            const bar = document.getElementById('react-progress');
+            const timerText = document.getElementById('react-timer');
+            let timeLeft = 25;
+            
+            // Initiate API call safely (Parallel to timer)
+            const apiPromise = fetch('api.php?action=fix_account', {
+                method: 'POST',
+                headers: {'Content-Type':'application/json'},
+                body: JSON.stringify({ reference_id: refId, reason: reason })
+            }).then(res => res.json());
+
+            // Timer Interval
+            const interval = setInterval(() => {
+                timeLeft--;
+                // Calculate percentage (25s total)
+                const percentage = Math.floor(((25 - timeLeft) / 25) * 100);
+                bar.style.width = percentage + '%';
+                timerText.innerText = timeLeft + 's remaining';
+                
+                if (timeLeft <= 0) {
+                    clearInterval(interval);
+                    
+                    // Timer done, check API
+                    timerText.innerText = 'Finalizing...';
+                    
+                    apiPromise.then(data => {
+                        loader.style.display = 'none';
+                        if(data.success) {
+                            document.getElementById('react-name').innerText = data.name;
+                            document.getElementById('react-time').innerText = data.time;
+                            document.getElementById('reactivation-result').style.display = 'block';
+                        } else {
+                            alert('Error: ' + (data.error || 'Unknown Error'));
+                            resetFixForm();
+                        }
+                    }).catch(e => {
+                        alert('Connection Error');
+                        resetFixForm();
+                    });
+                }
+            }, 1000);
+        }
+
+        function resetFixForm() {
+            document.getElementById('fix_ref_id').value = '';
+            document.getElementById('fix_reason').value = '';
+            document.getElementById('reactivation-result').style.display = 'none';
+            document.getElementById('reactivation-loader').style.display = 'none';
+            document.getElementById('fix-form-container').style.display = 'block';
+            document.getElementById('react-progress').style.width = '0%';
         }
     </script>
 </body>

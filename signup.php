@@ -30,9 +30,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['accept_terms'])) {
 
 // Email Configuration - Gmail SMTP
 define('SMTP_HOST', 'smtp.gmail.com');
-define('SMTP_PORT', 587); // TLS Port
+define('SMTP_PORT', 465); // SSL Port (more reliable on XAMPP)
 define('SMTP_USER', 'khentcorpuz71@gmail.com');
-define('SMTP_PASS', 'tmyzdqgkxwcjzski');
+define('SMTP_PASS', 'edqj nqsx pvgb ffph');
 
 // Include PHPMailer
 use PHPMailer\PHPMailer\PHPMailer;
@@ -56,15 +56,17 @@ function sendOTPEmail($to, $fullname, $otp) {
         $mail->SMTPAuth   = true;
         $mail->Username   = trim(SMTP_USER);
         $mail->Password   = trim(SMTP_PASS);
-        $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS; // Use TLS
-        $mail->Port       = SMTP_PORT;
+        $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS; // Changed to SMTPS (SSL)
+        $mail->Port       = 465; // Changed to 465
+        $mail->Timeout    = 20;
         
         // Fix for Windows/XAMPP SSL issues
         $mail->SMTPOptions = array(
             'ssl' => array(
                 'verify_peer' => false,
                 'verify_peer_name' => false,
-                'allow_self_signed' => true
+                'allow_self_signed' => true,
+                'crypto_method' => STREAM_CRYPTO_METHOD_TLSv1_2_CLIENT
             )
         );
 
@@ -236,17 +238,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['verify_otp'])) {
             $stmt->bind_param("ssssssssssss", $first_name, $middle_name, $last_name, $suffix, $fullname, $email, $mobile, $street, $house_number, $vid, $hashed_password, $reference_id);
             
             if ($stmt->execute()) {
-                $user_id = $stmt->insert_id;
-                $_SESSION['user_id'] = $user_id;
-                $_SESSION['role'] = 'user';
-                $_SESSION['full_name'] = $fullname;
-                
-                // Clear signup session
+                // Clear signup session only (Do not log in yet)
                 unset($_SESSION['signup_data']);
                 unset($_SESSION['signup_step']);
                 
-                // Redirect to Dashboard
-                header("Location: user_dashboard.php?new_user=1");
+                // Redirect to Login with Success Message
+                header("Location: index.php?verified=1");
                 exit();
             } else {
                 $error = "Database Error: " . $conn->error;
