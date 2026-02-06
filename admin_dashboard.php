@@ -1946,7 +1946,7 @@ if ($checkCol && $checkCol->num_rows > 0) {
                           <tr>
                               <td><span style="font-weight:600; color:var(--text-main);">${d.title}</span></td>
                               <td><span class="badge active">${d.category}</span></td>
-                              <td><a href="${d.file_path}" target="_blank" style="color:var(--primary); font-size:0.8rem;">View File</a></td>
+                              <td><a href="${encodeURI(d.file_path)}" target="_blank" style="color:var(--primary); font-size:0.8rem;">View File</a></td>
                               <td>${d.created_at.split(' ')[0]}</td>
                               <td>
                                   <button class="icon-btn warning" style="background:#ef4444; border:none; padding:0.4rem;" onclick="deleteDoc(${d.id})" title="Delete Doc"><i data-feather="trash-2" style="width:14px; color:white;"></i></button>

@@ -1915,7 +1915,7 @@ if (empty($skillRow['skills'])) {
                                 <p style="color:#94a3b8; font-size:0.85rem; margin-top:0.5rem; line-height:1.5;">Official livelihood resource for professional distribution and learning.</p>
                             </div>
                             <div class="doc-footer">
-                                <a href="${d.file_path}" target="_blank" class="download-btn-premium">
+                                <a href="${encodeURI(d.file_path)}" target="_blank" class="download-btn-premium">
                                     <i data-feather="download" style="width:18px;"></i>
                                     Access Material
                                 </a>

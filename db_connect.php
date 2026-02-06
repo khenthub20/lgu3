@@ -3,7 +3,7 @@
 $servername = "localhost";
 
 // Check if running on localhost
-if ($_SERVER['HTTP_HOST'] == 'localhost' || $_SERVER['HTTP_HOST'] == '127.0.0.1') {
+if (php_sapi_name() === 'cli' || $_SERVER['HTTP_HOST'] == 'localhost' || $_SERVER['HTTP_HOST'] == '127.0.0.1') {
     // Local Credentials
     $username = "root";
     $password = "";
@@ -28,7 +28,7 @@ if ($conn->connect_error) {
     }
 }
 
-// --- SCHEMA AUTO-HEAL: Ensure all columns exist ---
+// --- SCHEMA AUTO-HEAL: Ensure all columns and tables exist ---
 $required_columns = [
     'first_name' => "VARCHAR(100) AFTER full_name",
     'middle_name' => "VARCHAR(100) AFTER first_name",
@@ -50,6 +50,48 @@ foreach ($required_columns as $col => $definition) {
     }
 }
 
+// 1. Learning Docs Table
+$conn->query("CREATE TABLE IF NOT EXISTS learning_docs (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    category VARCHAR(100) NOT NULL,
+    file_path VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+)");
+
+// Fix uploaded_at vs created_at for learning_docs
+$resL = $conn->query("SHOW COLUMNS FROM learning_docs LIKE 'uploaded_at'");
+if($resL && $resL->num_rows > 0) {
+    $conn->query("ALTER TABLE learning_docs CHANGE uploaded_at created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP");
+}
+
+// 2. Program Applications Table
+$conn->query("CREATE TABLE IF NOT EXISTS program_applications (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT,
+    program_id INT,
+    status VARCHAR(50) DEFAULT 'pending',
+    material_link VARCHAR(255),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+)");
+
+// 3. Programs Table
+$conn->query("CREATE TABLE IF NOT EXISTS programs (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    title VARCHAR(200),
+    category VARCHAR(100),
+    description TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+)");
+
+// 4. Ensure Upload Directories Exist
+$uploadDirs = ['uploads', 'uploads/docs', 'uploads/skill_tests', 'uploads/announcements'];
+foreach ($uploadDirs as $dir) {
+    if (!is_dir($dir)) {
+        mkdir($dir, 0777, true);
+    }
+}
+
 // Standardize Reference IDs for existing users
 $res = $conn->query("SELECT id, reference_id FROM users");
 if ($res) {
@@ -57,13 +99,16 @@ if ($res) {
         if (empty($row['reference_id']) || !preg_match('/^REF-\d{8}$/', $row['reference_id'])) {
             $is_unique = false;
             $tries = 0;
+            $ref = '';
             while(!$is_unique && $tries < 10) {
                 $ref = 'REF-' . str_pad(mt_rand(0, 99999999), 8, '0', STR_PAD_LEFT);
                 if($conn->query("SELECT id FROM users WHERE reference_id = '$ref'")->num_rows == 0) $is_unique = true;
                 $tries++;
             }
-            $uid_row = $row['id'];
-            $conn->query("UPDATE users SET reference_id = '$ref' WHERE id = $uid_row");
+            if($is_unique) {
+                $uid_row = $row['id'];
+                $conn->query("UPDATE users SET reference_id = '$ref' WHERE id = $uid_row");
+            }
         }
     }
 }

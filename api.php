@@ -597,18 +597,31 @@ if ($action === 'upload_doc') {
 }
 
 if ($action === 'get_docs') {
-    // Auto-heal
+    // Auto-heal: Ensure table exists and has all required columns
     $conn->query("CREATE TABLE IF NOT EXISTS learning_docs (
         id INT AUTO_INCREMENT PRIMARY KEY,
-        title VARCHAR(200),
-        category VARCHAR(100),
-        file_path VARCHAR(255),
+        title VARCHAR(255) NOT NULL,
+        category VARCHAR(100) NOT NULL,
+        file_path VARCHAR(255) NOT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )");
     
+    // Check if we need to rename uploaded_at to created_at or add it
+    $check_uploaded_at = $conn->query("SHOW COLUMNS FROM learning_docs LIKE 'uploaded_at'");
+    if($check_uploaded_at && $check_uploaded_at->num_rows > 0) {
+        // We have uploaded_at, let's make sure we can use it or rename it if created_at is missing
+        $check_created_at = $conn->query("SHOW COLUMNS FROM learning_docs LIKE 'created_at'");
+        if(!$check_created_at || $check_created_at->num_rows == 0) {
+            $conn->query("ALTER TABLE learning_docs CHANGE uploaded_at created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP");
+        }
+    }
+
     $docs = [];
+    // Always fallback to ORDER BY id if column ordering fails, but created_at should exist now
     $res = $conn->query("SELECT * FROM learning_docs ORDER BY created_at DESC");
-    while($row = $res->fetch_assoc()) $docs[] = $row;
+    if($res) {
+        while($row = $res->fetch_assoc()) $docs[] = $row;
+    }
     echo json_encode($docs);
     exit;
 }
@@ -2073,27 +2086,7 @@ if ($action === 'get_analytics') {
     exit;
 }
 
-// --- LEARNING DOCUMENTS ---
-if ($action === 'get_docs') {
-    // Auto-heal: Create table if missing
-    $conn->query("CREATE TABLE IF NOT EXISTS learning_docs (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        title VARCHAR(255) NOT NULL,
-        category VARCHAR(100) NOT NULL,
-        file_path VARCHAR(255) NOT NULL,
-        uploaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    )");
-    
-    $docs = [];
-    $res = $conn->query("SELECT * FROM learning_docs ORDER BY uploaded_at DESC");
-    if($res) {
-        while($row = $res->fetch_assoc()) {
-            $docs[] = $row;
-        }
-    }
-    echo json_encode($docs);
-    exit;
-}
+// Redundant handler removed - logic consolidated at line 599
 
 
 

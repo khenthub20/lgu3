@@ -2,19 +2,26 @@
 session_start();
 include 'db_connect.php';
 
+ini_set('display_errors', 1);
+error_reporting(E_ALL);
+
 if (!isset($_SESSION['user_id'])) {
     header("Location: index.php");
     exit();
 }
 
-$appId = $_GET['app_id'] ?? 0;
+$appId = isset($_GET['app_id']) ? (int)$_GET['app_id'] : 0;
+if ($appId <= 0) die("Invalid application ID.");
+
 // Fetch details
 $sql = "SELECT pa.*, p.title, p.description, u.full_name FROM program_applications pa 
         JOIN programs p ON pa.program_id = p.id 
         JOIN users u ON pa.user_id = u.id
         WHERE pa.id = $appId";
 $res = $conn->query($sql);
-if(!$res || $res->num_rows == 0) die("Material not found.");
+
+if(!$res) die("Database Error: " . $conn->error);
+if($res->num_rows == 0) die("Material not found for ID: " . $appId);
 $data = $res->fetch_assoc();
 
 // Simulate PDF View
