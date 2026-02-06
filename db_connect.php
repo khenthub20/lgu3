@@ -39,6 +39,7 @@ $required_columns = [
     'house_number' => "VARCHAR(50) AFTER street",
     'valid_id_path' => "VARCHAR(255) AFTER house_number",
     'is_active' => "INT(1) DEFAULT 1",
+    'is_first_login' => "INT(1) DEFAULT 1",
     'reference_id' => "VARCHAR(20) UNIQUE",
     'barangay' => "VARCHAR(255) DEFAULT 'Baranggay Laforteza Holdings 264'"
 ];
