@@ -84,7 +84,21 @@ $conn->query("CREATE TABLE IF NOT EXISTS programs (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 )");
 
-// 4. Ensure Upload Directories Exist
+// 4. Maintenance Schedules Table
+$conn->query("CREATE TABLE IF NOT EXISTS maintenance_schedules (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    maint_id VARCHAR(50) UNIQUE,
+    facility VARCHAR(200),
+    maint_type VARCHAR(100),
+    scheduled_date DATETIME,
+    duration VARCHAR(50),
+    priority VARCHAR(50),
+    status VARCHAR(50),
+    user_id INT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+)");
+
+// 5. Ensure Upload Directories Exist
 $uploadDirs = ['uploads', 'uploads/docs', 'uploads/skill_tests', 'uploads/announcements'];
 foreach ($uploadDirs as $dir) {
     if (!is_dir($dir)) {

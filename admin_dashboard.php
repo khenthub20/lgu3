@@ -969,7 +969,7 @@ if ($checkCol && $checkCol->num_rows > 0) {
                                     <span class="badge active" style="display:inline-flex; align-items:center; gap:5px;">
                                         <i data-feather="check-circle" style="width:12px;"></i> Connected
                                     </span>
-                                    <span style="font-size:0.8rem; color:var(--text-muted);">Last sync: Feb 02, 2026 00:51</span>
+                                    <span id="last-sync-time" style="font-size:0.8rem; color:var(--text-muted);">Last sync: Feb 07, 2026 04:15</span>
                                 </div>
                             </div>
                             <button class="action-btn" style="background:var(--input-bg); border-color:var(--border-color); color:var(--text-main); font-size:0.8rem;" onclick="syncMaintenance()">
@@ -1028,9 +1028,9 @@ if ($checkCol && $checkCol->num_rows > 0) {
                             <div class="content-section" style="padding:1.5rem;">
                                 <h3 style="margin:0 0 1.25rem 0;">Maintenance Calendar</h3>
                                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
-                                    <button class="icon-btn primary-action-btn" style="padding:5px; border-radius:50%; width:28px; height:28px;"><i data-feather="chevron-left" style="width:14px;"></i></button>
-                                    <span style="font-size:0.9rem; font-weight:700; color:var(--text-main);">February 2026</span>
-                                    <button class="icon-btn primary-action-btn" style="padding:5px; border-radius:50%; width:28px; height:28px;"><i data-feather="chevron-right" style="width:14px;"></i></button>
+                                    <button class="icon-btn primary-action-btn" onclick="changeMaintMonth(-1)" style="padding:5px; border-radius:50%; width:28px; height:28px;"><i data-feather="chevron-left" style="width:14px;"></i></button>
+                                    <span id="maint-cal-month" style="font-size:0.9rem; font-weight:700; color:var(--text-main);">February 2026</span>
+                                    <button class="icon-btn primary-action-btn" onclick="changeMaintMonth(1)" style="padding:5px; border-radius:50%; width:28px; height:28px;"><i data-feather="chevron-right" style="width:14px;"></i></button>
                                 </div>
                                 <div style="display:grid; grid-template-columns: repeat(7, 1fr); gap:5px; margin-bottom:1.5rem;">
                                     <div style="text-align:center; font-size:0.65rem; color:var(--text-muted); font-weight:700;">SUN</div>
@@ -1637,10 +1637,37 @@ if ($checkCol && $checkCol->num_rows > 0) {
                 <button onclick="confirmLogout()" class="danger-btn" style="flex:1; padding:0.8rem; background:#ef4444; color:white; border:none; border-radius:8px; cursor:pointer; font-weight:500;">Yes, Logout</button>
             </div>
         </div>
+    <!-- Maintenance Details Modal -->
+    <div class="modal-overlay" id="maintenanceDetailsModal">
+        <div class="success-modal" style="text-align:left; max-width:550px; width:95%; padding:2.5rem; background:var(--card-bg); border:1px solid var(--border-color); border-radius:32px; box-shadow:0 30px 60px rgba(0,0,0,0.6); backdrop-filter: blur(10px);">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2.5rem;">
+                <div>
+                    <h3 id="maint-modal-date" style="margin:0; color:var(--text-main); font-size:1.6rem; letter-spacing:-0.5px;">Scheduled Tasks</h3>
+                    <p style="color:var(--text-muted); margin:0.4rem 0 0 0; font-size:0.9rem; opacity:0.8;">Barangay Infrastructure Management System</p>
+                </div>
+                <button onclick="closeMaintModal()" style="background:var(--input-bg); border:1px solid var(--border-color); color:var(--text-main); padding:0.75rem; border-radius:16px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:0.3s ease;"><i data-feather="x" style="width:20px;"></i></button>
+            </div>
+            
+            <div id="maint-modal-list" style="display:flex; flex-direction:column; gap:1.2rem; max-height:450px; overflow-y:auto; padding-right:0.75rem; scrollbar-width:thin; scrollbar-color:var(--border-color) transparent;">
+                <!-- Populated via JS -->
+            </div>
+
+            <div style="margin-top:2.5rem; display:flex; gap:1.25rem;">
+                <button onclick="closeMaintModal()" style="flex:1; padding:1.15rem; background:var(--input-bg); border:1px solid var(--border-color); color:var(--text-main); border-radius:18px; cursor:pointer; font-weight:700; font-size:0.95rem; transition:0.3s ease;">Dismiss</button>
+                <button onclick="syncMaintenance()" style="flex:1.2; padding:1.15rem; background:var(--primary); border:none; color:white; border-radius:18px; cursor:pointer; font-weight:700; font-size:0.95rem; box-shadow:0 12px 24px -6px rgba(99,102,241,0.4); display:flex; align-items:center; justify-content:center; gap:8px;">
+                    <i data-feather="refresh-cw" style="width:18px;"></i> System Sync
+                </button>
+            </div>
+        </div>
     </div>
     
     <script>
         feather.replace();
+        
+        // --- MAINTENANCE STATE ---
+        let currentMaintMonth = new Date().getMonth(); // 0-11
+        let currentMaintYear = new Date().getFullYear();
+        let allMaintenanceData = [];
 
         // --- Sidebar Toggle Logic ---
         function toggleSidebar() {
@@ -1784,81 +1811,187 @@ if ($checkCol && $checkCol->num_rows > 0) {
 
          async function fetchMaintenance() {
              const tbody = document.getElementById('maintenance-table');
+             const historyBody = document.getElementById('maint-history-table');
              if(!tbody) return;
              
              try {
                  const res = await fetch('api.php?action=get_maintenance');
-                 const data = await res.json();
+                 allMaintenanceData = await res.json();
                  
-                 if(data.length === 0) {
-                      tbody.innerHTML = '<tr><td colspan="10" style="text-align:center; padding:2rem; color:var(--text-muted);">No maintenance schedules found.</td></tr>';
-                      return;
-                 }
-
-                 tbody.innerHTML = '';
-                 const scheduledDays = [];
+                 renderMaintTables();
+                 renderMaintCalendar();
                  
-                 data.forEach(s => {
-                     let pColor = '#f59e0b'; // Medium
-                     if(s.priority === 'High' || s.priority === 'Critical') pColor = '#ef4444';
-                     else if(s.priority === 'Low') pColor = '#10b981';
+             } catch(e) { console.error(e); }
+         }
 
-                     let sColor = '#6366f1'; // Scheduled
-                     if(s.status === 'In Progress') sColor = '#f59e0b';
-                     else if(s.status === 'Completed') sColor = '#10b981';
-                     else if(s.status === 'Delayed') sColor = '#ef4444';
-                     
-                     const dateObj = new Date(s.scheduled_date);
-                     const dateStr = dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-                     const timeStr = dateObj.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
-                     
-                     if(dateObj.getMonth() === 1 && dateObj.getFullYear() === 2026) {
-                         scheduledDays.push(dateObj.getDate());
-                     }
+         function renderMaintTables() {
+             const tbody = document.getElementById('maintenance-table');
+             const historyBody = document.getElementById('maint-history-table');
+             
+             tbody.innerHTML = '';
+             historyBody.innerHTML = '';
+             
+             const upcoming = allMaintenanceData.filter(s => s.status !== 'Completed');
+             const history = allMaintenanceData.filter(s => s.status === 'Completed');
+             
+             if(upcoming.length === 0) {
+                 tbody.innerHTML = '<tr><td colspan="9" style="text-align:center; padding:2rem; color:var(--text-muted);">No upcoming schedules.</td></tr>';
+             } else {
+                 upcoming.forEach(s => tbody.innerHTML += createMaintRow(s));
+             }
+             
+             if(history.length === 0) {
+                 historyBody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:2rem; color:var(--text-muted);">No history available.</td></tr>';
+             } else {
+                 history.forEach(s => historyBody.innerHTML += createMaintHistoryRow(s));
+             }
+             
+             feather.replace();
+         }
 
-                     const userHtml = s.full_name ? `
-                        <div style="font-weight:600; color:var(--text-main);">${s.full_name}</div>
-                        <div style="font-size:0.7rem; color:var(--primary); font-family:monospace;">${s.user_ref || '---'}</div>
-                     ` : '<span style="color:var(--text-muted);">Internal Task</span>';
+         function createMaintRow(s) {
+             let pColor = '#f59e0b'; // Medium
+             if(s.priority === 'High' || s.priority === 'Critical') pColor = '#ef4444';
+             else if(s.priority === 'Low') pColor = '#10b981';
 
-                     tbody.innerHTML += `
-                         <tr>
-                            <td><span style="font-weight:700; color:var(--text-main);">${s.maint_id}</span></td>
-                            <td>${s.facility}</td>
-                            <td>${s.maint_type}</td>
-                            <td>${userHtml}</td>
-                            <td style="font-size:0.75rem;">
-                                <div style="font-weight:600; color:var(--text-main);">${dateStr}</div>
-                                <div style="color:var(--text-muted);">${timeStr}</div>
-                            </td>
-                            <td>${s.duration}</td>
-                            <td><span class="badge" style="background:${pColor}15; color:${pColor}; border:1px solid ${pColor}30;">${s.priority}</span></td>
-                            <td><span class="badge" style="background:${sColor}15; color:${sColor}; border:1px solid ${sColor}30;">${s.status}</span></td>
-                            <td><button class="action-btn" style="padding:0.3rem 0.6rem; font-size:0.7rem;">View Details</button></td>
-                         </tr>
-                     `;
+             let sColor = '#6366f1'; // Scheduled
+             if(s.status === 'In Progress') sColor = '#f59e0b';
+             else if(s.status === 'Delayed') sColor = '#ef4444';
+             
+             const dateObj = new Date(s.scheduled_date);
+             const dateStr = dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+             const timeStr = dateObj.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+
+             const userHtml = s.full_name ? `
+                <div style="font-weight:600; color:var(--text-main);">${s.full_name}</div>
+                <div style="font-size:0.7rem; color:var(--primary);">${s.user_ref || '---'}</div>
+             ` : '<span style="color:var(--text-muted);">System Task</span>';
+
+             return `
+                 <tr>
+                    <td><span style="font-weight:700; color:var(--text-main);">${s.maint_id}</span></td>
+                    <td>${s.facility}</td>
+                    <td>${s.maint_type}</td>
+                    <td>${userHtml}</td>
+                    <td style="font-size:0.75rem;">
+                        <div style="font-weight:600; color:var(--text-main);">${dateStr}</div>
+                        <div style="color:var(--text-muted);">${timeStr}</div>
+                    </td>
+                    <td>${s.duration}</td>
+                    <td><span class="badge" style="background:${pColor}15; color:${pColor}; border:1px solid ${pColor}30;">${s.priority}</span></td>
+                    <td><span class="badge" style="background:${sColor}15; color:${sColor}; border:1px solid ${sColor}30;">${s.status}</span></td>
+                    <td><button class="action-btn" style="padding:0.3rem 0.6rem; font-size:0.7rem;">Manage</button></td>
+                 </tr>
+             `;
+         }
+
+         function createMaintHistoryRow(s) {
+            const dateObj = new Date(s.scheduled_date);
+            const dateStr = dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+            return `
+                <tr>
+                    <td><span style="font-weight:700; color:var(--text-main);">${s.maint_id}</span></td>
+                    <td>${s.facility}</td>
+                    <td>${s.maint_type}</td>
+                    <td>${dateStr}</td>
+                    <td>${s.duration}</td>
+                    <td>Admin / CIMM</td>
+                    <td><span class="badge" style="background:#10b98115; color:#10b981; border:1px solid #10b98130;">Completed</span></td>
+                    <td><button class="action-btn" style="padding:0.3rem 0.6rem; font-size:0.7rem;">Archive</button></td>
+                </tr>
+            `;
+         }
+
+         function changeMaintMonth(delta) {
+             currentMaintMonth += delta;
+             if(currentMaintMonth < 0) { currentMaintMonth = 11; currentMaintYear--; }
+             if(currentMaintMonth > 11) { currentMaintMonth = 0; currentMaintYear++; }
+             renderMaintCalendar();
+         }
+
+         function renderMaintCalendar() {
+             const calGrid = document.getElementById('maint-calendar-grid');
+             const monthLabel = document.getElementById('maint-cal-month');
+             if(!calGrid) return;
+             
+             const firstDay = new Date(currentMaintYear, currentMaintMonth, 1).getDay();
+             const daysInMonth = new Date(currentMaintYear, currentMaintMonth + 1, 0).getDate();
+             const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+             
+             monthLabel.innerText = `${monthNames[currentMaintMonth]} ${currentMaintYear}`;
+             calGrid.innerHTML = '';
+             
+             // Empty slots
+             for(let i=0; i<firstDay; i++) {
+                 calGrid.innerHTML += `<div></div>`;
+             }
+             
+             // Days
+             for(let i=1; i<=daysInMonth; i++) {
+                 const hasMaint = allMaintenanceData.some(s => {
+                     const d = new Date(s.scheduled_date);
+                     return d.getDate() === i && d.getMonth() === currentMaintMonth && d.getFullYear() === currentMaintYear;
                  });
                  
-                 // Update Calendar Grid
-                 const calGrid = document.getElementById('maint-calendar-grid');
-                 if(calGrid) {
-                     calGrid.innerHTML = '';
-                     for(let i=1; i<=28; i++) {
-                         const hasMaint = scheduledDays.includes(i);
-                         calGrid.innerHTML += `
-                            <div style="aspect-ratio:1; display:flex; align-items:center; justify-content:center; border-radius:8px; font-size:0.75rem; color:var(--text-main); background:var(--input-bg); font-weight:600; cursor:pointer; border:1px solid ${hasMaint ? 'var(--primary)' : 'transparent'}; ${hasMaint ? 'background:rgba(99,102,241,0.1);' : ''}">${i}</div>
-                         `;
-                     }
-                 }
-                 
-                 feather.replace();
-             } catch(e) { console.error(e); }
+                 calGrid.innerHTML += `
+                    <div onclick="viewMaintByDate(${i})" style="aspect-ratio:1; display:flex; align-items:center; justify-content:center; border-radius:8px; font-size:0.75rem; color:var(--text-main); background:var(--input-bg); font-weight:600; cursor:pointer; border:1px solid ${hasMaint ? 'var(--primary)' : 'transparent'}; ${hasMaint ? 'background:rgba(99,102,241,0.1);' : ''}">${i}</div>
+                 `;
+             }
+         }
+
+         function viewMaintByDate(day) {
+             const tasks = allMaintenanceData.filter(s => {
+                 const d = new Date(s.scheduled_date);
+                 return d.getDate() === day && d.getMonth() === currentMaintMonth && d.getFullYear() === currentMaintYear;
+             });
+             
+             if(tasks.length === 0) return;
+             
+             const modal = document.getElementById('maintenanceDetailsModal');
+             const dateLabel = document.getElementById('maint-modal-date');
+             const listContainer = document.getElementById('maint-modal-list');
+             const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+             
+             dateLabel.innerText = `${day} ${monthNames[currentMaintMonth]} ${currentMaintYear}`;
+             listContainer.innerHTML = '';
+             
+             tasks.forEach(t => {
+                 let priorityColor = '#f59e0b'; // Medium
+                 if(t.priority === 'High' || t.priority === 'Critical') priorityColor = '#ef4444';
+                 else if(t.priority === 'Low') priorityColor = '#10b981';
+
+                 listContainer.innerHTML += `
+                     <div style="background:rgba(255,255,255,0.03); border:1px solid var(--border-color); padding:1.25rem; border-radius:20px; transition:0.3s ease; transform:translateY(0);">
+                         <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:1rem;">
+                             <span style="font-size:0.7rem; font-weight:800; color:var(--primary); letter-spacing:1px; text-transform:uppercase;">${t.maint_id}</span>
+                             <span class="badge" style="background:${priorityColor}15; color:${priorityColor}; border:1px solid ${priorityColor}30; font-size:0.65rem; padding:0.2rem 0.6rem;">${t.priority}</span>
+                         </div>
+                         <h4 style="margin:0; color:var(--text-main); font-size:1.1rem; font-weight:700;">${t.facility}</h4>
+                         <p style="color:var(--text-muted); font-size:0.85rem; margin:0.5rem 0 1rem 0; line-height:1.5;">${t.maint_type} integration for community safety and infrastructure longevity.</p>
+                         <div style="display:flex; align-items:center; gap:1rem; padding-top:1rem; border-top:1px dashed var(--border-color);">
+                             <div style="display:flex; align-items:center; gap:6px; color:var(--text-muted); font-size:0.75rem;">
+                                 <i data-feather="clock" style="width:14px;"></i> ${t.duration}
+                             </div>
+                             <div style="display:flex; align-items:center; gap:6px; color:var(--text-muted); font-size:0.75rem;">
+                                 <i data-feather="tool" style="width:14px;"></i> System Managed
+                             </div>
+                         </div>
+                     </div>
+                 `;
+             });
+             
+             modal.classList.add('active');
+             feather.replace();
+         }
+
+         function closeMaintModal() {
+             document.getElementById('maintenanceDetailsModal').classList.remove('active');
          }
 
          async function syncMaintenance() {
              const btn = event.currentTarget;
              const originalHtml = btn.innerHTML;
-             btn.innerHTML = '<i data-feather="loader" class="spin" style="width:14px; margin-right:5px;"></i> Syncing...';
+             btn.innerHTML = '<i data-feather="loader" class="spin" style="width:14px; margin-right:5px;"></i> Synchronizing...';
              btn.disabled = true;
              feather.replace();
              
@@ -1867,10 +2000,14 @@ if ($checkCol && $checkCol->num_rows > 0) {
                  const data = await res.json();
                  
                  if(data.success) {
-                     showSuccessModal(`Synchronization complete! Detected ${data.synced_count} new maintenance tasks from reported issues.`);
-                     fetchMaintenance();
+                      const now = new Date();
+                      const timeStr = now.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) + ' ' + now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+                      document.getElementById('last-sync-time').innerText = 'Last sync: ' + timeStr;
+                      
+                      showSuccessModal(`Sync Complete! System detected ${data.synced_count} new infrastructure issues that require maintenance from the CIMM system.`);
+                      fetchMaintenance();
                  } else {
-                     alert('Sync Error: ' + data.error);
+                      alert('Sync Failed: ' + data.error);
                  }
              } catch(e) { alert('Connection Error'); }
              finally {
