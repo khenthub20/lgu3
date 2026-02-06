@@ -620,7 +620,10 @@ if ($action === 'get_docs') {
     // Always fallback to ORDER BY id if column ordering fails, but created_at should exist now
     $res = $conn->query("SELECT * FROM learning_docs ORDER BY created_at DESC");
     if($res) {
-        while($row = $res->fetch_assoc()) $docs[] = $row;
+        while($row = $res->fetch_assoc()) {
+            $row['exists'] = file_exists($row['file_path']);
+            $docs[] = $row;
+        }
     }
     echo json_encode($docs);
     exit;
