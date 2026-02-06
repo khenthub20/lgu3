@@ -28,32 +28,42 @@ if ($conn->connect_error) {
     }
 }
 
-// --- SCHEMA AUTO-HEAL: Reference ID ---
-$check = $conn->query("SHOW COLUMNS FROM users LIKE 'reference_id'");
-// Check if query succeeded AND if column is missing
-if ($check && $check->num_rows == 0) {
-    $conn->query("ALTER TABLE users ADD COLUMN reference_id VARCHAR(20) UNIQUE AFTER id");
+// --- SCHEMA AUTO-HEAL: Ensure all columns exist ---
+$required_columns = [
+    'first_name' => "VARCHAR(100) AFTER full_name",
+    'middle_name' => "VARCHAR(100) AFTER first_name",
+    'last_name' => "VARCHAR(100) AFTER middle_name",
+    'suffix' => "VARCHAR(20) AFTER last_name",
+    'mobile_number' => "VARCHAR(20) AFTER email",
+    'street' => "VARCHAR(255) AFTER mobile_number",
+    'house_number' => "VARCHAR(50) AFTER street",
+    'valid_id_path' => "VARCHAR(255) AFTER house_number",
+    'is_active' => "INT(1) DEFAULT 1",
+    'reference_id' => "VARCHAR(20) UNIQUE",
+    'barangay' => "VARCHAR(255) DEFAULT 'Baranggay Laforteza Holdings 264'"
+];
+
+foreach ($required_columns as $col => $definition) {
+    if (!$conn->query("SHOW COLUMNS FROM users LIKE '$col'")->num_rows) {
+        $conn->query("ALTER TABLE users ADD COLUMN $col $definition");
+    }
 }
 
-// Ensure all users have the standardized 8-digit numeric ID format (e.g., REF-12345678)
+// Standardize Reference IDs for existing users
 $res = $conn->query("SELECT id, reference_id FROM users");
 if ($res) {
     while($row = $res->fetch_assoc()) {
-        // If it's empty OR NOT exactly 8 digits after 'REF-' (standardizes old alphanumeric ones)
         if (empty($row['reference_id']) || !preg_match('/^REF-\d{8}$/', $row['reference_id'])) {
             $is_unique = false;
-            $max_tries = 10;
             $tries = 0;
-            
-            while(!$is_unique && $tries < $max_tries) {
+            while(!$is_unique && $tries < 10) {
                 $ref = 'REF-' . str_pad(mt_rand(0, 99999999), 8, '0', STR_PAD_LEFT);
-                $dupCheck = $conn->query("SELECT id FROM users WHERE reference_id = '$ref'");
-                if($dupCheck->num_rows == 0) $is_unique = true;
+                if($conn->query("SELECT id FROM users WHERE reference_id = '$ref'")->num_rows == 0) $is_unique = true;
                 $tries++;
             }
-            
             $uid_row = $row['id'];
             $conn->query("UPDATE users SET reference_id = '$ref' WHERE id = $uid_row");
         }
     }
 }
+?>
