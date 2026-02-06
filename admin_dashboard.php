@@ -1928,9 +1928,11 @@ if ($checkCol && $checkCol->num_rows > 0) {
              
              // Days
              for(let i=1; i<=daysInMonth; i++) {
+                 const targetDateStr = `${currentMaintYear}-${String(currentMaintMonth + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
+                 
                  const hasMaint = allMaintenanceData.some(s => {
-                     const d = new Date(s.scheduled_date);
-                     return d.getDate() === i && d.getMonth() === currentMaintMonth && d.getFullYear() === currentMaintYear;
+                     const sDate = s.scheduled_date.split(' ')[0];
+                     return sDate === targetDateStr;
                  });
                  
                  calGrid.innerHTML += `
@@ -1940,9 +1942,11 @@ if ($checkCol && $checkCol->num_rows > 0) {
          }
 
          function viewMaintByDate(day) {
+             const targetDateStr = `${currentMaintYear}-${String(currentMaintMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+             
              const tasks = allMaintenanceData.filter(s => {
-                 const d = new Date(s.scheduled_date);
-                 return d.getDate() === day && d.getMonth() === currentMaintMonth && d.getFullYear() === currentMaintYear;
+                 const sDate = s.scheduled_date.split(' ')[0];
+                 return sDate === targetDateStr;
              });
              
              if(tasks.length === 0) return;
