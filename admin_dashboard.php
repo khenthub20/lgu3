@@ -3673,6 +3673,21 @@ if ($checkCol && $checkCol->num_rows > 0) {
             document.getElementById('fix-form-container').style.display = 'block';
             document.getElementById('react-progress').style.width = '0%';
         }
+
+        // --- INITIALIZATION ---
+        document.addEventListener('DOMContentLoaded', () => {
+            // Trigger the initial section load (typically Overview)
+            const activeNav = document.querySelector('.nav-item.active');
+            if(activeNav) {
+                const sectionId = activeNav.getAttribute('onclick').match(/'([^']+)'/)[1];
+                showSection(sectionId, activeNav);
+            } else {
+                showSection('overview', document.querySelector('.nav-item'));
+            }
+            
+            // Initial stats update
+            updateStats();
+        });
     </script>
 </body>
 </html>
