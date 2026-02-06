@@ -2125,12 +2125,12 @@ if ($action === 'toggle_user_status') {
                     $mail->Password = 'edqj nqsx pvgb ffph';
                     $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;
                     $mail->Port = 465;
+                    $mail->Timeout = 30; 
                     $mail->SMTPOptions = [
                         'ssl' => [
                             'verify_peer' => false, 
                             'verify_peer_name' => false, 
-                            'allow_self_signed' => true,
-                            'crypto_method' => STREAM_CRYPTO_METHOD_TLSv1_2_CLIENT
+                            'allow_self_signed' => true
                         ]
                     ];
 
@@ -2203,12 +2203,12 @@ if ($action === 'fix_account') {
             $mail->Password = 'edqj nqsx pvgb ffph';
             $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;
             $mail->Port = 465;
+            $mail->Timeout = 30;
             $mail->SMTPOptions = [
                 'ssl' => [
                     'verify_peer' => false, 
                     'verify_peer_name' => false, 
-                    'allow_self_signed' => true,
-                    'crypto_method' => STREAM_CRYPTO_METHOD_TLSv1_2_CLIENT
+                    'allow_self_signed' => true
                 ]
             ];
 

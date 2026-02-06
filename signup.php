@@ -52,21 +52,22 @@ function sendOTPEmail($to, $fullname, $otp) {
         // Server settings
         $mail->SMTPDebug = 0;
         $mail->isSMTP();
-        $mail->Host       = SMTP_HOST;
+        $mail->Host       = 'smtp.gmail.com';
         $mail->SMTPAuth   = true;
         $mail->Username   = trim(SMTP_USER);
         $mail->Password   = trim(SMTP_PASS);
-        $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS; // Changed to SMTPS (SSL)
-        $mail->Port       = 465; // Changed to 465
-        $mail->Timeout    = 20;
         
-        // Fix for Windows/XAMPP SSL issues
+        // Use Port 465 (SSL) as priority, or 587 (TLS) if 465 is blocked
+        $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS; 
+        $mail->Port       = 465; 
+        $mail->Timeout    = 30; // Increased for live server latency
+        
+        // Robust SSL options for live servers
         $mail->SMTPOptions = array(
             'ssl' => array(
                 'verify_peer' => false,
                 'verify_peer_name' => false,
-                'allow_self_signed' => true,
-                'crypto_method' => STREAM_CRYPTO_METHOD_TLSv1_2_CLIENT
+                'allow_self_signed' => true
             )
         );
 
